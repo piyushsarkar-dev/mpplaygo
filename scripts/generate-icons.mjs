@@ -88,7 +88,8 @@ async function main() {
 	const args = parseArgs(process.argv);
 	const source = args.source || "public/favi-icon.png";
 	const fitArg = typeof args.fit === "string" ? String(args.fit) : null;
-	const fitMode = fitArg === "cover" || fitArg === "contain" ? fitArg : "auto";
+	const fitMode =
+		fitArg === "cover" || fitArg === "contain" ? fitArg : "auto";
 	const verifyOnly = Boolean(args.verify);
 
 	const sourcePath = resolveFromRoot(source);
@@ -188,7 +189,9 @@ async function main() {
 		generated += 4;
 	}
 
-	const favSize = fs.existsSync(favicon512) ? await getImageSize(favicon512) : null;
+	const favSize = fs.existsSync(favicon512)
+		? await getImageSize(favicon512)
+		: null;
 	if (favSize && (favSize.width !== 512 || favSize.height !== 512)) {
 		console.warn(
 			`Favicon size is ${favSize.width}x${favSize.height} (recommended 512x512): public/favi-icon.png`
