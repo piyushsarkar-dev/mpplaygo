@@ -1,5 +1,7 @@
 "use client";
+import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { MusicContext } from "@/hooks/use-context";
+import { PlusCircle } from "lucide-react";
 import { useContext } from "react";
 import { IoPlay } from "react-icons/io5";
 import { Skeleton } from "../ui/skeleton";
@@ -13,7 +15,7 @@ export default function SongCard({ title, image, artist, id, desc }) {
 	return (
 		<div className="h-fit w-[200px]">
 			<div className="overflow-hidden rounded-md">
-				{image ? (
+				{image ?
 					<div
 						className="relative"
 						onClick={() => {
@@ -29,12 +31,10 @@ export default function SongCard({ title, image, artist, id, desc }) {
 							<IoPlay className="w-4 h-4 -mr-0.5 dark:fill-white" />
 						</div>
 					</div>
-				) : (
-					<Skeleton className="w-full h-[182px]" />
-				)}
+				:	<Skeleton className="w-full h-[182px]" />}
 			</div>
 			<div className="cursor-pointer">
-				{title ? (
+				{title ?
 					<div
 						onClick={() => {
 							ids.setMusic(id);
@@ -45,23 +45,28 @@ export default function SongCard({ title, image, artist, id, desc }) {
 							{title.slice(0, 20)}
 							{title.length > 20 && "..."}
 						</h1>
+						{id && (
+							<AddToPlaylist song={{ id, title, artist, image }}>
+								<button
+									className="text-muted-foreground hover:text-primary transition-colors p-1"
+									onClick={(e) => e.stopPropagation()}>
+									<PlusCircle className="h-5 w-5" />
+								</button>
+							</AddToPlaylist>
+						)}
 					</div>
-				) : (
-					<Skeleton className="w-[70%] h-4 mt-2" />
-				)}
+				:	<Skeleton className="w-[70%] h-4 mt-2" />}
 				{desc && (
 					<p className="text-xs text-muted-foreground">
 						{desc.slice(0, 30)}
 					</p>
 				)}
-				{artist ? (
+				{artist ?
 					<p className="text-sm font-light text-muted-foreground">
 						{artist.slice(0, 20)}
 						{artist.length > 20 && "..."}
 					</p>
-				) : (
-					<Skeleton className="w-10 h-2 mt-2" />
-				)}
+				:	<Skeleton className="w-10 h-2 mt-2" />}
 			</div>
 		</div>
 	);
