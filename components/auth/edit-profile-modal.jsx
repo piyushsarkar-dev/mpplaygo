@@ -12,9 +12,9 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 function normalizeUsername(value) {
 	return String(value || "")
@@ -25,7 +25,12 @@ function normalizeUsername(value) {
 }
 
 export function EditProfileModal({ children }) {
-	const { supabase, user, profile: myProfile, refreshProfile } = useSupabase();
+	const {
+		supabase,
+		user,
+		profile: myProfile,
+		refreshProfile,
+	} = useSupabase();
 	const router = useRouter();
 
 	const [open, setOpen] = useState(false);
@@ -138,7 +143,10 @@ export function EditProfileModal({ children }) {
 			setOpen(false);
 
 			// If username changed, navigate to the new route
-			if (myProfile?.username && myProfile.username !== normalizedUsername) {
+			if (
+				myProfile?.username &&
+				myProfile.username !== normalizedUsername
+			) {
 				router.push(`/profile/${normalizedUsername}`);
 			} else {
 				router.refresh();
@@ -153,7 +161,9 @@ export function EditProfileModal({ children }) {
 	if (!user) return null;
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog
+			open={open}
+			onOpenChange={setOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
@@ -163,7 +173,9 @@ export function EditProfileModal({ children }) {
 					</DialogDescription>
 				</DialogHeader>
 
-				<form onSubmit={handleSave} className="space-y-4">
+				<form
+					onSubmit={handleSave}
+					className="space-y-4">
 					<div className="space-y-2">
 						<label className="text-sm font-medium">Full name</label>
 						<Input
@@ -185,11 +197,18 @@ export function EditProfileModal({ children }) {
 						/>
 						<div className="text-xs text-muted-foreground">
 							<span>Will be saved as </span>
-							<span className="font-mono">{normalizedUsername || "-"}</span>
+							<span className="font-mono">
+								{normalizedUsername || "-"}
+							</span>
 							{checking && <span> · Checking…</span>}
-							{!checking && isAvailable === true && normalizedUsername.length >= 3 && (
-								<span className="text-emerald-500"> · Available</span>
-							)}
+							{!checking &&
+								isAvailable === true &&
+								normalizedUsername.length >= 3 && (
+									<span className="text-emerald-500">
+										{" "}
+										· Available
+									</span>
+								)}
 							{!checking && isAvailable === false && (
 								<span className="text-red-500"> · Taken</span>
 							)}
@@ -203,7 +222,9 @@ export function EditProfileModal({ children }) {
 								<Button
 									key={g}
 									type="button"
-									variant={gender === g ? "default" : "secondary"}
+									variant={
+										gender === g ? "default" : "secondary"
+									}
 									onClick={() => setGender(g)}
 									disabled={saving}
 									className="capitalize">
@@ -214,7 +235,9 @@ export function EditProfileModal({ children }) {
 					</div>
 
 					<DialogFooter>
-						<Button type="submit" disabled={!canSubmit || saving}>
+						<Button
+							type="submit"
+							disabled={!canSubmit || saving}>
 							{saving ? "Saving…" : "Save"}
 						</Button>
 					</DialogFooter>

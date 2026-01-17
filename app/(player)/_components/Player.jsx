@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 export default function Player({ id }) {
 	const [data, setData] = useState([]);
-	const [playing, setPlaying] = useState(true);
+	const [playing, setPlaying] = useState(false);
 	const audioRef = useRef(null);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
@@ -25,6 +25,17 @@ export default function Player({ id }) {
 	const next = useNextMusicProvider();
 	const { current, setCurrent, setDownloadProgress, downloadProgress } =
 		useMusicProvider();
+	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
+	const userInitiatedRef = useRef(false);
+
+	useEffect(() => {
+		try {
+			userInitiatedRef.current =
+				sessionStorage.getItem(USER_PLAY_KEY) === "true";
+		} catch {
+			userInitiatedRef.current = false;
+		}
+	}, []);
 
 	const getSong = async () => {
 		const get = await getSongsById(id);
@@ -48,15 +59,25 @@ export default function Player({ id }) {
 		)}`;
 	};
 
-	const togglePlayPause = () => {
+	const togglePlayPause = async () => {
+		if (!audioRef.current) return;
 		if (playing) {
 			audioRef.current.pause();
 			localStorage.setItem("p", "false");
-		} else {
-			audioRef.current.play();
-			localStorage.setItem("p", "true");
+			setPlaying(false);
+			return;
 		}
-		setPlaying(!playing);
+		try {
+			sessionStorage.setItem(USER_PLAY_KEY, "true");
+			userInitiatedRef.current = true;
+		} catch {}
+		localStorage.setItem("p", "true");
+		try {
+			await audioRef.current.play();
+			setPlaying(true);
+		} catch {
+			setPlaying(false);
+		}
 	};
 
 	const downloadSong = async () => {
@@ -136,7 +157,10 @@ export default function Player({ id }) {
 	useEffect(() => {
 		getSong();
 		localStorage.setItem("last-played", id);
-		localStorage.removeItem("p");
+		// No autoplay on page open unless user initiated play in this tab.
+		const shouldAutoPlay =
+			userInitiatedRef.current && localStorage.getItem("p") === "true";
+		setPlaying(Boolean(shouldAutoPlay));
 		if (current) {
 			audioRef.current.currentTime = parseFloat(current + 1);
 		}
@@ -159,6 +183,18 @@ export default function Player({ id }) {
 			}
 		};
 	}, []);
+
+	useEffect(() => {
+		if (!audioRef.current) return;
+		if (!audioURL) return;
+		if (playing) {
+			audioRef.current.play().catch(() => setPlaying(false));
+		} else {
+			try {
+				audioRef.current.pause();
+			} catch {}
+		}
+	}, [audioURL, playing]);
 	useEffect(() => {
 		const handleRedirect = () => {
 			if (currentTime === duration && !isLooping && duration !== 0) {
@@ -174,7 +210,7 @@ export default function Player({ id }) {
 				onPlay={() => setPlaying(true)}
 				onPause={() => setPlaying(false)}
 				onLoadedData={() => setDuration(audioRef.current.duration)}
-				autoPlay={playing}
+				autoPlay={false}
 				src={audioURL}
 				ref={audioRef}></audio>
 			<div className="grid gap-6 w-full">

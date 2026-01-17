@@ -8,9 +8,14 @@ import { Skeleton } from "../ui/skeleton";
 
 export default function SongCard({ title, image, artist, id, desc }) {
 	const ids = useContext(MusicContext);
+	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
 	const setLastPlayed = () => {
-		localStorage.clear();
+		// Don't clear the whole localStorage (theme/auth/etc). Only update player keys.
 		localStorage.setItem("last-played", id);
+		localStorage.setItem("p", "true");
+		try {
+			sessionStorage.setItem(USER_PLAY_KEY, "true");
+		} catch {}
 	};
 	return (
 		<div className="h-fit w-[200px]">

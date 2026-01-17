@@ -29,8 +29,11 @@ function getAuthProvider(user) {
 }
 
 export function OnboardingModal() {
-	const { supabase, user, profile, isLoading, refreshProfile } =
+	const { supabase, user, profile, isLoading, refreshProfile, setProfile } =
 		useSupabase();
+
+	const [dbSupportsGender, setDbSupportsGender] = useState(true);
+	const [dbSupportsFullName, setDbSupportsFullName] = useState(true);
 
 	const provider = useMemo(() => getAuthProvider(user), [user]);
 	const requiresFullName = provider === "email";
@@ -42,12 +45,12 @@ export function OnboardingModal() {
 		const missingUsername = !profile?.username;
 		const missingGender =
 			profile?.gender == null || String(profile.gender).trim() === "";
-		return missingUsername || missingGender;
-	}, [user, isLoading, profile]);
+		return missingUsername || (dbSupportsGender ? missingGender : false);
+	}, [user, isLoading, profile, dbSupportsGender]);
 
 	const [open, setOpen] = useState(false);
 	useEffect(() => {
-		if (needsOnboarding) setOpen(true);
+		setOpen(needsOnboarding);
 	}, [needsOnboarding]);
 
 	const [fullName, setFullName] = useState("");
@@ -168,8 +171,13 @@ export function OnboardingModal() {
 		if (!user) return false;
 		if (!normalizedUsername || normalizedUsername.length < 3) return false;
 		if (isAvailable === false) return false;
-		if (!gender) return false;
-		if (requiresFullName && !String(fullName).trim()) return false;
+		if (dbSupportsGender && !gender) return false;
+		if (
+			requiresFullName &&
+			dbSupportsFullName &&
+			!String(fullName).trim()
+		)
+			return false;
 		return true;
 	}, [
 		user,
@@ -178,6 +186,8 @@ export function OnboardingModal() {
 		gender,
 		requiresFullName,
 		fullName,
+		dbSupportsGender,
+		dbSupportsFullName,
 	]);
 
 	const handleSubmit = async (e) => {
@@ -188,10 +198,12 @@ export function OnboardingModal() {
 		try {
 			const payload = {
 				username: normalizedUsername,
-				gender,
+				...(dbSupportsGender ? { gender } : {}),
 			};
 			const trimmedFullName = String(fullName || "").trim();
-			if (trimmedFullName) payload.full_name = trimmedFullName;
+			if (dbSupportsFullName && trimmedFullName) {
+				payload.full_name = trimmedFullName;
+			}
 
 			let { error } = await supabase
 				.from("profiles")
@@ -205,11 +217,19 @@ export function OnboardingModal() {
 					msg.includes("column") &&
 					(msg.includes("gender") || msg.includes("full_name"))
 				) {
+					if (msg.includes("gender")) setDbSupportsGender(false);
+					if (msg.includes("full_name")) setDbSupportsFullName(false);
+
 					const fallback = await supabase
 						.from("profiles")
 						.update({ username: normalizedUsername })
 						.eq("id", user.id);
 					if (fallback.error) throw fallback.error;
+					setProfile((prev) => ({
+						...(prev || {}),
+						id: user.id,
+						username: normalizedUsername,
+					}));
 					toast.warning(
 						"Saved username, but your profiles table is missing gender/full_name columns. Update your DB schema to finish onboarding.",
 					);
@@ -217,7 +237,12 @@ export function OnboardingModal() {
 					throw error;
 				}
 			}
-
+			// Optimistic update to prevent the modal from re-opening on the next render.
+			setProfile((prev) => ({
+				...(prev || {}),
+				id: user.id,
+				...payload,
+			}));
 			await refreshProfile();
 			toast.success("Profile saved!");
 			setOpen(false);

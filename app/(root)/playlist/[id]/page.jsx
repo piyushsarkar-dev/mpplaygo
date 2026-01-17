@@ -105,6 +105,12 @@ export default function PlaylistPage({ params }) {
 	};
 
 	const handlePlaySong = (songId) => {
+		try {
+			sessionStorage.setItem("mpplaygo_user_initiated_play", "true");
+		} catch {}
+		try {
+			localStorage.setItem("p", "true");
+		} catch {}
 		musicContext.setMusic(songId);
 	};
 

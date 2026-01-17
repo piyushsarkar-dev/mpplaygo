@@ -62,10 +62,16 @@ export function UserProfileDropdown() {
 				<DropdownMenuSeparator />
 				<DropdownMenuItem asChild>
 					<Link
-						href={profile?.username ? `/profile/${profile.username}` : "/"}
+						href={
+							profile?.username ?
+								`/profile/${profile.username}`
+							:	"/"
+						}
 						className="cursor-pointer">
 						<User className="mr-2 h-4 w-4" />
-						<span>{profile?.username ? "Profile" : "Complete profile"}</span>
+						<span>
+							{profile?.username ? "Profile" : "Complete profile"}
+						</span>
 					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />

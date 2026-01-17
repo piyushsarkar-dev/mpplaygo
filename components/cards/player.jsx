@@ -18,6 +18,17 @@ export default function Player() {
 	const [audioURL, setAudioURL] = useState("");
 	const [isLooping, setIsLooping] = useState(false);
 	const { music, setMusic, current, setCurrent } = useMusicProvider();
+	const userInitiatedRef = useRef(false);
+	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
+
+	useEffect(() => {
+		try {
+			userInitiatedRef.current =
+				sessionStorage.getItem(USER_PLAY_KEY) === "true";
+		} catch {
+			userInitiatedRef.current = false;
+		}
+	}, []);
 
 	const getSong = async () => {
 		const get = await getSongsById(music);
@@ -41,13 +52,25 @@ export default function Player() {
 		)}`;
 	};
 
-	const togglePlayPause = () => {
+	const togglePlayPause = async () => {
+		if (!audioRef.current) return;
 		if (playing) {
 			audioRef.current.pause();
-		} else {
-			audioRef.current.play();
+			localStorage.setItem("p", "false");
+			setPlaying(false);
+			return;
 		}
-		setPlaying(!playing);
+		try {
+			sessionStorage.setItem(USER_PLAY_KEY, "true");
+			userInitiatedRef.current = true;
+		} catch {}
+		localStorage.setItem("p", "true");
+		try {
+			await audioRef.current.play();
+			setPlaying(true);
+		} catch {
+			setPlaying(false);
+		}
 	};
 
 	const handleSeek = (e) => {
@@ -67,10 +90,11 @@ export default function Player() {
 			if (current) {
 				audioRef.current.currentTime = parseFloat(current + 1);
 			}
-			setPlaying(
-				(localStorage.getItem("p") == "true" && true) ||
-					(!localStorage.getItem("p") && true)
-			);
+			// Never autoplay on first website open. Only autoplay after a user action in this tab.
+			const shouldAutoPlay =
+				userInitiatedRef.current &&
+				localStorage.getItem("p") === "true";
+			setPlaying(Boolean(shouldAutoPlay));
 			const handleTimeUpdate = () => {
 				try {
 					setCurrentTime(audioRef.current.currentTime);
@@ -91,10 +115,22 @@ export default function Player() {
 			};
 		}
 	}, [music]);
+
+	useEffect(() => {
+		if (!audioRef.current) return;
+		if (!audioURL) return;
+		if (playing) {
+			audioRef.current.play().catch(() => setPlaying(false));
+		} else {
+			try {
+				audioRef.current.pause();
+			} catch {}
+		}
+	}, [audioURL, playing]);
 	return (
 		<main>
 			<audio
-				autoPlay={playing}
+				autoPlay={false}
 				onPlay={() => setPlaying(true)}
 				onPause={() => setPlaying(false)}
 				onLoadedData={() => setDuration(audioRef.current.duration)}
@@ -212,7 +248,8 @@ export default function Player() {
 							onClick={() => {
 								setMusic(null);
 								setCurrent(0);
-								localStorage.clear();
+								localStorage.removeItem("last-played");
+								localStorage.removeItem("p");
 								audioRef.current.currentTime = 0;
 								audioRef.current.src = null;
 								setAudioURL(null);

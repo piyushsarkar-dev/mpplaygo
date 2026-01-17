@@ -1,7 +1,7 @@
 "use client";
 
-import { CreatePlaylistModal } from "@/components/playlist/create-playlist-modal";
 import { EditProfileModal } from "@/components/auth/edit-profile-modal";
+import { CreatePlaylistModal } from "@/components/playlist/create-playlist-modal";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import { Globe, Lock, Play } from "lucide-react";
@@ -88,7 +88,9 @@ export default function ProfilePage({ params }) {
 					{isOwner && (
 						<div className="mt-4 flex justify-center md:justify-start">
 							<EditProfileModal>
-								<Button variant="secondary">Edit Profile</Button>
+								<Button variant="secondary">
+									Edit Profile
+								</Button>
 							</EditProfileModal>
 						</div>
 					)}
