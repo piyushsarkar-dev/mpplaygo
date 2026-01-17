@@ -1,7 +1,7 @@
+import { OnboardingModal } from "@/components/auth/onboarding-modal";
 import MusicProvider from "@/components/providers/music-provider";
 import SupabaseProvider from "@/components/providers/supabase-provider";
 import { ThemeProvider } from "@/components/theme-provider";
-import { OnboardingModal } from "@/components/auth/onboarding-modal";
 import { Outfit, Syne } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";

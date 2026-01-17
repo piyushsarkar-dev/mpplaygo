@@ -134,7 +134,9 @@ export default function PlaylistPage({ params }) {
 			toast.error("Failed to delete playlist");
 		} else {
 			toast.success("Playlist deleted");
-			router.push(`/profile/${encodeURIComponent(profile?.username || user?.user_metadata?.full_name || "")}`);
+			router.push(
+				`/profile/${encodeURIComponent(profile?.username || user?.user_metadata?.full_name || "")}`,
+			);
 		}
 	};
 
@@ -151,7 +153,11 @@ export default function PlaylistPage({ params }) {
 				.single();
 			if (error) throw error;
 			setPlaylist(data);
-			toast.success(nextValue ? "Playlist is now public" : "Playlist is now private");
+			toast.success(
+				nextValue ?
+					"Playlist is now public"
+				:	"Playlist is now private",
+			);
 		} catch (e) {
 			toast.error(e?.message || "Failed to update playlist");
 		} finally {
@@ -197,7 +203,11 @@ export default function PlaylistPage({ params }) {
 							variant="outline"
 							onClick={handleTogglePublic}
 							disabled={togglingPublic}>
-							{togglingPublic ? "Updating…" : playlist.is_public ? "Make private" : "Make public"}
+							{togglingPublic ?
+								"Updating…"
+							: playlist.is_public ?
+								"Make private"
+							:	"Make public"}
 						</Button>
 					)}
 					{canCopy && (

@@ -30,24 +30,34 @@ export default function AuthCodeErrorClient() {
 				<div className="mt-6 w-full max-w-2xl rounded-xl border border-white/10 bg-secondary/10 p-4">
 					<div className="text-sm">
 						<div className="text-muted-foreground">Error</div>
-						<div className="font-mono break-words">{error || "-"}</div>
+						<div className="font-mono break-words">
+							{error || "-"}
+						</div>
 					</div>
 					<div className="text-sm mt-3">
 						<div className="text-muted-foreground">Error code</div>
-						<div className="font-mono break-words">{errorCode || "-"}</div>
+						<div className="font-mono break-words">
+							{errorCode || "-"}
+						</div>
 					</div>
 					<div className="text-sm mt-3">
 						<div className="text-muted-foreground">Description</div>
-						<div className="font-mono break-words">{description || "-"}</div>
+						<div className="font-mono break-words">
+							{description || "-"}
+						</div>
 					</div>
 					{hint && (
-						<div className="text-sm mt-3 text-muted-foreground">{hint}</div>
+						<div className="text-sm mt-3 text-muted-foreground">
+							{hint}
+						</div>
 					)}
 				</div>
 			)}
 
 			<div className="mt-6 flex gap-3">
-				<Button asChild variant="secondary">
+				<Button
+					asChild
+					variant="secondary">
 					<Link href="/">Go home</Link>
 				</Button>
 				<Button asChild>

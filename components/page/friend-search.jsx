@@ -54,7 +54,9 @@ export default function FriendSearch({ className }) {
 	}, [query, supabase]);
 
 	return (
-		<div ref={wrapperRef} className={cn("relative w-full", className)}>
+		<div
+			ref={wrapperRef}
+			className={cn("relative w-full", className)}>
 			<Input
 				value={query}
 				onChange={(e) => {
@@ -89,14 +91,16 @@ export default function FriendSearch({ className }) {
 											src={
 												u.avatar_url ||
 												`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-													u.username
+													u.username,
 												)}`
 											}
 											alt={u.username}
 											className="h-full w-full object-cover"
 										/>
 									</div>
-									<div className="text-sm font-medium truncate">@{u.username}</div>
+									<div className="text-sm font-medium truncate">
+										@{u.username}
+									</div>
 								</Link>
 							))}
 						</div>

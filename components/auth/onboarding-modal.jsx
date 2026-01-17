@@ -29,7 +29,8 @@ function getAuthProvider(user) {
 }
 
 export function OnboardingModal() {
-	const { supabase, user, profile, isLoading, refreshProfile } = useSupabase();
+	const { supabase, user, profile, isLoading, refreshProfile } =
+		useSupabase();
 
 	const provider = useMemo(() => getAuthProvider(user), [user]);
 	const requiresFullName = provider === "email";
@@ -39,7 +40,8 @@ export function OnboardingModal() {
 		if (isLoading) return false;
 		if (!profile) return true;
 		const missingUsername = !profile?.username;
-		const missingGender = profile?.gender == null || String(profile.gender).trim() === "";
+		const missingGender =
+			profile?.gender == null || String(profile.gender).trim() === "";
 		return missingUsername || missingGender;
 	}, [user, isLoading, profile]);
 
@@ -51,18 +53,35 @@ export function OnboardingModal() {
 	const [fullName, setFullName] = useState("");
 	const [username, setUsername] = useState("");
 	const [gender, setGender] = useState("");
+	const didPrefillRef = useRef(false);
 
 	useEffect(() => {
 		if (!open) return;
 		if (profile?.username && !username) setUsername(profile.username);
 		if (profile?.gender && !gender) setGender(profile.gender);
-		if (requiresFullName && !fullName) {
+
+		if (!fullName) {
 			const initial =
 				profile?.full_name ||
 				user?.user_metadata?.full_name ||
+				user?.user_metadata?.name ||
 				user?.email?.split("@")[0] ||
 				"";
 			setFullName(String(initial || ""));
+		}
+
+		// Prefill a *suggested* username (still editable) when empty.
+		if (!didPrefillRef.current && !profile?.username && !username) {
+			const base =
+				user?.user_metadata?.preferred_username ||
+				user?.user_metadata?.user_name ||
+				user?.user_metadata?.full_name ||
+				user?.user_metadata?.name ||
+				user?.email?.split("@")[0] ||
+				"";
+			const suggested = normalizeUsername(base);
+			if (suggested && suggested.length >= 3) setUsername(suggested);
+			didPrefillRef.current = true;
 		}
 	}, [open, profile, user, requiresFullName, username, gender, fullName]);
 
@@ -71,7 +90,10 @@ export function OnboardingModal() {
 	const [suggestions, setSuggestions] = useState([]);
 	const lastCheckRef = useRef(0);
 
-	const normalizedUsername = useMemo(() => normalizeUsername(username), [username]);
+	const normalizedUsername = useMemo(
+		() => normalizeUsername(username),
+		[username],
+	);
 
 	useEffect(() => {
 		if (!open) return;
@@ -111,8 +133,12 @@ export function OnboardingModal() {
 						const n = i + 1;
 						return `${base}${n}`;
 					});
-					candidates.push(`${base}_${Math.floor(100 + Math.random() * 900)}`);
-					candidates.push(`${base}${Math.floor(10 + Math.random() * 90)}`);
+					candidates.push(
+						`${base}_${Math.floor(100 + Math.random() * 900)}`,
+					);
+					candidates.push(
+						`${base}${Math.floor(10 + Math.random() * 90)}`,
+					);
 
 					const uniq = Array.from(new Set(candidates)).slice(0, 10);
 					const { data: existing } = await supabase
@@ -121,8 +147,12 @@ export function OnboardingModal() {
 						.in("username", uniq);
 
 					if (lastCheckRef.current !== startedAt) return;
-					const taken = new Set((existing || []).map((x) => x.username));
-					setSuggestions(uniq.filter((u) => !taken.has(u)).slice(0, 4));
+					const taken = new Set(
+						(existing || []).map((x) => x.username),
+					);
+					setSuggestions(
+						uniq.filter((u) => !taken.has(u)).slice(0, 4),
+					);
 				}
 			} finally {
 				if (lastCheckRef.current === startedAt) setChecking(false);
@@ -141,7 +171,14 @@ export function OnboardingModal() {
 		if (!gender) return false;
 		if (requiresFullName && !String(fullName).trim()) return false;
 		return true;
-	}, [user, normalizedUsername, isAvailable, gender, requiresFullName, fullName]);
+	}, [
+		user,
+		normalizedUsername,
+		isAvailable,
+		gender,
+		requiresFullName,
+		fullName,
+	]);
 
 	const handleSubmit = async (e) => {
 		e?.preventDefault?.();
@@ -153,7 +190,8 @@ export function OnboardingModal() {
 				username: normalizedUsername,
 				gender,
 			};
-			if (requiresFullName) payload.full_name = String(fullName).trim();
+			const trimmedFullName = String(fullName || "").trim();
+			if (trimmedFullName) payload.full_name = trimmedFullName;
 
 			let { error } = await supabase
 				.from("profiles")
@@ -163,14 +201,17 @@ export function OnboardingModal() {
 			if (error) {
 				// If the DB schema doesn't have gender/full_name yet, fallback to username-only
 				const msg = String(error.message || "");
-				if (msg.includes("column") && (msg.includes("gender") || msg.includes("full_name"))) {
+				if (
+					msg.includes("column") &&
+					(msg.includes("gender") || msg.includes("full_name"))
+				) {
 					const fallback = await supabase
 						.from("profiles")
 						.update({ username: normalizedUsername })
 						.eq("id", user.id);
 					if (fallback.error) throw fallback.error;
 					toast.warning(
-						"Saved username, but your profiles table is missing gender/full_name columns. Update your DB schema to finish onboarding."
+						"Saved username, but your profiles table is missing gender/full_name columns. Update your DB schema to finish onboarding.",
 					);
 				} else {
 					throw error;
@@ -211,26 +252,30 @@ export function OnboardingModal() {
 				<DialogHeader>
 					<DialogTitle>Finish setting up your profile</DialogTitle>
 					<DialogDescription>
-						Pick a unique username and your gender to continue.
+						Pick a unique username and tell us a bit about you.
 					</DialogDescription>
 				</DialogHeader>
 
-				<form onSubmit={handleSubmit} className="grid gap-4">
-					{requiresFullName && (
-						<div className="grid gap-2">
-							<label className="text-sm text-muted-foreground">Full name</label>
-							<Input
-								value={fullName}
-								onChange={(e) => setFullName(e.target.value)}
-								placeholder="Your name"
-								disabled={saving}
-								required
-							/>
-						</div>
-					)}
+				<form
+					onSubmit={handleSubmit}
+					className="grid gap-4">
+					<div className="grid gap-2">
+						<label className="text-sm text-muted-foreground">
+							Full name
+						</label>
+						<Input
+							value={fullName}
+							onChange={(e) => setFullName(e.target.value)}
+							placeholder="Your name"
+							disabled={saving}
+							required={requiresFullName}
+						/>
+					</div>
 
 					<div className="grid gap-2">
-						<label className="text-sm text-muted-foreground">Username</label>
+						<label className="text-sm text-muted-foreground">
+							Username
+						</label>
 						<Input
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
@@ -240,11 +285,18 @@ export function OnboardingModal() {
 						/>
 						<div className="text-xs text-muted-foreground">
 							<span>Will be saved as </span>
-							<span className="font-mono">{normalizedUsername || "-"}</span>
+							<span className="font-mono">
+								{normalizedUsername || "-"}
+							</span>
 							{checking && <span> · Checking…</span>}
-							{!checking && isAvailable === true && normalizedUsername.length >= 3 && (
-								<span className="text-emerald-500"> · Available</span>
-							)}
+							{!checking &&
+								isAvailable === true &&
+								normalizedUsername.length >= 3 && (
+									<span className="text-emerald-500">
+										{" "}
+										· Available
+									</span>
+								)}
 							{!checking && isAvailable === false && (
 								<span className="text-red-500"> · Taken</span>
 							)}
@@ -253,7 +305,9 @@ export function OnboardingModal() {
 
 					{isAvailable === false && suggestions.length > 0 && (
 						<div className="grid gap-2">
-							<div className="text-xs text-muted-foreground">Suggestions</div>
+							<div className="text-xs text-muted-foreground">
+								Suggestions
+							</div>
 							<div className="flex flex-wrap gap-2">
 								{suggestions.map((s) => (
 									<Button
@@ -270,13 +324,17 @@ export function OnboardingModal() {
 					)}
 
 					<div className="grid gap-2">
-						<label className="text-sm text-muted-foreground">Gender</label>
+						<label className="text-sm text-muted-foreground">
+							Gender
+						</label>
 						<div className="flex gap-2">
 							{["male", "female", "other"].map((g) => (
 								<Button
 									key={g}
 									type="button"
-									variant={gender === g ? "default" : "secondary"}
+									variant={
+										gender === g ? "default" : "secondary"
+									}
 									onClick={() => setGender(g)}
 									disabled={saving}
 									className="capitalize">
@@ -286,7 +344,9 @@ export function OnboardingModal() {
 						</div>
 					</div>
 
-					<Button type="submit" disabled={!canSubmit || saving}>
+					<Button
+						type="submit"
+						disabled={!canSubmit || saving}>
 						{saving ? "Saving…" : "Continue"}
 					</Button>
 				</form>

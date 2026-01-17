@@ -1,8 +1,8 @@
 "use client";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { UserProfileDropdown } from "@/components/auth/user-profile-dropdown";
-import { useSupabase } from "@/components/providers/supabase-provider";
 import FriendSearch from "@/components/page/friend-search";
+import { useSupabase } from "@/components/providers/supabase-provider";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
