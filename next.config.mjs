@@ -8,6 +8,35 @@ Legal Disclaimer:
 */
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+	images: {
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "lh3.googleusercontent.com",
+			},
+			{
+				protocol: "https",
+				hostname: "avatars.githubusercontent.com",
+			},
+			{
+				protocol: "https",
+				hostname: "api.dicebear.com",
+			},
+			{
+				protocol: "https",
+				hostname: "saavn.cdn.sg.ln.is",
+			},
+			{
+				protocol: "https",
+				hostname: "c.saavncdn.com",
+			},
+			{
+				protocol: "https",
+				hostname: "az-avatar.vercel.app",
+			},
+		],
+	},
+};
 
 export default nextConfig;

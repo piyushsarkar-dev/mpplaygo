@@ -6,10 +6,10 @@
 	"license": "MIT",
 	"homepage": "https://github.com/piyushsarkar-dev/mpplaygo",
 	"scripts": {
-		"dev": "next dev",
-		"build": "next build",
-		"start": "next start",
-		"lint": "next lint",
+		"dev": "node ./node_modules/next/dist/bin/next dev",
+		"build": "node ./node_modules/next/dist/bin/next build",
+		"start": "node ./node_modules/next/dist/bin/next start",
+		"lint": "node ./node_modules/next/dist/bin/next lint",
 		"icons:generate": "node scripts/generate-icons.mjs --source public/favi-icon.png",
 		"icons:verify": "node scripts/generate-icons.mjs --source public/favi-icon.png --verify"
 	},
@@ -21,6 +21,8 @@
 		"@radix-ui/react-slider": "^1.1.2",
 		"@radix-ui/react-slot": "^1.0.2",
 		"@radix-ui/react-tooltip": "^1.0.7",
+		"@supabase/ssr": "^0.8.0",
+		"@supabase/supabase-js": "^2.90.1",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.1.0",
 		"cmdk": "1.0.0",
