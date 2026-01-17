@@ -68,7 +68,15 @@ export default function ProfilePage({ params }) {
 					/>
 				</div>
 				<div className="text-center md:text-left pt-2">
-					<h1 className="text-3xl font-bold">{profile.username}</h1>
+					<h1 className="text-3xl font-bold">
+						{profile.full_name || profile.username}
+					</h1>
+					<p className="text-muted-foreground">@{profile.username}</p>
+					{profile.gender && (
+						<p className="text-xs text-muted-foreground mt-1 capitalize">
+							Gender: {profile.gender}
+						</p>
+					)}
 					{isOwner && (
 						<p className="text-muted-foreground">{profile.email}</p>
 					)}

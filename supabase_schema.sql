@@ -2,6 +2,8 @@
 create table profiles (
   id uuid references auth.users not null primary key,
   username text unique,
+  full_name text,
+  gender text,
   email text,
   avatar_url text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -108,8 +110,8 @@ create policy "Users can insert their own history." on user_history
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, username, email, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.email, new.raw_user_meta_data->>'avatar_url');
+  insert into public.profiles (id, username, full_name, email, avatar_url)
+  values (new.id, null, new.raw_user_meta_data->>'full_name', new.email, new.raw_user_meta_data->>'avatar_url');
   return new;
 end;
 $$ language plpgsql security definer;

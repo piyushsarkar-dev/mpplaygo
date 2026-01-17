@@ -15,9 +15,36 @@ export default function SupabaseProvider({ children }) {
   );
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    let cancelled = false;
+
+    const hydrate = async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (cancelled) return;
+        if (error) {
+          setUser(null);
+          setProfile(null);
+          return;
+        }
+
+        const nextUser = data?.user ?? null;
+        setUser(nextUser);
+        if (nextUser) {
+          await fetchProfile(nextUser.id);
+        } else {
+          setProfile(null);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    hydrate();
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -32,6 +59,7 @@ export default function SupabaseProvider({ children }) {
     });
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
     };
   }, [router, supabase]);
@@ -45,8 +73,13 @@ export default function SupabaseProvider({ children }) {
     if (data) setProfile(data);
   };
 
+  const refreshProfile = async () => {
+    if (!user?.id) return;
+    await fetchProfile(user.id);
+  };
+
   return (
-    <Context.Provider value={{ supabase, user, profile }}>
+    <Context.Provider value={{ supabase, user, profile, isLoading, refreshProfile, setProfile }}>
       {children}
     </Context.Provider>
   );

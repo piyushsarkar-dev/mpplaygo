@@ -10,10 +10,12 @@ import { toast } from "sonner";
 
 export default function PlaylistPage({ params }) {
 	const { id } = params;
-	const { supabase, user } = useSupabase();
+	const { supabase, user, profile } = useSupabase();
 	const [playlist, setPlaylist] = useState(null);
 	const [songs, setSongs] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [copying, setCopying] = useState(false);
+	const [togglingPublic, setTogglingPublic] = useState(false);
 	const router = useRouter();
 	const musicContext = useContext(MusicContext);
 
@@ -56,6 +58,51 @@ export default function PlaylistPage({ params }) {
 		);
 
 	const isOwner = user?.id === playlist.user_id;
+	const canCopy = Boolean(user && !isOwner && playlist?.is_public);
+
+	const handleCopyPlaylist = async () => {
+		if (!user) {
+			toast.error("You must be logged in");
+			return;
+		}
+		if (!playlist?.is_public) return;
+
+		setCopying(true);
+		try {
+			const { data: newPlaylist, error: playlistError } = await supabase
+				.from("playlists")
+				.insert({
+					user_id: user.id,
+					name: `Copy of ${playlist.name}`,
+					is_public: false,
+				})
+				.select("*")
+				.single();
+
+			if (playlistError) throw playlistError;
+
+			if (songs.length > 0) {
+				const rows = songs.map((s) => ({
+					playlist_id: newPlaylist.id,
+					song_id: s.song_id,
+					song_title: s.song_title,
+					artist: s.artist,
+					thumbnail: s.thumbnail,
+				}));
+				const { error: songsError } = await supabase
+					.from("playlist_songs")
+					.insert(rows);
+				if (songsError) throw songsError;
+			}
+
+			toast.success("Playlist copied to your account");
+			router.push(`/playlist/${newPlaylist.id}`);
+		} catch (e) {
+			toast.error(e?.message || "Failed to copy playlist");
+		} finally {
+			setCopying(false);
+		}
+	};
 
 	const handlePlaySong = (songId) => {
 		musicContext.setMusic(songId);
@@ -87,7 +134,28 @@ export default function PlaylistPage({ params }) {
 			toast.error("Failed to delete playlist");
 		} else {
 			toast.success("Playlist deleted");
-			router.push(`/profile/${user.user_metadata.full_name}`);
+			router.push(`/profile/${encodeURIComponent(profile?.username || user?.user_metadata?.full_name || "")}`);
+		}
+	};
+
+	const handleTogglePublic = async () => {
+		if (!isOwner) return;
+		setTogglingPublic(true);
+		try {
+			const nextValue = !playlist.is_public;
+			const { data, error } = await supabase
+				.from("playlists")
+				.update({ is_public: nextValue })
+				.eq("id", playlist.id)
+				.select("*, profiles(username)")
+				.single();
+			if (error) throw error;
+			setPlaylist(data);
+			toast.success(nextValue ? "Playlist is now public" : "Playlist is now private");
+		} catch (e) {
+			toast.error(e?.message || "Failed to update playlist");
+		} finally {
+			setTogglingPublic(false);
 		}
 	};
 
@@ -124,6 +192,22 @@ export default function PlaylistPage({ params }) {
 						:	<Lock className="h-3 w-3" />}
 						<span>{playlist.is_public ? "Public" : "Private"}</span>
 					</div>
+					{isOwner && (
+						<Button
+							variant="outline"
+							onClick={handleTogglePublic}
+							disabled={togglingPublic}>
+							{togglingPublic ? "Updating…" : playlist.is_public ? "Make private" : "Make public"}
+						</Button>
+					)}
+					{canCopy && (
+						<Button
+							variant="secondary"
+							onClick={handleCopyPlaylist}
+							disabled={copying}>
+							{copying ? "Copying…" : "Copy playlist"}
+						</Button>
+					)}
 				</div>
 				{isOwner && (
 					<Button

@@ -2,6 +2,7 @@
 import { AuthModal } from "@/components/auth/auth-modal";
 import { UserProfileDropdown } from "@/components/auth/user-profile-dropdown";
 import { useSupabase } from "@/components/providers/supabase-provider";
+import FriendSearch from "@/components/page/friend-search";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -38,8 +39,11 @@ export default function Header() {
 						</Button>
 					</div>
 				}
-				<div className="hidden sm:flex items-center gap-3 w-full max-w-md">
-					<Search />
+				<div className="hidden sm:flex items-center gap-3 w-full max-w-2xl">
+					<div className="flex-1">
+						<Search />
+					</div>
+					<FriendSearch className="flex-1" />
 					{path != "/" && (
 						<Button
 							className="h-10 px-3"

@@ -34,7 +34,6 @@ export function AuthModal({ children }) {
 					password,
 					options: {
 						data: {
-							full_name: email.split("@")[0],
 							avatar_url: `https://api.dicebear.com/7.x/miniavs/svg?seed=${email}`,
 						},
 					},
