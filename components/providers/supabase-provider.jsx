@@ -10,7 +10,8 @@ export default function SupabaseProvider({ children }) {
 	const [supabase] = useState(() =>
 		createBrowserClient(
 			process.env.NEXT_PUBLIC_SUPABASE_URL,
-			process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+			process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN ??
+				process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 		),
 	);
 	const [user, setUser] = useState(null);
