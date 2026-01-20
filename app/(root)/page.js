@@ -370,7 +370,7 @@ export default function Page() {
 					{feed.map((song, i) => (
 						<div
 							key={`${song.id}-${i}`}
-							className=" bg-red-500 transition-transform hover:scale-[1.02] origin-top">
+							className=" transition-transform hover:scale-[1.02] origin-top">
 							<SongCard
 								item={song}
 								id={song.id}
@@ -378,7 +378,7 @@ export default function Page() {
 								title={song.name}
 								artist={song.artists?.primary?.[0]?.name}
 								className="w-full"
-								imageClassName="h-[210px]"
+								imageClassName="h-[300px]"
 							/>
 						</div>
 					))}
