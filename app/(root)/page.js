@@ -13,6 +13,9 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import RecentPlayedCarousel from "@/components/home/recent-played-carousel";
+import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
+
 export default function Page() {
 	const PAGE_SIZE = 30;
 	const [latest, setLatest] = useState([]);
@@ -33,7 +36,13 @@ export default function Page() {
 	useEffect(() => {
 		const fetchRecommendations = async () => {
 			if (!user) {
-				setRecommended([]);
+				// Not logged in: Fetch generic recommendations (e.g. "Trending" or "Hindi" or "English" hits)
+				// Using "Trending" or a default query
+				const get = await getSongsByQuery("Global Hits");
+				const data = await get.json();
+				if (data.data && data.data.results) {
+					setRecommended(data.data.results);
+				}
 				setHistorySongs([]);
 				return;
 			}
@@ -48,20 +57,52 @@ export default function Page() {
 			if (history && history.length > 0) {
 				const uniqueHistory = [];
 				const seenIds = new Set();
+				const idsToFetch = [];
+
 				history.forEach((h) => {
 					if (!seenIds.has(h.song_id)) {
 						seenIds.add(h.song_id);
+						idsToFetch.push(h.song_id);
 						uniqueHistory.push({
 							id: h.song_id,
 							name: h.song_title,
-							artist: h.artist,
-							image: h.thumbnail, // Assuming thumbnail is array or url
+							artist: h.artist, // artist might be missing in history table, so we need fetch
+							image: h.thumbnail, // thumbnail is likely missing based on schema
 						});
 					}
 				});
-				setHistorySongs(uniqueHistory);
 
-				// Existing Logic for Recommendations
+				// Fetch full details for images if possible
+				// Since getSongsById takes a single ID, we loop or Promise.all.
+				// Optimization: Slice to top 10 to avoid too many requests.
+				const topIds = idsToFetch.slice(0, 10);
+				try {
+					const promises = topIds.map((id) =>
+						getSongsById(id)
+							.then((r) => r.json())
+							.catch(() => null),
+					);
+					const results = await Promise.all(promises);
+
+					const enrichedHistory = results
+						.map((r) => {
+							if (r && r.data && r.data[0]) return r.data[0];
+							return null;
+						})
+						.filter(Boolean);
+
+					if (enrichedHistory.length > 0) {
+						setHistorySongs(enrichedHistory);
+					} else {
+						// Fallback if fetch fails (use stored data but missing image)
+						setHistorySongs(uniqueHistory);
+					}
+				} catch (e) {
+					console.error("Error fetching history details", e);
+					setHistorySongs(uniqueHistory);
+				}
+
+				// Recommendations Logic
 				const langCounts = {};
 				history.forEach((h) => {
 					if (h.language)
@@ -69,9 +110,12 @@ export default function Page() {
 							(langCounts[h.language] || 0) + 1;
 				});
 
-				const favoriteLang = Object.keys(langCounts).reduce((a, b) =>
-					langCounts[a] > langCounts[b] ? a : b,
-				);
+				let favoriteLang = "English";
+				if (Object.keys(langCounts).length > 0) {
+					favoriteLang = Object.keys(langCounts).reduce((a, b) =>
+						langCounts[a] > langCounts[b] ? a : b,
+					);
+				}
 
 				if (favoriteLang) {
 					const get = await getSongsByQuery(
@@ -81,10 +125,16 @@ export default function Page() {
 					if (data.data && data.data.results)
 						setRecommended(data.data.results);
 				}
+			} else {
+				// User logged in but no history
+				const get = await getSongsByQuery("Trending");
+				const data = await get.json();
+				if (data.data && data.data.results)
+					setRecommended(data.data.results);
 			}
 		};
 
-		if (user) fetchRecommendations();
+		if (user !== undefined) fetchRecommendations(); // Run even if user is null (for guest mode)
 	}, [user, supabase]);
 
 	const feedPageRef = useRef(1);
@@ -226,66 +276,17 @@ export default function Page() {
 	});
 
 	return (
-		<main className="flex flex-col gap-12 w-full pt-6">
-			{/* 1. Recent Plays - Prominent Horizontal Cards */}
-			{user && historySongs.length > 0 && (
-				<section>
-					<div className="flex items-center justify-between mb-4 px-1">
-						<h2 className="text-2xl font-bold text-white">
-							Recent Plays
-						</h2>
-					</div>
-					<ScrollArea className="w-full whitespace-nowrap pb-4">
-						<div className="flex w-max space-x-6">
-							{historySongs.map((song) => (
-								<div
-									key={song.id}
-									className="w-[300px] h-[300px] relative group transition-transform hover:scale-[1.02]">
-									{/* Custom Card for Recent Plays to match screenshot large style */}
-									<div className="overflow-hidden rounded-3xl w-full h-full relative cursor-pointer shadow-lg bg-zinc-900 border border-white/5">
-										{/* Song Image Background */}
-										<img
-											src={
-												song.image?.[2]?.url ||
-												song.image?.[1]?.url ||
-												(Array.isArray(song.image) ?
-													song.image[0]
-												:	song.image) ||
-												""
-											}
-											alt={song.name}
-											className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-500"
-										/>
-										{/* Overlay Content */}
-										<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-6">
-											<h3 className="text-2xl font-bold text-white truncate drop-shadow-md">
-												{song.name}
-											</h3>
-											<p className="text-white/80 font-medium truncate drop-shadow-md">
-												{song.artist}
-											</p>
-										</div>
-										{/* Play Button Overlay */}
-										<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 bg-black/20 backdrop-blur-[2px]">
-											<div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-xl transform scale-75 group-hover:scale-100 transition">
-												<svg
-													className="w-6 h-6 text-black fill-current ml-1"
-													viewBox="0 0 24 24">
-													<path d="M8 5v14l11-7z" />
-												</svg>
-											</div>
-										</div>
-									</div>
-								</div>
-							))}
-						</div>
-						<ScrollBar
-							orientation="horizontal"
-							className="hidden"
-						/>
-					</ScrollArea>
-				</section>
-			)}
+		<main className="flex flex-col gap-8 w-full pt-32 pb-32">
+			{/* Carousel Section: History or Recommendations */}
+			<div className="w-full min-h-[400px]">
+				{user && historySongs.length > 0 ?
+					<RecentPlayedCarousel songs={historySongs} />
+				:	<RecentPlayedCarousel
+						songs={recommended}
+						title="Recommended For You"
+					/>
+				}
+			</div>
 
 			{/* 2. Popular Artists - Circular Row */}
 			<section>

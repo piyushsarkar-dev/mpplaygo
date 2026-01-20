@@ -58,17 +58,17 @@ export default function FriendSearch({ className }) {
 			ref={wrapperRef}
 			className={cn("relative w-full max-w-[280px]", className)}>
 			<div className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-2xl transition-all duration-300 overflow-hidden h-12">
-                <Input
-                    value={query}
-                    onChange={(e) => {
-                        setQuery(e.target.value);
-                        setOpen(true);
-                    }}
-                    onFocus={() => setOpen(true)}
-                    placeholder="Search friends"
-                    autoComplete="off"
-                    className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
-                />
+				<Input
+					value={query}
+					onChange={(e) => {
+						setQuery(e.target.value);
+						setOpen(true);
+					}}
+					onFocus={() => setOpen(true)}
+					placeholder="Search friends"
+					autoComplete="off"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
+				/>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="20"
@@ -80,10 +80,14 @@ export default function FriendSearch({ className }) {
 					strokeLinecap="round"
 					strokeLinejoin="round"
 					className="mr-4 text-white/40 group-focus-within:text-white transition-colors shrink-0">
-					<circle cx="11" cy="11" r="8" />
+					<circle
+						cx="11"
+						cy="11"
+						r="8"
+					/>
 					<path d="m21 21-4.3-4.3" />
 				</svg>
-            </div>
+			</div>
 
 			{open && (loading || results.length > 0) && (
 				<div className="absolute top-full right-0 mt-3 w-[320px] bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
