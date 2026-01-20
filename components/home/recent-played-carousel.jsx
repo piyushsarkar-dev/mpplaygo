@@ -22,31 +22,37 @@ export default function RecentPlayedCarousel({
 		setActiveIndex((prev) => (prev - 1 + songs.length) % songs.length);
 	};
 
-	// Determine the input range to display
-	// We want to show a center item, and maybe 2 on left, 2 on right.
-	// If items < 5, handling might be tricky with this logic, but let's assume > 5 or duplicate.
-	// Ideally we repeat items if fewer than 5.
-
+	// Ensure we have enough items to show a full 7-card stack (-3..3)
 	const validSongs =
-		songs.length < 5 ? [...songs, ...songs, ...songs].slice(0, 10) : songs;
+		songs.length < 7 ? [...songs, ...songs, ...songs].slice(0, 14) : songs;
 
 	return (
-		<div className="w-full py-8 flex flex-col items-center overflow-hidden">
-			<div className="w-full max-w-[1700px] px-8 md:px-12 mb-6 flex items-center justify-between">
+		<div className="w-full pt-2 pb-3 flex flex-col items-center overflow-hidden">
+			<div className="w-full max-w-[1700px] px-8 md:px-12  md:mb-4 flex items-center justify-between">
 				<h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-white">
 					{title} <ArrowRight className="w-5 h-5 opacity-70" />
 				</h2>
 			</div>
 
-			<div className="relative w-full max-w-6xl h-[350px] md:h-[450px] flex items-center justify-center perspective-1000">
+			<div
+				className="relative w-full max-w-6xl h-[320px] md:h-[420px] flex items-center justify-center perspective-1000"
+				role="region"
+				aria-label={`${title} carousel`}
+				tabIndex={0}
+				onKeyDown={(e) => {
+					if (e.key === "ArrowLeft") handlePrev();
+					if (e.key === "ArrowRight") handleNext();
+				}}>
 				{/* Navigation Buttons */}
 				<button
 					onClick={handlePrev}
+					aria-label="Previous"
 					className="absolute left-4 md:left-0 z-50 p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
 					<ChevronLeft className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
 				</button>
 				<button
 					onClick={handleNext}
+					aria-label="Next"
 					className="absolute right-4 md:right-0 z-50 p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
 					<ChevronRight className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
 				</button>
@@ -60,8 +66,8 @@ export default function RecentPlayedCarousel({
 					if (diff > total / 2) diff -= total;
 					if (diff < -total / 2) diff += total;
 
-					// Only render if within visible range (e.g. -2 to 2)
-					if (Math.abs(diff) > 2) return null;
+					// Only render if within visible range (-3..3) => 7 cards
+					if (Math.abs(diff) > 3) return null;
 
 					// Determine styles based on diff
 					// 0 = Center
@@ -69,10 +75,12 @@ export default function RecentPlayedCarousel({
 					// -2, 2 = Far Side
 
 					const isCenter = diff === 0;
+					const absDiff = Math.abs(diff);
 					const brightness =
-						isCenter ? 1
-						: diff === 0 ? 1
-						: 0.4;
+						absDiff === 0 ? 1
+						: absDiff === 1 ? 0.72
+						: absDiff === 2 ? 0.5
+						: 0.35;
 
 					let xTranslate = "0%";
 					let scale = 1;
@@ -85,25 +93,35 @@ export default function RecentPlayedCarousel({
 						zIndex = 50;
 						rotateY = "0deg";
 					} else if (diff === 1) {
-						xTranslate = "65%";
+						xTranslate = "60%";
 						scale = 0.9;
 						zIndex = 40;
 						rotateY = "-10deg"; // rotated away
 					} else if (diff === -1) {
-						xTranslate = "-65%";
+						xTranslate = "-60%";
 						scale = 0.9;
 						zIndex = 40;
 						rotateY = "10deg";
 					} else if (diff === 2) {
-						xTranslate = "110%";
+						xTranslate = "105%";
 						scale = 0.75;
 						zIndex = 30;
 						rotateY = "-20deg";
 					} else if (diff === -2) {
-						xTranslate = "-110%";
+						xTranslate = "-105%";
 						scale = 0.75;
 						zIndex = 30;
 						rotateY = "20deg";
+					} else if (diff === 3) {
+						xTranslate = "145%";
+						scale = 0.62;
+						zIndex = 20;
+						rotateY = "-28deg";
+					} else if (diff === -3) {
+						xTranslate = "-145%";
+						scale = 0.62;
+						zIndex = 20;
+						rotateY = "28deg";
 					}
 
 					return (
@@ -123,8 +141,8 @@ export default function RecentPlayedCarousel({
 							style={{
 								transform: `translateX(${xTranslate}) scale(${scale}) perspective(1000px) rotateY(${rotateY})`,
 								zIndex: zIndex,
-								opacity: Math.abs(diff) > 2 ? 0 : 1,
-								filter: `brightness(${isCenter ? 1 : 0.5})`,
+								opacity: Math.abs(diff) > 3 ? 0 : 1,
+								filter: `brightness(${brightness})`,
 							}}>
 							{/* Image */}
 							<div className="relative w-full h-full">
