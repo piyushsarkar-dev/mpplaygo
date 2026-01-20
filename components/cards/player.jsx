@@ -1,7 +1,8 @@
 "use client";
+import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { useMusicProvider } from "@/hooks/use-context";
 import { getSongsById } from "@/lib/fetch";
-import { Download, Play, Repeat, Repeat1, X } from "lucide-react";
+import { Download, Heart, Play, SkipBack, SkipForward, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IoPause } from "react-icons/io5";
@@ -10,7 +11,7 @@ import { Skeleton } from "../ui/skeleton";
 import { Slider } from "../ui/slider";
 
 export default function Player() {
-	const [data, setData] = useState([]);
+	const [data, setData] = useState({});
 	const [playing, setPlaying] = useState(false);
 	const audioRef = useRef(null);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -48,7 +49,7 @@ export default function Player() {
 		const seconds = Math.floor(time % 60);
 		return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
 			2,
-			"0"
+			"0",
 		)}`;
 	};
 
@@ -109,7 +110,7 @@ export default function Player() {
 				if (audioRef.current) {
 					audioRef.current.removeEventListener(
 						"timeupdate",
-						handleTimeUpdate
+						handleTimeUpdate,
 					);
 				}
 			};
@@ -127,8 +128,12 @@ export default function Player() {
 			} catch {}
 		}
 	}, [audioURL, playing]);
+
+	// UI Redesign: Floating Glassmorphism Player
+	if (!music) return <audio ref={audioRef} />;
+
 	return (
-		<main>
+		<main className="w-full">
 			<audio
 				autoPlay={false}
 				onPlay={() => setPlaying(true)}
@@ -136,129 +141,152 @@ export default function Player() {
 				onLoadedData={() => setDuration(audioRef.current.duration)}
 				src={audioURL}
 				ref={audioRef}></audio>
-			{music && (
-				<div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between bg-black border-t border-white/10 px-4 py-3 h-[90px]">
-					{/* Left: Song Info */}
-					<div className="flex items-center gap-4 w-[30%] min-w-[200px]">
-						<div className="relative group">
-							<img
-								src={data.image ? data?.image[1]?.url : ""}
-								alt={data?.name}
-								className="rounded-md h-14 w-14 bg-secondary object-cover shadow-lg"
-							/>
-						</div>
-						<div className="flex flex-col justify-center overflow-hidden">
-							{!data?.name ? (
-								<Skeleton className="h-4 w-32 mb-1" />
-							) : (
-								<Link
-									href={`/${music}`}
-									className="text-sm font-semibold truncate hover:underline text-white">
-									{data?.name}
-								</Link>
-							)}
-							{!data?.artists?.primary[0]?.name ? (
-								<Skeleton className="h-3 w-20" />
-							) : (
-								<span className="text-xs text-muted-foreground truncate hover:text-white cursor-pointer transition">
-									{data?.artists?.primary[0]?.name}
-								</span>
-							)}
-						</div>
+
+			<div className="w-full max-w-6xl mx-auto h-24 bg-black/60 backdrop-blur-xl border border-white/10 rounded-[2rem] flex items-center px-4 md:px-8 shadow-2xl relative overflow-hidden group">
+				{/* Background Blur Mesh (Optional aesthetic) */}
+				<div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
+
+				{/* Left: Song Info */}
+				<div className="flex items-center gap-4 w-[25%] min-w-[200px]">
+					<div className="h-16 w-16 rounded-xl overflow-hidden relative shrink-0 shadow-lg">
+						<img
+							src={data.image ? data?.image[1]?.url : ""}
+							alt={data?.name}
+							className="h-full w-full object-cover animate-spin-slow"
+							style={{
+								animationPlayState:
+									playing ? "running" : "paused",
+								animationDuration: "10s",
+							}}
+						/>
+					</div>
+					<div className="flex flex-col justify-center overflow-hidden">
+						{!data?.name ?
+							<Skeleton className="h-4 w-32 mb-1" />
+						:	<Link
+								href={`/${music}`}
+								className="text-white font-bold truncate text-base hover:underline shadow-black drop-shadow-md">
+								{data?.name}
+							</Link>
+						}
+						{!data?.artists?.primary[0]?.name ?
+							<Skeleton className="h-3 w-20" />
+						:	<span className="text-white/60 text-sm truncate hover:text-white cursor-pointer transition">
+								{data?.artists?.primary[0]?.name}
+							</span>
+						}
+					</div>
+				</div>
+
+				{/* Center: Controls & Progress */}
+				<div className="flex-1 flex flex-col items-center justify-center gap-2 max-w-[50%] mx-auto">
+					<div className="flex items-center gap-6">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="text-white/70 hover:text-white"
+							onClick={() => {
+								if (audioRef.current)
+									audioRef.current.currentTime -= 10;
+							}}>
+							<SkipBack className="w-6 h-6 fill-white/20" />
+						</Button>
+
+						<button
+							className="h-12 w-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition active:scale-95 shadow-lg shadow-white/20"
+							onClick={togglePlayPause}>
+							{playing ?
+								<IoPause className="h-5 w-5" />
+							:	<Play className="h-5 w-5 ml-1" />}
+						</button>
+
+						<Button
+							variant="ghost"
+							size="icon"
+							className="text-white/70 hover:text-white"
+							onClick={() => {
+								if (audioRef.current)
+									audioRef.current.currentTime += 10;
+							}}>
+							<SkipForward className="w-6 h-6 fill-white/20" />
+						</Button>
 					</div>
 
-					{/* Center: Controls & Progress */}
-					<div className="flex flex-col items-center max-w-[40%] w-full gap-2">
-						<div className="flex items-center gap-4">
+					<div className="flex items-center gap-3 w-full text-xs font-medium font-mono text-zinc-400">
+						<span className="w-10 text-right">
+							{formatTime(currentTime)}
+						</span>
+						<div className="flex-1">
+							{/* Using Slider as Progress Bar */}
+							{!duration ?
+								<Skeleton className="h-1 w-full" />
+							:	<Slider
+									thumbClassName="h-3 w-3 bg-white border-none opacity-0 group-hover:opacity-100 transition shadow-lg"
+									trackClassName="h-1 bg-white/20"
+									rangeClassName="bg-white group-hover:bg-primary transition shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+									onValueChange={handleSeek}
+									value={[currentTime]}
+									max={duration}
+									className="w-full group cursor-pointer"
+								/>
+							}
+						</div>
+						<span className="w-10 text-left">
+							{formatTime(duration)}
+						</span>
+					</div>
+				</div>
+
+				{/* Right: Actions */}
+				<div className="flex items-center justify-end gap-2 w-[25%] min-w-[150px]">
+					<AddToPlaylist
+						song={{
+							id: data.id,
+							title: data.name,
+							artist:
+								data.artist || data.artists?.primary?.[0]?.name,
+							image: data.image,
+						}}>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="text-white/60 hover:text-red-500 hover:bg-white/10 rounded-full transition-colors">
+							<Heart className="w-5 h-5" />
+						</Button>
+					</AddToPlaylist>
+
+					{audioURL && (
+						<a
+							href={audioURL}
+							download={`${data?.name || "song"}.m4a`}
+							target="_blank"
+							rel="noreferrer">
 							<Button
 								size="icon"
 								variant="ghost"
-								className={
-									!isLooping
-										? "text-muted-foreground hover:text-white"
-										: "text-primary hover:text-primary/80"
-								}
-								onClick={loopSong}>
-								{!isLooping ? (
-									<Repeat className="h-4 w-4" />
-								) : (
-									<Repeat1 className="h-4 w-4" />
-								)}
+								className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+								title="Download">
+								<Download className="w-5 h-5" />
 							</Button>
-
-							<Button
-								size="icon"
-								className="h-8 w-8 rounded-full bg-white text-black hover:scale-105 transition"
-								onClick={togglePlayPause}>
-								{playing ? (
-									<IoPause className="h-4 w-4" />
-								) : (
-									<Play className="h-4 w-4 ml-0.5" />
-								)}
-							</Button>
-						</div>
-
-						<div className="flex items-center gap-2 w-full max-w-md">
-							<span className="text-xs text-muted-foreground w-10 text-right">
-								{formatTime(currentTime)}
-							</span>
-							<div className="flex-1">
-								{/* Using Slider as Progress Bar */}
-								{!duration ? (
-									<Skeleton className="h-1 w-full" />
-								) : (
-									<Slider
-										thumbClassName="h-3 w-3 bg-white border-none opacity-0 group-hover:opacity-100 transition"
-										trackClassName="h-1 bg-white/20"
-										rangeClassName="bg-white group-hover:bg-primary transition"
-										onValueChange={handleSeek}
-										value={[currentTime]}
-										max={duration}
-										className="w-full group cursor-pointer"
-									/>
-								)}
-							</div>
-							<span className="text-xs text-muted-foreground w-10 text-left">
-								{formatTime(duration)}
-							</span>
-						</div>
-					</div>
-
-					{/* Right: Actions */}
-					<div className="flex items-center justify-end gap-2 w-[30%] min-w-[200px]">
-						{audioURL && (
-							<a
-								href={audioURL}
-								download={`${data?.name || "song"}.m4a`}
-								target="_blank"
-								rel="noreferrer">
-								<Button
-									size="icon"
-									variant="ghost"
-									className="text-muted-foreground hover:text-white"
-									title="Download">
-									<Download className="h-5 w-5" />
-								</Button>
-							</a>
-						)}
-						<Button
-							size="icon"
-							variant="ghost"
-							className="text-muted-foreground hover:text-white"
-							onClick={() => {
-								setMusic(null);
-								setCurrent(0);
-								localStorage.removeItem("last-played");
-								localStorage.removeItem("p");
-								audioRef.current.currentTime = 0;
-								audioRef.current.src = null;
-								setAudioURL(null);
-							}}>
-							<X className="h-5 w-5" />
-						</Button>
-					</div>
+						</a>
+					)}
+					<Button
+						size="icon"
+						variant="ghost"
+						className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+						onClick={() => {
+							setMusic(null);
+							setCurrent(0);
+							localStorage.removeItem("last-played");
+							localStorage.removeItem("p");
+							audioRef.current.currentTime = 0;
+							audioRef.current.src = null;
+							setAudioURL(null);
+						}}>
+						<X className="w-5 h-5" />
+					</Button>
 				</div>
-			)}
+			</div>
 		</main>
 	);
 }
