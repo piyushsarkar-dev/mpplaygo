@@ -1,12 +1,21 @@
 "use client";
 import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { MusicContext } from "@/hooks/use-context";
+import { cn } from "@/lib/utils";
 import { PlusCircle } from "lucide-react";
 import { useContext } from "react";
 import { IoPlay } from "react-icons/io5";
 import { Skeleton } from "../ui/skeleton";
 
-export default function SongCard({ title, image, artist, id, desc }) {
+export default function SongCard({
+	title,
+	image,
+	artist,
+	id,
+	desc,
+	className,
+	imageClassName,
+}) {
 	const ids = useContext(MusicContext);
 	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
 	const setLastPlayed = () => {
@@ -18,7 +27,7 @@ export default function SongCard({ title, image, artist, id, desc }) {
 		} catch {}
 	};
 	return (
-		<div className="h-fit w-[200px]">
+		<div className={cn("h-fit w-[200px]", className)}>
 			<div className="overflow-hidden rounded-md">
 				{image ?
 					<div
@@ -30,7 +39,10 @@ export default function SongCard({ title, image, artist, id, desc }) {
 						<img
 							src={image}
 							alt={title}
-							className="h-[182px] blurz w-full bg-secondary/60 rounded-md transition hover:scale-105 cursor-context-menu"
+							className={cn(
+								"h-[182px] blurz w-full bg-secondary/60 rounded-md transition hover:scale-105 cursor-context-menu",
+								imageClassName,
+							)}
 						/>
 						<div className="cursor-pointer absolute z-10 bottom-2 left-2 bg-background/60 backdrop-blur-md rounded-full h-8 w-8 flex items-center justify-center">
 							<IoPlay className="w-4 h-4 -mr-0.5 dark:fill-white" />

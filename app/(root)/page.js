@@ -270,8 +270,9 @@ export default function Page() {
 	const { sentinelRef: feedSentinelRef } = useInfiniteScroll({
 		enabled: feedHasMore && !feedLoading && feed.length >= PAGE_SIZE,
 		onLoadMore: loadMoreFeed,
-		rootMargin: "300px 0px",
-		cooldownMs: 1400,
+		// Vertical page scroll: preload when nearing the bottom
+		rootMargin: "600px 0px",
+		threshold: 0,
 	});
 
 	return (
@@ -292,7 +293,7 @@ export default function Page() {
 
 			{/* 2. Popular Artists - Circular Row */}
 			<section>
-				<div className="flex items-center justify-between mb-6 px-1">
+				<div className="flex items-center  justify-between mb-6 px-1">
 					<h2 className="text-xl font-bold text-white flex items-center gap-2 cursor-pointer hover:text-primary transition">
 						Popular Artist{" "}
 						<ChevronRight className="w-5 h-5 text-zinc-500" />
@@ -356,7 +357,7 @@ export default function Page() {
 				</ScrollArea>
 			</section>
 
-			{/* 3. For You Section - Infinite List */}
+			{/* 3. For You Section - Infinite List (Vertical) */}
 			<section className="pb-10">
 				<div className="flex items-center justify-between mb-6 px-1">
 					<h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -365,36 +366,38 @@ export default function Page() {
 					</h2>
 				</div>
 
-				<ScrollArea className="w-full whitespace-nowrap pb-4">
-					<div className="flex w-max space-x-6">
-						{feed.slice(0, FOR_YOU_LIMIT).map((song, i) => (
+				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-8 gap-y-10 px-2">
+					{feed.map((song, i) => (
+						<div
+							key={`${song.id}-${i}`}
+							className=" bg-red-500 transition-transform hover:scale-[1.02] origin-top">
+							<SongCard
+								item={song}
+								id={song.id}
+								image={song.image?.[2]?.url}
+								title={song.name}
+								artist={song.artists?.primary?.[0]?.name}
+								className="w-full"
+								imageClassName="h-[210px]"
+							/>
+						</div>
+					))}
+					{feedLoading &&
+						Array.from({ length: FOR_YOU_LIMIT }).map((_, i) => (
 							<div
-								key={`${song.id}-${i}`}
-								className="transition-transform hover:scale-[1.02]">
-								<SongCard
-									item={song}
-									id={song.id}
-									image={song.image?.[2]?.url}
-									title={song.name}
-									artist={song.artists?.primary?.[0]?.name}
-								/>
+								key={i}
+								className="w-full">
+								<Skeleton className="w-full h-[210px] rounded-md" />
+								<Skeleton className="w-[70%] h-4 mt-3" />
+								<Skeleton className="w-20 h-3 mt-2" />
 							</div>
 						))}
-						{feedLoading &&
-							Array.from({ length: FOR_YOU_LIMIT }).map(
-								(_, i) => (
-									<div
-										key={i}
-										className="w-[200px]">
-										<Skeleton className="w-full h-[182px] rounded-md" />
-										<Skeleton className="w-[70%] h-4 mt-3" />
-										<Skeleton className="w-20 h-3 mt-2" />
-									</div>
-								),
-							)}
-					</div>
-					<ScrollBar orientation="horizontal" />
-				</ScrollArea>
+				</div>
+				{/* Sentinel for vertical infinite loading */}
+				<div
+					ref={feedSentinelRef}
+					className="h-6"
+				/>
 			</section>
 		</main>
 	);
