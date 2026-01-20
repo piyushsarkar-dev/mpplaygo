@@ -133,17 +133,20 @@ export default function Page() {
 				// Optimization: Slice to top 10 to avoid too many requests.
 				const topIds = idsToFetch.slice(0, 10);
 				try {
-					const promises = topIds.map((id) =>
-						getSongsById(id).catch(() => null),
+					const results = await Promise.all(
+						topIds.map(async (id) => {
+							try {
+								const res = await getSongsById(id);
+								if (!res?.ok) return null;
+								const json = await res.json().catch(() => null);
+								return json?.data?.[0] ?? null;
+							} catch {
+								return null;
+							}
+						}),
 					);
-					const results = await Promise.all(promises);
 
-					const enrichedHistory = results
-						.map((r) => {
-							if (r && r.data && r.data[0]) return r.data[0];
-							return null;
-						})
-						.filter(Boolean);
+					const enrichedHistory = results.filter(Boolean);
 
 					if (enrichedHistory.length > 0) {
 						setHistorySongs(enrichedHistory);

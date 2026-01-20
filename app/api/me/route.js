@@ -27,7 +27,10 @@ export async function GET() {
 	const user = userData?.user ?? null;
 
 	if (!user) {
-		return NextResponse.json({ user: null, profile: null }, { status: 200 });
+		return NextResponse.json(
+			{ user: null, profile: null },
+			{ status: 200 },
+		);
 	}
 
 	let profile = null;

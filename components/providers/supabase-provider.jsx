@@ -2,7 +2,13 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 
 const Context = createContext(undefined);
 
@@ -19,7 +25,7 @@ export default function SupabaseProvider({ children }) {
 	const [isLoading, setIsLoading] = useState(true);
 	const router = useRouter();
 
-	const fetchServerSession = async () => {
+	const fetchServerSession = useCallback(async () => {
 		try {
 			const res = await fetch("/api/me", { cache: "no-store" });
 			if (!res.ok) return { user: null, profile: null };
@@ -27,7 +33,19 @@ export default function SupabaseProvider({ children }) {
 		} catch {
 			return { user: null, profile: null };
 		}
-	};
+	}, []);
+
+	const fetchProfile = useCallback(
+		async (userId) => {
+			const { data } = await supabase
+				.from("profiles")
+				.select("*")
+				.eq("id", userId)
+				.single();
+			if (data) setProfile(data);
+		},
+		[supabase],
+	);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -73,16 +91,7 @@ export default function SupabaseProvider({ children }) {
 			cancelled = true;
 			subscription.unsubscribe();
 		};
-	}, [router, supabase]);
-
-	const fetchProfile = async (userId) => {
-		const { data } = await supabase
-			.from("profiles")
-			.select("*")
-			.eq("id", userId)
-			.single();
-		if (data) setProfile(data);
-	};
+	}, [fetchProfile, fetchServerSession, router, supabase]);
 
 	const refreshProfile = async () => {
 		if (!user?.id) return;

@@ -1,4 +1,6 @@
 "use client";
+
+/* eslint-disable @next/next/no-img-element */
 import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { MusicContext } from "@/hooks/use-context";
 import { cn } from "@/lib/utils";
@@ -42,7 +44,11 @@ export default function SongCard({
 								setLastPlayed();
 							}}>
 							<img
-								src={image}
+								src={
+									typeof image === "string" ?
+										image.replace(/^http:\/\//, "https://")
+									:	image
+								}
 								alt={title}
 								className={cn(
 									"h-[182px] w-full object-cover bg-secondary/60 rounded-xl transition-transform duration-500 group-hover:scale-[1.04]",
