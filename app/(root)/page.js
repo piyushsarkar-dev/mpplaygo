@@ -1,6 +1,15 @@
 "use client";
 import SongCard from "@/components/cards/song";
 import { useSupabase } from "@/components/providers/supabase-provider";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -9,9 +18,9 @@ import {
 	getSongsByQueryPaged,
 	searchAlbumByQuery,
 } from "@/lib/fetch";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import FeaturedCarousel from "@/components/home/recent-played-carousel";
 import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
@@ -19,6 +28,7 @@ import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 export default function Page() {
 	const FOR_YOU_LIMIT = 6;
 	const PAGE_SIZE = FOR_YOU_LIMIT;
+	const ARTIST_PREVIEW_COUNT = 10;
 	const [latest, setLatest] = useState([]);
 	const [popular, setPopular] = useState([]);
 	const [albums, setAlbums] = useState([]);
@@ -31,8 +41,53 @@ export default function Page() {
 	const [feedLoading, setFeedLoading] = useState(false);
 	const [feedHasMore, setFeedHasMore] = useState(true);
 	const [recommended, setRecommended] = useState([]);
+	const [artistModalOpen, setArtistModalOpen] = useState(false);
+	const [artistQuery, setArtistQuery] = useState("");
 
 	const { user, supabase } = useSupabase();
+
+	const artists = useMemo(() => {
+		// Prefer history-based ranking when available, else fallback to trending/popular
+		const source = user && historySongs.length > 0 ? historySongs : popular;
+		const counts = new Map();
+
+		for (const item of source || []) {
+			const a = item?.artists?.primary?.[0];
+			const name = a?.name || "";
+			if (!name) continue;
+
+			const key = a?.id || name.toLowerCase();
+			const current = counts.get(key) || {
+				id: a?.id || name,
+				name,
+				image:
+					a?.image?.[2]?.url ||
+					a?.image?.[1]?.url ||
+					item?.image?.[2]?.url ||
+					item?.image?.[1]?.url ||
+					"",
+				count: 0,
+			};
+			current.count += 1;
+			if (!current.image) {
+				current.image =
+					a?.image?.[2]?.url ||
+					a?.image?.[1]?.url ||
+					item?.image?.[2]?.url ||
+					item?.image?.[1]?.url ||
+					"";
+			}
+			counts.set(key, current);
+		}
+
+		return [...counts.values()].sort((x, y) => y.count - x.count);
+	}, [popular, historySongs, user]);
+
+	const filteredArtists = useMemo(() => {
+		const q = artistQuery.trim().toLowerCase();
+		if (!q) return artists;
+		return artists.filter((a) => a.name.toLowerCase().includes(q));
+	}, [artists, artistQuery]);
 
 	useEffect(() => {
 		const fetchRecommendations = async () => {
@@ -301,57 +356,132 @@ export default function Page() {
 				</div>
 				<ScrollArea className="w-full whitespace-nowrap pb-6">
 					<div className="flex w-max space-x-8 px-2">
-						{
-							popular.length > 0 ?
-								// Extracting unique artists logic simplified for UI demo
-								[
-									...new Map(
-										popular
-											.slice(0, 20)
-											.map((item) => [
-												item.artists?.primary?.[0]?.id,
-												item,
-											]),
-									).values(),
-								].map((song, i) => (
-									<Link
-										key={i}
-										href={`/search/${song.artists?.primary?.[0]?.name || "artist"}`}
-										className="flex flex-col items-center gap-4 group cursor-pointer">
-										<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
-											<img
-												src={
-													song.artists?.primary?.[0]
-														?.image?.[2]?.url ||
-													song.artists?.primary?.[0]
-														?.image?.[1]?.url ||
-													song.image?.[2]?.url ||
-													song.image?.[1]?.url
-												}
-												alt={
-													song.artists?.primary?.[0]
-														?.name
-												}
-												className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-											/>
-										</div>
-										<span className="text-zinc-400 group-hover:text-white font-medium text-base text-center max-w-[140px] truncate transition">
-											{song.artists?.primary?.[0]?.name ||
-												"Unknown Artist"}
-										</span>
-									</Link>
-								))
-								// Skeletons
-							:	Array.from({ length: 8 }).map((_, i) => (
-									<div
-										key={i}
-										className="flex flex-col items-center gap-4">
-										<Skeleton className="w-32 h-32 rounded-full" />
-										<Skeleton className="w-20 h-4" />
+						{artists.length > 0 ?
+							artists.slice(0, ARTIST_PREVIEW_COUNT).map((a) => (
+								<Link
+									key={a.id}
+									href={`/search/${a.name || "artist"}`}
+									className="flex flex-col items-center gap-4 group cursor-pointer">
+									<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
+										<img
+											src={a.image}
+											alt={a.name}
+											className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+											onError={(e) => {
+												e.currentTarget.src =
+													"https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&auto=format&fit=crop&q=60";
+											}}
+										/>
 									</div>
-								))
-
+									<span className="text-zinc-400 group-hover:text-white font-medium text-base text-center max-w-[140px] truncate transition">
+										{a.name}
+									</span>
+								</Link>
+							))
+						:	Array.from({ length: 8 }).map((_, i) => (
+								<div
+									key={i}
+									className="flex flex-col items-center gap-4">
+									<Skeleton className="w-32 h-32 rounded-full" />
+									<Skeleton className="w-20 h-4" />
+								</div>
+							))
 						}
+
+						{/* Show more (at the end of the row) */}
+						<Dialog
+							open={artistModalOpen}
+							onOpenChange={(v) => {
+								setArtistModalOpen(v);
+								if (!v) setArtistQuery("");
+							}}>
+							<DialogTrigger asChild>
+								<button
+									type="button"
+									className="flex flex-col items-center gap-4 group cursor-pointer">
+									<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
+										<ChevronRight className="w-10 h-10 text-white/70 group-hover:text-white transition" />
+									</div>
+									<span className="text-zinc-400 group-hover:text-white font-medium text-base text-center max-w-[140px] truncate transition">
+										Show more
+									</span>
+								</button>
+							</DialogTrigger>
+							<DialogContent className="sm:max-w-[900px]">
+								<DialogHeader>
+									<DialogTitle>Artists</DialogTitle>
+								</DialogHeader>
+
+								<div className="mt-4">
+									<div className="relative">
+										<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+										<Input
+											value={artistQuery}
+											onChange={(e) =>
+												setArtistQuery(e.target.value)
+											}
+											placeholder="Search artists"
+											className="pl-9 pr-9"
+										/>
+										{artistQuery.trim().length > 0 && (
+											<Button
+												variant="ghost"
+												size="icon"
+												type="button"
+												onClick={() =>
+													setArtistQuery("")
+												}
+												className="absolute right-1 top-1/2 -translate-y-1/2">
+												<X className="w-4 h-4" />
+											</Button>
+										)}
+									</div>
+
+									<div className="mt-5 max-h-[70vh] overflow-y-auto pr-1">
+										{filteredArtists.length === 0 ?
+											<p className="text-sm text-muted-foreground">
+												No artists found.
+											</p>
+										:	<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+												{filteredArtists.map((a) => (
+													<Link
+														key={a.id}
+														href={`/search/${a.name}`}
+														onClick={() =>
+															setArtistModalOpen(
+																false,
+															)
+														}
+														className="flex items-center gap-3 rounded-xl p-3 border border-white/10 hover:border-white/20 hover:bg-white/5 transition">
+														<div className="h-12 w-12 rounded-full overflow-hidden bg-white/5 border border-white/10">
+															<img
+																src={a.image}
+																alt={a.name}
+																className="h-full w-full object-cover"
+																onError={(
+																	e,
+																) => {
+																	e.currentTarget.src =
+																		"https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=200&auto=format&fit=crop&q=60";
+																}}
+															/>
+														</div>
+														<div className="min-w-0">
+															<p className="text-sm font-medium text-white truncate">
+																{a.name}
+															</p>
+															<p className="text-xs text-white/50">
+																Top listens
+															</p>
+														</div>
+													</Link>
+												))}
+											</div>
+										}
+									</div>
+								</div>
+							</DialogContent>
+						</Dialog>
 					</div>
 					<ScrollBar orientation="horizontal" />
 				</ScrollArea>

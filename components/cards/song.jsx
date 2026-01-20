@@ -69,11 +69,14 @@ export default function SongCard({
 
 							{/* + icon in the old play button position */}
 							{id && (
-								<AddToPlaylist song={{ id, title, artist, image }}>
+								<AddToPlaylist
+									song={{ id, title, artist, image }}>
 									<button
 										type="button"
 										aria-label="Add to playlist"
-										onPointerDown={(e) => e.stopPropagation()}
+										onPointerDown={(e) =>
+											e.stopPropagation()
+										}
 										onClick={(e) => e.stopPropagation()}
 										className="absolute z-20 bottom-2 left-2 h-9 w-9 rounded-full bg-black/55 hover:bg-black/70 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/85 hover:text-white transition">
 										<PlusCircle className="h-5 w-5" />
@@ -81,7 +84,13 @@ export default function SongCard({
 								</AddToPlaylist>
 							)}
 						</div>
-					:	<Skeleton className={cn("w-full h-[182px] rounded-xl", imageClassName)} />}
+					:	<Skeleton
+							className={cn(
+								"w-full h-[182px] rounded-xl",
+								imageClassName,
+							)}
+						/>
+					}
 				</div>
 
 				<div className="pt-3">
