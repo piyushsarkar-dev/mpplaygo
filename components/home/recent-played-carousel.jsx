@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useMusicProvider } from "@/hooks/use-context";
 import { cn } from "@/lib/utils";
 import { ArrowRight, ChevronLeft, ChevronRight, Play } from "lucide-react";
@@ -146,8 +148,8 @@ export default function RecentPlayedCarousel({
 							}}>
 							{/* Image */}
 							<div className="relative w-full h-full">
-								<img
-									src={
+								{(() => {
+									const raw =
 										(typeof song.image === "string" ?
 											song.image
 										: Array.isArray(song.image) ?
@@ -156,15 +158,26 @@ export default function RecentPlayedCarousel({
 											song.image[song.image.length - 1]
 												?.link
 										:	"") ||
-										"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=60"
-									}
-									alt={song.name}
-									className="w-full h-full object-cover"
-									onError={(e) => {
-										e.target.src =
-											"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=60";
-									}}
-								/>
+										"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=60";
+									const safe =
+										typeof raw === "string" ?
+											raw.replace(
+												/^http:\/\//,
+												"https://",
+											)
+										:	raw;
+									return (
+										<img
+											src={safe}
+											alt={song.name}
+											className="w-full h-full object-cover"
+											onError={(e) => {
+												e.currentTarget.src =
+													"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=60";
+											}}
+										/>
+									);
+								})()}
 
 								{/* Overlay Gradient */}
 								<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
