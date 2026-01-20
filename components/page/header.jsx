@@ -17,61 +17,68 @@ export default function Header() {
 	const router = useRouter();
 
 	return (
-		<header className="fixed top-0 left-0 right-0 z-50 h-20 px-6 md:px-10 flex items-center justify-between gap-6 backdrop-blur-md bg-black/40 border-b border-white/5 shadow-2xl">
-			{/* Left Section: Logo & Nav */}
-			<div className="flex items-center gap-6 shrink-0">
-				<Logo />
+		<header className="fixed top-6 left-0 right-0 z-50 px-4 md:px-8 flex justify-center pointer-events-none">
+            <div className="w-full max-w-[1700px] h-20 bg-[#1A1A1A]/90 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl flex items-center justify-between px-6 pointer-events-auto">
+			    
+                {/* Left Section: Logo & Nav */}
+                <div className="flex items-center gap-6 shrink-0">
+                    <Link href="/" className="text-xl font-bold text-white tracking-tight">
+                        Mp Play go
+                    </Link>
 
-				<div className="hidden md:flex items-center gap-2">
-					<Button
-						variant="ghost"
-						size="icon"
-						asChild
-						className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10">
-						<Link href="/">
-							<Home className="w-5 h-5" />
-						</Link>
-					</Button>
+                    <div className="hidden md:flex items-center gap-3">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            asChild
+                            className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300">
+                            <Link href="/">
+                                <Home className="w-5 h-5" />
+                            </Link>
+                        </Button>
 
-					<PlaylistDrawer>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10">
-							<Library className="w-5 h-5" />
-						</Button>
-					</PlaylistDrawer>
-				</div>
-			</div>
+                        <PlaylistDrawer>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300">
+                                <Library className="w-5 h-5" />
+                            </Button>
+                        </PlaylistDrawer>
+                    </div>
+                </div>
 
-			{/* Center Section: Main Search */}
-			<div className="flex-1 max-w-2xl">
-				<Search className="w-full bg-white/5 border-white/10 focus:border-white/20 h-11 rounded-2xl" />
-			</div>
+                {/* Center Section: Main Search */}
+                <div className="flex-1 max-w-3xl px-8">
+                    <Search />
+                </div>
 
-			{/* Right Section: Friends & Profile */}
-			<div className="flex items-center gap-4 shrink-0">
-				<FriendSearch />
+                {/* Right Section: Friends & Profile */}
+                <div className="flex items-center gap-6 shrink-0">
+                    <FriendSearch />
 
-				{user ?
-					<UserProfileDropdown>
-						<Avatar className="w-10 h-10 border-2 border-white/10 hover:border-white/50 transition cursor-pointer">
-							<AvatarImage
-								src={user?.user_metadata?.avatar_url}
-								style={{ objectFit: "cover" }}
-							/>
-							<AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
-								{user?.user_metadata?.full_name?.[0] || "U"}
-							</AvatarFallback>
-						</Avatar>
-					</UserProfileDropdown>
-				:	<AuthModal>
-						<Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6">
-							Login
-						</Button>
-					</AuthModal>
-				}
-			</div>
+                    {user ?
+                        <UserProfileDropdown>
+                            <div className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity">
+                                <Avatar className="w-full h-full rounded-full">
+                                    <AvatarImage
+                                        src={user?.user_metadata?.avatar_url}
+                                        style={{ objectFit: "cover" }}
+                                    />
+                                    <AvatarFallback className="bg-neutral-800 text-white font-bold">
+                                        {user?.user_metadata?.full_name?.[0] || "U"}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </div>
+                        </UserProfileDropdown>
+                    :	<AuthModal>
+                            <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6">
+                                Login
+                            </Button>
+                        </AuthModal>
+                    }
+                </div>
+            </div>
 		</header>
 	);
 }

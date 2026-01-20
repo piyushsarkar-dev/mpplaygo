@@ -182,28 +182,8 @@ export default function Search() {
 	};
 
 	return (
-		<div ref={containerRef} className="relative z-10 w-full">
-			<form onSubmit={handleSubmit} className="flex items-center relative w-full">
-				<div className="absolute right-0 flex items-center">
-					{trimmed.length > 0 && (
-						<Button
-							variant="ghost"
-							type="button"
-							size="icon"
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={clearQuery}
-							className="rounded-none bg-none">
-							<X className="w-4 h-4" />
-						</Button>
-					)}
-					<Button
-						variant="ghost"
-						type="submit"
-						size="icon"
-						className="rounded-xl rounded-l-none bg-none">
-						<SearchIcon className="w-4 h-4" />
-					</Button>
-				</div>
+		<div ref={containerRef} className="relative z-10 w-full max-w-2xl mx-auto">
+			<form onSubmit={handleSubmit} className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-2xl transition-all duration-300 overflow-hidden h-12">
 				<Input
 					ref={inpRef}
 					value={query}
@@ -216,14 +196,32 @@ export default function Search() {
 					onKeyDown={onKeyDown}
 					autoComplete="off"
 					type="search"
-					className="rounded-lg bg-secondary/50 pr-20"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
 					name="query"
-					placeholder="Seacrh The Music"
+					placeholder="Search here"
 				/>
+                <Button
+                    variant="ghost"
+                    type="submit"
+                    size="icon"
+                    className="mr-1 text-white/40 hover:text-white transition rounded-xl hover:bg-white/10 w-10 h-10">
+                    <SearchIcon className="w-5 h-5" />
+                </Button>
+                {trimmed.length > 0 && (
+                    <Button
+                        variant="ghost"
+                        type="button"
+                        size="icon"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={clearQuery}
+                        className="mr-1 text-white/40 hover:text-white transition rounded-full hover:bg-white/10 w-8 h-8 absolute right-10">
+                        <X className="w-4 h-4" />
+                    </Button>
+                )}
 			</form>
 
 			{open && (trimmed.length > 0 || recent.length > 0) && (
-				<div className="absolute left-0 right-0 mt-2 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow">
+				<div className="absolute top-full left-0 right-0 mt-3 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 					<div className="p-2">
 						{loading && (
 							<div className="px-3 py-2 text-sm text-muted-foreground">Searching…</div>

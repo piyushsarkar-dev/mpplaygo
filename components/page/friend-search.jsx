@@ -56,20 +56,37 @@ export default function FriendSearch({ className }) {
 	return (
 		<div
 			ref={wrapperRef}
-			className={cn("relative w-full", className)}>
-			<Input
-				value={query}
-				onChange={(e) => {
-					setQuery(e.target.value);
-					setOpen(true);
-				}}
-				onFocus={() => setOpen(true)}
-				placeholder="Search friends…"
-				autoComplete="off"
-				className="rounded-lg bg-secondary/50"
-			/>
+			className={cn("relative w-full max-w-[280px]", className)}>
+			<div className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-2xl transition-all duration-300 overflow-hidden h-12">
+                <Input
+                    value={query}
+                    onChange={(e) => {
+                        setQuery(e.target.value);
+                        setOpen(true);
+                    }}
+                    onFocus={() => setOpen(true)}
+                    placeholder="Search friends"
+                    autoComplete="off"
+                    className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
+                />
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					className="mr-4 text-white/40 group-focus-within:text-white transition-colors shrink-0">
+					<circle cx="11" cy="11" r="8" />
+					<path d="m21 21-4.3-4.3" />
+				</svg>
+            </div>
+
 			{open && (loading || results.length > 0) && (
-				<div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow">
+				<div className="absolute top-full right-0 mt-3 w-[320px] bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] animate-in fade-in zoom-in-95 duration-200">
 					{loading && (
 						<div className="px-3 py-2 text-sm text-muted-foreground">
 							Searching…
