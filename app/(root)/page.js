@@ -13,11 +13,12 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import RecentPlayedCarousel from "@/components/home/recent-played-carousel";
+import FeaturedCarousel from "@/components/home/recent-played-carousel";
 import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 
 export default function Page() {
-	const PAGE_SIZE = 30;
+	const FOR_YOU_LIMIT = 6;
+	const PAGE_SIZE = FOR_YOU_LIMIT;
 	const [latest, setLatest] = useState([]);
 	const [popular, setPopular] = useState([]);
 	const [albums, setAlbums] = useState([]);
@@ -78,9 +79,7 @@ export default function Page() {
 				const topIds = idsToFetch.slice(0, 10);
 				try {
 					const promises = topIds.map((id) =>
-						getSongsById(id)
-							.then((r) => r.json())
-							.catch(() => null),
+						getSongsById(id).catch(() => null),
 					);
 					const results = await Promise.all(promises);
 
@@ -276,12 +275,15 @@ export default function Page() {
 	});
 
 	return (
-		<main className="flex flex-col gap-8 w-full pt-32 pb-32">
+		<main className="flex flex-col gap-8 w-full pb-32">
 			{/* Carousel Section: History or Recommendations */}
-			<div className="w-full min-h-[400px]">
+			<div className="w-full min-h-[50vh]">
 				{user && historySongs.length > 0 ?
-					<RecentPlayedCarousel songs={historySongs} />
-				:	<RecentPlayedCarousel
+					<FeaturedCarousel
+						songs={historySongs}
+						title="Recent Played"
+					/>
+				:	<FeaturedCarousel
 						songs={recommended}
 						title="Recommended For You"
 					/>
@@ -363,49 +365,36 @@ export default function Page() {
 					</h2>
 				</div>
 
-				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
-					{feed.map((song, i) => (
-						<div
-							key={`${song.id}-${i}`}
-							className="transition-transform hover:scale-[1.02]">
-							<SongCard
-								item={song}
-								id={song.id}
-								image={song.image?.[2]?.url}
-								title={song.name}
-								artist={song.artists?.primary?.[0]?.name}
-							/>
-						</div>
-					))}
-					{feedLoading &&
-						Array.from({ length: 10 }).map((_, i) => (
+				<ScrollArea className="w-full whitespace-nowrap pb-4">
+					<div className="flex w-max space-x-6">
+						{feed.slice(0, FOR_YOU_LIMIT).map((song, i) => (
 							<div
-								key={i}
-								className="space-y-3">
-								<Skeleton className="h-40 w-full rounded-2xl" />
-								<div className="space-y-2">
-									<Skeleton className="h-4 w-[90%]" />
-									<Skeleton className="h-3 w-[60%]" />
-								</div>
+								key={`${song.id}-${i}`}
+								className="transition-transform hover:scale-[1.02]">
+								<SongCard
+									item={song}
+									id={song.id}
+									image={song.image?.[2]?.url}
+									title={song.name}
+									artist={song.artists?.primary?.[0]?.name}
+								/>
 							</div>
 						))}
-				</div>
-
-				<div
-					ref={feedSentinelRef}
-					className="h-10 w-full"
-				/>
-
-				{!feedLoading && feedHasMore && (
-					<div className="mt-8 flex items-center justify-center">
-						<button
-							onClick={loadMoreFeed}
-							className="text-sm px-6 py-3 rounded-full border border-white/10 hover:bg-white/10 hover:border-white/30 transition text-white"
-							type="button">
-							Load more songs
-						</button>
+						{feedLoading &&
+							Array.from({ length: FOR_YOU_LIMIT }).map(
+								(_, i) => (
+									<div
+										key={i}
+										className="w-[200px]">
+										<Skeleton className="w-full h-[182px] rounded-md" />
+										<Skeleton className="w-[70%] h-4 mt-3" />
+										<Skeleton className="w-20 h-3 mt-2" />
+									</div>
+								),
+							)}
 					</div>
-				)}
+					<ScrollBar orientation="horizontal" />
+				</ScrollArea>
 			</section>
 		</main>
 	);

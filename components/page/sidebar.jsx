@@ -34,7 +34,7 @@ export default function Sidebar() {
 							href={route.href}
 							className={cn(
 								"flex flex-row h-auto items-center w-full gap-x-4 text-md font-medium cursor-pointer transition text-muted-foreground hover:text-white",
-								route.active && "text-white"
+								route.active && "text-white",
 							)}>
 							<route.icon className={cn("h-6 w-6")} />
 							{route.label}
