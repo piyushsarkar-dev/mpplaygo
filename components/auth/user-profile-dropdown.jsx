@@ -12,7 +12,7 @@ import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export function UserProfileDropdown({ children }) {
+export function UserProfileDropdown() {
 	const { user, profile, supabase } = useSupabase();
 	const router = useRouter();
 
@@ -20,20 +20,14 @@ export function UserProfileDropdown({ children }) {
 
 	const handleLogout = async () => {
 		await supabase.auth.signOut();
-		// Clear cookie-based sessions (OAuth via server exchange).
-		await fetch("/api/logout", { method: "POST" });
 		router.refresh();
 	};
 
-	const meta = user?.user_metadata ?? {};
-	const avatarUrl =
-		profile?.avatar_url ?? meta.avatar_url ?? meta.picture ?? null;
-
 	const UserAvatar = () => (
 		<div className="relative h-8 w-8 rounded-full overflow-hidden border">
-			{avatarUrl ?
+			{profile?.avatar_url ?
 				<img
-					src={avatarUrl}
+					src={profile.avatar_url}
 					alt={profile?.username || "User"}
 					className="h-full w-full object-cover"
 				/>
@@ -47,11 +41,9 @@ export function UserProfileDropdown({ children }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				{children ?? (
-					<button className="outline-none rounded-full">
-						<UserAvatar />
-					</button>
-				)}
+				<button className="outline-none rounded-full">
+					<UserAvatar />
+				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				className="w-56"

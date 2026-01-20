@@ -40,7 +40,7 @@ export default function MusicProvider({ children }) {
 			}
 		};
 		updateHistory();
-	}, [music, supabase, user]);
+	}, [music, user]);
 
 	return (
 		<MusicContext.Provider

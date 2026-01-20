@@ -10,7 +10,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Music2, Plus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CreatePlaylistModal } from "./create-playlist-modal";
 
@@ -20,7 +20,13 @@ export function AddToPlaylist({ children, song }) {
 	const [playlists, setPlaylists] = useState([]);
 	const [loading, setLoading] = useState(false);
 
-	const fetchPlaylists = useCallback(async () => {
+	useEffect(() => {
+		if (open && user) {
+			fetchPlaylists();
+		}
+	}, [open, user]);
+
+	const fetchPlaylists = async () => {
 		setLoading(true);
 		const { data } = await supabase
 			.from("playlists")
@@ -29,13 +35,7 @@ export function AddToPlaylist({ children, song }) {
 			.order("name", { ascending: true });
 		setPlaylists(data || []);
 		setLoading(false);
-	}, [supabase, user?.id]);
-
-	useEffect(() => {
-		if (open && user) {
-			fetchPlaylists();
-		}
-	}, [fetchPlaylists, open, user]);
+	};
 
 	const addToPlaylist = async (playlistId) => {
 		const { error } = await supabase.from("playlist_songs").insert({
@@ -78,7 +78,7 @@ export function AddToPlaylist({ children, song }) {
 				<DialogHeader>
 					<DialogTitle>Add to Playlist</DialogTitle>
 					<DialogDescription>
-						Save &quot;{song.title}&quot; to a playlist
+						Save "{song.title}" to a playlist
 					</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-2 max-h-[300px] overflow-y-auto">

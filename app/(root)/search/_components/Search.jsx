@@ -330,7 +330,7 @@ export default function Search({ params }) {
 				<div className="mt-2">
 					<h1 className="text-base">Search Results</h1>
 					<p className="text-xs text-muted-foreground">
-						search results for &quot;{decodedQuery}&quot;
+						search results for "{decodedQuery}"
 					</p>
 				</div>
 				<div className="grid gap-4">
@@ -382,7 +382,7 @@ export default function Search({ params }) {
 				<div className="mt-8">
 					<h1 className="text-base">Related Albums</h1>
 					<p className="text-xs text-muted-foreground">
-						Albums related to &quot;{decodedQuery}&quot;
+						Albums related to "{decodedQuery}"
 					</p>
 				</div>
 				<div className="grid gap-4">
@@ -435,7 +435,7 @@ export default function Search({ params }) {
 				<div className="mt-4">
 					<h1 className="text-base font-medium">Related Artists</h1>
 					<p className="text-xs text-muted-foreground">
-						artists related to &quot;{decodedQuery}&quot;
+						artists related to "{decodedQuery}"
 					</p>
 				</div>
 				<ScrollArea>

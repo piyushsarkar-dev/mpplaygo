@@ -59,7 +59,7 @@ export default function Sidebar() {
 							Create Playlist
 						</p>
 						<p className="text-sm text-muted-foreground mt-1">
-							It&apos;s easy, we&apos;ll help you
+							It's easy, we'll help you
 						</p>
 						<button className="mt-4 px-4 py-1.5 bg-white text-black font-bold rounded-full text-sm hover:scale-105 transition">
 							Create playlist

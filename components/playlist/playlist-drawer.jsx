@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { ListMusic, Plus } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { CreatePlaylistModal } from "./create-playlist-modal";
 
 export function PlaylistDrawer({ children }) {
@@ -19,25 +19,24 @@ export function PlaylistDrawer({ children }) {
 	const [playlists, setPlaylists] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [open, setOpen] = useState(false);
-	const userId = user?.id;
 
-	const fetchPlaylists = useCallback(async () => {
-		if (!userId) return;
+	const fetchPlaylists = async () => {
+		if (!user) return;
 		setLoading(true);
 		const { data } = await supabase
 			.from("playlists")
 			.select("*")
-			.eq("user_id", userId)
+			.eq("user_id", user.id)
 			.order("created_at", { ascending: false });
 		setPlaylists(data || []);
 		setLoading(false);
-	}, [supabase, userId]);
+	};
 
 	useEffect(() => {
 		if (open) {
 			fetchPlaylists();
 		}
-	}, [fetchPlaylists, open]);
+	}, [open, user]);
 
 	return (
 		<Sheet

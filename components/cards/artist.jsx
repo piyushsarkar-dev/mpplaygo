@@ -9,11 +9,7 @@ export default function ArtistCard({ image, name, id }) {
 			}>
 			<div className="overflow-hidden h-[100px] w-[100px] rounded-md">
 				<img
-					src={
-						typeof image === "string" ?
-							image.replace(/^http:\/\//, "https://")
-						:	image
-					}
+					src={image}
 					alt={name}
 					className="hover:scale-105 transition cursor-pointer rounded-full h-[100px] min-w-[100px] object-cover"
 				/>

@@ -2,13 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
-import {
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const Context = createContext(undefined);
 
@@ -25,28 +19,6 @@ export default function SupabaseProvider({ children }) {
 	const [isLoading, setIsLoading] = useState(true);
 	const router = useRouter();
 
-	const fetchServerSession = useCallback(async () => {
-		try {
-			const res = await fetch("/api/me", { cache: "no-store" });
-			if (!res.ok) return { user: null, profile: null };
-			return await res.json();
-		} catch {
-			return { user: null, profile: null };
-		}
-	}, []);
-
-	const fetchProfile = useCallback(
-		async (userId) => {
-			const { data } = await supabase
-				.from("profiles")
-				.select("*")
-				.eq("id", userId)
-				.single();
-			if (data) setProfile(data);
-		},
-		[supabase],
-	);
-
 	useEffect(() => {
 		let cancelled = false;
 
@@ -54,19 +26,19 @@ export default function SupabaseProvider({ children }) {
 			try {
 				const { data, error } = await supabase.auth.getUser();
 				if (cancelled) return;
-				if (!error && data?.user) {
-					const nextUser = data.user;
-					setUser(nextUser);
-					await fetchProfile(nextUser.id);
+				if (error) {
+					setUser(null);
+					setProfile(null);
 					return;
 				}
 
-				// Fallback for OAuth flows where session is stored in HttpOnly cookies
-				// (common when using @supabase/ssr exchangeCodeForSession on the server).
-				const server = await fetchServerSession();
-				if (cancelled) return;
-				setUser(server?.user ?? null);
-				setProfile(server?.profile ?? null);
+				const nextUser = data?.user ?? null;
+				setUser(nextUser);
+				if (nextUser) {
+					await fetchProfile(nextUser.id);
+				} else {
+					setProfile(null);
+				}
 			} finally {
 				if (!cancelled) setIsLoading(false);
 			}
@@ -91,20 +63,20 @@ export default function SupabaseProvider({ children }) {
 			cancelled = true;
 			subscription.unsubscribe();
 		};
-	}, [fetchProfile, fetchServerSession, router, supabase]);
+	}, [router, supabase]);
+
+	const fetchProfile = async (userId) => {
+		const { data } = await supabase
+			.from("profiles")
+			.select("*")
+			.eq("id", userId)
+			.single();
+		if (data) setProfile(data);
+	};
 
 	const refreshProfile = async () => {
 		if (!user?.id) return;
-		// If we're using cookie-only session (OAuth), profile fetch via browser client
-		// may not be authorized. Use server endpoint as a fallback.
-		try {
-			await fetchProfile(user.id);
-			if (profile) return;
-		} catch {
-			// ignore and fallback
-		}
-		const server = await fetchServerSession();
-		setProfile(server?.profile ?? null);
+		await fetchProfile(user.id);
 	};
 
 	return (
