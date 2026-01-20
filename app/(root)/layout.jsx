@@ -11,8 +11,8 @@ export default function RootLayout({ children }) {
 				{/* Main Content */}
 				<div className="flex-1 overflow-hidden relative">
 					<Header />
-					<ScrollArea className="h-full w-full pt-[72px] md:pt-[104px] pb-24">
-						<div className="px-6 pb-6 pt-0 md:px-10 md:pb-10 md:pt-0 max-w-[1920px] mx-auto animate-fade-in-up">
+					<ScrollArea className="h-full w-full pt-20 pb-24">
+						<div className="p-6 md:p-10 max-w-[1920px] mx-auto animate-fade-in-up">
 							{children}
 						</div>
 						<Footer />
