@@ -1,6 +1,4 @@
 "use client";
-import AlbumCard from "@/components/cards/album";
-import ArtistCard from "@/components/cards/artist";
 import SongCard from "@/components/cards/song";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -11,14 +9,21 @@ import {
 	getSongsByQueryPaged,
 	searchAlbumByQuery,
 } from "@/lib/fetch";
-import { Loader2 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+
+import RecentPlayedCarousel from "@/components/home/recent-played-carousel";
+import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 
 export default function Page() {
 	const PAGE_SIZE = 30;
 	const [latest, setLatest] = useState([]);
 	const [popular, setPopular] = useState([]);
 	const [albums, setAlbums] = useState([]);
+
+	// New State for UI
+	const [historySongs, setHistorySongs] = useState([]);
 
 	const [feed, setFeed] = useState([]);
 	const [feedPage, setFeedPage] = useState(1);
@@ -31,17 +36,73 @@ export default function Page() {
 	useEffect(() => {
 		const fetchRecommendations = async () => {
 			if (!user) {
-				setRecommended([]);
+				// Not logged in: Fetch generic recommendations (e.g. "Trending" or "Hindi" or "English" hits)
+				// Using "Trending" or a default query
+				const get = await getSongsByQuery("Global Hits");
+				const data = await get.json();
+				if (data.data && data.data.results) {
+					setRecommended(data.data.results);
+				}
+				setHistorySongs([]);
 				return;
 			}
 
 			const { data: history } = await supabase
 				.from("user_history")
-				.select("language")
+				.select("*")
 				.order("listened_at", { ascending: false })
 				.limit(20);
 
+			// Process History for "Recent Plays"
 			if (history && history.length > 0) {
+				const uniqueHistory = [];
+				const seenIds = new Set();
+				const idsToFetch = [];
+
+				history.forEach((h) => {
+					if (!seenIds.has(h.song_id)) {
+						seenIds.add(h.song_id);
+						idsToFetch.push(h.song_id);
+						uniqueHistory.push({
+							id: h.song_id,
+							name: h.song_title,
+							artist: h.artist, // artist might be missing in history table, so we need fetch
+							image: h.thumbnail, // thumbnail is likely missing based on schema
+						});
+					}
+				});
+
+				// Fetch full details for images if possible
+				// Since getSongsById takes a single ID, we loop or Promise.all.
+				// Optimization: Slice to top 10 to avoid too many requests.
+				const topIds = idsToFetch.slice(0, 10);
+				try {
+					const promises = topIds.map((id) =>
+						getSongsById(id)
+							.then((r) => r.json())
+							.catch(() => null),
+					);
+					const results = await Promise.all(promises);
+
+					const enrichedHistory = results
+						.map((r) => {
+							if (r && r.data && r.data[0]) return r.data[0];
+							return null;
+						})
+						.filter(Boolean);
+
+					if (enrichedHistory.length > 0) {
+						setHistorySongs(enrichedHistory);
+					} else {
+						// Fallback if fetch fails (use stored data but missing image)
+						setHistorySongs(uniqueHistory);
+					}
+				} catch (e) {
+					console.error("Error fetching history details", e);
+					setHistorySongs(uniqueHistory);
+				}
+
+				// Recommendations Logic
 				const langCounts = {};
 				history.forEach((h) => {
 					if (h.language)
@@ -49,9 +110,12 @@ export default function Page() {
 							(langCounts[h.language] || 0) + 1;
 				});
 
-				const favoriteLang = Object.keys(langCounts).reduce((a, b) =>
-					langCounts[a] > langCounts[b] ? a : b,
-				);
+				let favoriteLang = "English";
+				if (Object.keys(langCounts).length > 0) {
+					favoriteLang = Object.keys(langCounts).reduce((a, b) =>
+						langCounts[a] > langCounts[b] ? a : b,
+					);
+				}
 
 				if (favoriteLang) {
 					const get = await getSongsByQuery(
@@ -61,10 +125,16 @@ export default function Page() {
 					if (data.data && data.data.results)
 						setRecommended(data.data.results);
 				}
+			} else {
+				// User logged in but no history
+				const get = await getSongsByQuery("Trending");
+				const data = await get.json();
+				if (data.data && data.data.results)
+					setRecommended(data.data.results);
 			}
 		};
 
-		if (user) fetchRecommendations();
+		if (user !== undefined) fetchRecommendations(); // Run even if user is null (for guest mode)
 	}, [user, supabase]);
 
 	const feedPageRef = useRef(1);
@@ -206,215 +276,119 @@ export default function Page() {
 	});
 
 	return (
-		<main className="px-6 py-5 md:px-20 lg:px-32">
-			{recommended.length > 0 && (
-				<div className="mb-14">
-					<div className="grid">
-						<h1 className="text-base">Recommended for You</h1>
-						<p className="text-xs text-muted-foreground">
-							Based on your listening history.
-						</p>
-					</div>
-					<ScrollArea className="rounded-md mt-4">
-						<div className="flex gap-4">
-							{recommended.map((song) => (
-								<SongCard
-									key={song.id}
-									image={
-										song.image && song.image.length > 2 ?
-											song.image[2].url
-										:	""
-									}
-									album={song.album}
-									title={song.name}
-									artist={song.artists.primary[0].name}
-									id={song.id}
-								/>
-							))}
-						</div>
-						<ScrollBar
-							orientation="horizontal"
-							className="hidden sm:flex"
-						/>
-					</ScrollArea>
+		<main className="flex flex-col gap-8 w-full pt-32 pb-32">
+			{/* Carousel Section: History or Recommendations */}
+			<div className="w-full min-h-[400px]">
+				{user && historySongs.length > 0 ?
+					<RecentPlayedCarousel songs={historySongs} />
+				:	<RecentPlayedCarousel
+						songs={recommended}
+						title="Recommended For You"
+					/>
+				}
+			</div>
+
+			{/* 2. Popular Artists - Circular Row */}
+			<section>
+				<div className="flex items-center justify-between mb-6 px-1">
+					<h2 className="text-xl font-bold text-white flex items-center gap-2 cursor-pointer hover:text-primary transition">
+						Popular Artist{" "}
+						<ChevronRight className="w-5 h-5 text-zinc-500" />
+					</h2>
 				</div>
-			)}
-			<div>
-				<div className="grid">
-					<h1 className="text-base">Songs</h1>
-					<p className="text-xs text-muted-foreground">
-						Top new released songs.
-					</p>
+				<ScrollArea className="w-full whitespace-nowrap pb-6">
+					<div className="flex w-max space-x-8 px-2">
+						{
+							popular.length > 0 ?
+								// Extracting unique artists logic simplified for UI demo
+								[
+									...new Map(
+										popular
+											.slice(0, 20)
+											.map((item) => [
+												item.artists?.primary?.[0]?.id,
+												item,
+											]),
+									).values(),
+								].map((song, i) => (
+									<Link
+										key={i}
+										href={`/search/${song.artists?.primary?.[0]?.name || "artist"}`}
+										className="flex flex-col items-center gap-4 group cursor-pointer">
+										<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
+											<img
+												src={
+													song.artists?.primary?.[0]
+														?.image?.[2]?.url ||
+													song.artists?.primary?.[0]
+														?.image?.[1]?.url ||
+													song.image?.[2]?.url ||
+													song.image?.[1]?.url
+												}
+												alt={
+													song.artists?.primary?.[0]
+														?.name
+												}
+												className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+											/>
+										</div>
+										<span className="text-zinc-400 group-hover:text-white font-medium text-base text-center max-w-[140px] truncate transition">
+											{song.artists?.primary?.[0]?.name ||
+												"Unknown Artist"}
+										</span>
+									</Link>
+								))
+								// Skeletons
+							:	Array.from({ length: 8 }).map((_, i) => (
+									<div
+										key={i}
+										className="flex flex-col items-center gap-4">
+										<Skeleton className="w-32 h-32 rounded-full" />
+										<Skeleton className="w-20 h-4" />
+									</div>
+								))
+
+						}
+					</div>
+					<ScrollBar orientation="horizontal" />
+				</ScrollArea>
+			</section>
+
+			{/* 3. For You Section - Infinite List */}
+			<section className="pb-10">
+				<div className="flex items-center justify-between mb-6 px-1">
+					<h2 className="text-xl font-bold text-white flex items-center gap-2">
+						For you{" "}
+						<ChevronRight className="w-5 h-5 text-zinc-500" />
+					</h2>
 				</div>
-				<ScrollArea className="rounded-md mt-4">
-					<div className="flex gap-4">
-						{latest.length ?
-							latest.slice().map((song) => (
-								<SongCard
-									key={song.id}
-									image={song.image[2].url}
-									album={song.album}
-									title={song.name}
-									artist={song.artists.primary[0].name}
-									id={song.id}
-								/>
-							))
-						:	Array.from({ length: 10 }).map((_, i) => (
-								<SongCard key={i} />
-							))
-						}
-					</div>
-					<ScrollBar
-						orientation="horizontal"
-						className="hidden sm:flex"
-					/>
-				</ScrollArea>
-			</div>
 
-			<div className="mt-14">
-				<h1 className="text-base">Albums</h1>
-				<p className="text-xs text-muted-foreground">
-					Top new released albums.
-				</p>
-				<ScrollArea className="rounded-md mt-6">
-					<div className="flex gap-4">
-						{albums.length ?
-							albums.slice().map((song) => (
-								<AlbumCard
-									key={song.id}
-									lang={song.language}
-									image={song.image[2].url}
-									album={song.album}
-									title={song.name}
-									artist={song.artists.primary[0].name}
-									id={`album/${song.id}`}
-								/>
-							))
-						:	Array.from({ length: 10 }).map((_, i) => (
-								<SongCard key={i} />
-							))
-						}
-					</div>
-					<ScrollBar
-						orientation="horizontal"
-						className="hidden sm:flex"
-					/>
-				</ScrollArea>
-			</div>
-
-			<div className="mt-12">
-				<h1 className="text-base">Artists</h1>
-				<p className="text-xs text-muted-foreground">
-					Most searched artists.
-				</p>
-				<ScrollArea className="rounded-md mt-6">
-					<div className="flex gap-4">
-						{latest.length ?
-							[
-								...new Set(
-									latest.map((a) => a.artists.primary[0].id),
-								),
-							].map((id) => (
-								<ArtistCard
-									key={id}
-									id={id}
-									image={
-										latest.find(
-											(a) =>
-												a.artists.primary[0].id === id,
-										).artists.primary[0].image[2]?.url ||
-										`https://az-avatar.vercel.app/api/avatar/?bgColor=0f0f0f0&fontSize=60&text=${
-											latest
-												.find(
-													(a) =>
-														a.artists.primary[0]
-															.id === id,
-												)
-												.artists.primary[0].name.split(
-													"",
-												)[0]
-												.toUpperCase() || "UN"
-										}`
-									}
-									name={
-										latest.find(
-											(a) =>
-												a.artists.primary[0].id === id,
-										).artists.primary[0].name
-									}
-								/>
-							))
-						:	Array.from({ length: 10 }).map((_, i) => (
-								<div
-									key={i}
-									className="grid gap-2">
-									<Skeleton className="h-[100px] w-[100px] rounded-full" />
-									<Skeleton className="h-3 w-20" />
-								</div>
-							))
-						}
-					</div>
-					<ScrollBar
-						orientation="horizontal"
-						className="hidden sm:flex"
-					/>
-				</ScrollArea>
-			</div>
-
-			<div className="mt-12">
-				<h1 className="text-base">Trending</h1>
-				<p className="text-xs text-muted-foreground">
-					Most played songs in this week.
-				</p>
-				<ScrollArea className="rounded-md mt-6">
-					<div className="flex gap-4">
-						{popular.length ?
-							popular.map((song) => (
-								<SongCard
-									key={song.id}
-									id={song.id}
-									image={song.image[2].url}
-									title={song.name}
-									artist={song.artists.primary[0].name}
-								/>
-							))
-						:	Array.from({ length: 10 }).map((_, i) => (
-								<SongCard key={i} />
-							))
-						}
-					</div>
-					<ScrollBar
-						orientation="horizontal"
-						className="hidden sm:flex"
-					/>
-				</ScrollArea>
-			</div>
-
-			{/* YouTube-style vertical infinite scroll */}
-			<div className="mt-12">
-				<h1 className="text-base">More Songs</h1>
-				<p className="text-xs text-muted-foreground">
-					Keep scrolling to load more.
-				</p>
-
-				<div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-					{feed.length ?
-						feed.map((song) => (
+				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
+					{feed.map((song, i) => (
+						<div
+							key={`${song.id}-${i}`}
+							className="transition-transform hover:scale-[1.02]">
 							<SongCard
-								key={song.id}
+								item={song}
 								id={song.id}
 								image={song.image?.[2]?.url}
 								title={song.name}
-								artist={
-									song.artists?.primary?.[0]?.name ||
-									"unknown"
-								}
+								artist={song.artists?.primary?.[0]?.name}
 							/>
-						))
-					:	Array.from({ length: 20 }).map((_, i) => (
-							<SongCard key={i} />
-						))
-					}
+						</div>
+					))}
+					{feedLoading &&
+						Array.from({ length: 10 }).map((_, i) => (
+							<div
+								key={i}
+								className="space-y-3">
+								<Skeleton className="h-40 w-full rounded-2xl" />
+								<div className="space-y-2">
+									<Skeleton className="h-4 w-[90%]" />
+									<Skeleton className="h-3 w-[60%]" />
+								</div>
+							</div>
+						))}
 				</div>
 
 				<div
@@ -423,23 +397,16 @@ export default function Page() {
 				/>
 
 				{!feedLoading && feedHasMore && (
-					<div className="mt-4 flex items-center justify-center">
+					<div className="mt-8 flex items-center justify-center">
 						<button
 							onClick={loadMoreFeed}
-							className="text-xs px-4 py-2 rounded-md border border-white/10 hover:bg-white/5"
+							className="text-sm px-6 py-3 rounded-full border border-white/10 hover:bg-white/10 hover:border-white/30 transition text-white"
 							type="button">
-							Load more
+							Load more songs
 						</button>
 					</div>
 				)}
-
-				{feedLoading && feed.length > 0 && (
-					<div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-						<Loader2 className="h-4 w-4 animate-spin" />
-						Loading more...
-					</div>
-				)}
-			</div>
+			</section>
 		</main>
 	);
 }
