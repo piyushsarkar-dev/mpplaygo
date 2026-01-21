@@ -61,7 +61,7 @@ export function AuthModal({ children }) {
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider: "google",
 				options: {
-					redirectTo: `${window.location.origin}/auth/callback`,
+					redirectTo: "https://mpplaygo.vercel.app/auth/callback",
 				},
 			});
 			if (error) throw error;

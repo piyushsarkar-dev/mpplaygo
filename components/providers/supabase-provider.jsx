@@ -52,6 +52,15 @@ export default function SupabaseProvider({ children }) {
 
 		const hydrate = async () => {
 			try {
+				const { data: sessionData } = await supabase.auth.getSession();
+				if (cancelled) return;
+				if (sessionData?.session?.user) {
+					const nextUser = sessionData.session.user;
+					setUser(nextUser);
+					await fetchProfile(nextUser.id);
+					return;
+				}
+
 				const { data, error } = await supabase.auth.getUser();
 				if (cancelled) return;
 				if (!error && data?.user) {
