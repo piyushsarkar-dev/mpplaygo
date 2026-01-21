@@ -58,10 +58,15 @@ export function AuthModal({ children }) {
 
 	const handleGoogleLogin = async () => {
 		try {
+			const siteUrl =
+				process.env.NEXT_PUBLIC_SITE_URL ??
+				"https://mpplaygo.vercel.app";
+			const redirectTo = `${siteUrl}/auth/callback`;
+
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider: "google",
 				options: {
-					redirectTo: "https://mpplaygo.vercel.app/auth/callback",
+					redirectTo,
 				},
 			});
 			if (error) throw error;
