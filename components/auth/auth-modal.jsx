@@ -58,7 +58,11 @@ export function AuthModal({ children }) {
 
 	const handleGoogleLogin = async () => {
 		try {
+			// Important for PKCE: the redirect URL must be on the same origin
+			// where the OAuth flow was initiated, otherwise the saved code verifier
+			// (cookie/localStorage) won't match during exchange.
 			const siteUrl =
+				globalThis?.location?.origin ??
 				process.env.NEXT_PUBLIC_SITE_URL ??
 				"https://mpplaygo.vercel.app";
 			const redirectTo = `${siteUrl}/auth/callback`;
