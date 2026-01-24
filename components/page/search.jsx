@@ -207,7 +207,7 @@ export default function Search() {
 					onKeyDown={onKeyDown}
 					autoComplete="off"
 					type="search"
-					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-4xl focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
 					name="query"
 					placeholder="Search here"
 				/>
