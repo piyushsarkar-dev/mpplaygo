@@ -336,7 +336,7 @@ export default function Page() {
 	return (
 		<main className="flex flex-col gap-8 w-full pb-10">
 			{/* Carousel Section: History or Recommendations */}
-			<div className="w-full min-h-[50vh]">
+			<div className="w-full">
 				{user && historySongs.length > 0 ?
 					<FeaturedCarousel
 						songs={historySongs}

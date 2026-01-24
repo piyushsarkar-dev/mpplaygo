@@ -1,8 +1,8 @@
 "use client";
 
 import { createSeedState } from "@/lib/mock/seed";
-import { loadMockState, saveMockState } from "@/lib/mock/storage";
 import { MOCK_SONGS } from "@/lib/mock/songs";
+import { loadMockState, saveMockState } from "@/lib/mock/storage";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const AppContext = createContext(undefined);
@@ -41,7 +41,9 @@ export default function AppProvider({ children }) {
 		if (!currentUser) return [];
 		return state.playlists
 			.filter((p) => p.userId === currentUser.id)
-			.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+			.sort((a, b) =>
+				(b.createdAt || "").localeCompare(a.createdAt || ""),
+			);
 	}, [currentUser, state.playlists]);
 
 	const actions = useMemo(() => {
@@ -50,10 +52,13 @@ export default function AppProvider({ children }) {
 
 		const login = async ({ email }) => {
 			const user = state.users.find(
-				(u) => u.email.toLowerCase() === String(email).toLowerCase()
+				(u) => u.email.toLowerCase() === String(email).toLowerCase(),
 			);
 			if (!user) {
-				return { ok: false, message: "No account found for this email." };
+				return {
+					ok: false,
+					message: "No account found for this email.",
+				};
 			}
 			setCurrentUserId(user.id);
 			return { ok: true };
@@ -61,7 +66,7 @@ export default function AppProvider({ children }) {
 
 		const signup = async ({ email }) => {
 			const exists = state.users.some(
-				(u) => u.email.toLowerCase() === String(email).toLowerCase()
+				(u) => u.email.toLowerCase() === String(email).toLowerCase(),
 			);
 			if (exists) {
 				return { ok: false, message: "Email already exists." };
@@ -80,7 +85,7 @@ export default function AppProvider({ children }) {
 				email,
 				username,
 				avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-					username
+					username,
 				)}`,
 				createdAt: new Date().toISOString(),
 			};
@@ -109,7 +114,8 @@ export default function AppProvider({ children }) {
 				return { ok: false, message: "Username is required." };
 			}
 			const taken = state.users.some(
-				(u) => u.username === normalized && u.id !== state.currentUserId
+				(u) =>
+					u.username === normalized && u.id !== state.currentUserId,
 			);
 			if (taken) {
 				return { ok: false, message: "Username already taken." };
@@ -118,7 +124,9 @@ export default function AppProvider({ children }) {
 			setState((prev) => ({
 				...prev,
 				users: prev.users.map((u) =>
-					u.id === prev.currentUserId ? { ...u, username: normalized } : u
+					u.id === prev.currentUserId ?
+						{ ...u, username: normalized }
+					:	u,
 				),
 			}));
 			return { ok: true };
@@ -136,7 +144,10 @@ export default function AppProvider({ children }) {
 				createdAt: new Date().toISOString(),
 				songs: [],
 			};
-			setState((prev) => ({ ...prev, playlists: [playlist, ...prev.playlists] }));
+			setState((prev) => ({
+				...prev,
+				playlists: [playlist, ...prev.playlists],
+			}));
 			return { ok: true, playlist };
 		};
 
@@ -144,7 +155,7 @@ export default function AppProvider({ children }) {
 			setState((prev) => ({
 				...prev,
 				playlists: prev.playlists.map((p) =>
-					p.id === playlistId ? { ...p, ...patch } : p
+					p.id === playlistId ? { ...p, ...patch } : p,
 				),
 			}));
 			return { ok: true };
@@ -210,7 +221,7 @@ export default function AppProvider({ children }) {
 				return { label: null, songs: [] };
 			}
 			const recent = (state.history || []).filter(
-				(h) => h.userId === state.currentUserId
+				(h) => h.userId === state.currentUserId,
 			);
 			const counts = {};
 			for (const h of recent.slice(0, 20)) {
@@ -218,13 +229,16 @@ export default function AppProvider({ children }) {
 				counts[h.language] = (counts[h.language] || 0) + 1;
 			}
 			const topLang = Object.keys(counts).sort(
-				(a, b) => counts[b] - counts[a]
+				(a, b) => counts[b] - counts[a],
 			)[0];
 			if (!topLang) return { label: null, songs: [] };
 
 			return {
 				label: `Because you listen to ${topLang}`,
-				songs: MOCK_SONGS.filter((s) => s.language === topLang).slice(0, 8),
+				songs: MOCK_SONGS.filter((s) => s.language === topLang).slice(
+					0,
+					8,
+				),
 			};
 		};
 
