@@ -3,14 +3,14 @@ import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { useMusicProvider } from "@/hooks/use-context";
 import { getSongsById } from "@/lib/fetch";
 import {
-	Download,
-	Heart,
-	Play,
-	SkipBack,
-	SkipForward,
-	Volume2,
-	VolumeX,
-	X,
+    Download,
+    Heart,
+    Play,
+    SkipBack,
+    SkipForward,
+    Volume2,
+    VolumeX,
+    X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
