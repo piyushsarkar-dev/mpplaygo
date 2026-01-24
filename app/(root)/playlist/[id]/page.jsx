@@ -123,7 +123,7 @@ export default function PlaylistPage({ params }) {
 		if (error) {
 			toast.error("Failed to remove song");
 		} else {
-			toast.success("Song removed");
+			toast.success("Song removed from playlist");
 			setSongs(songs.filter((s) => s.id !== songId));
 		}
 	};
