@@ -65,7 +65,22 @@ export function AuthModal({ children }) {
 				globalThis?.location?.origin ??
 				process.env.NEXT_PUBLIC_SITE_URL ??
 				"https://mpplaygo.vercel.app";
-			const redirectTo = `${siteUrl}/auth/callback`;
+			const nextPath =
+				(
+					globalThis?.location?.pathname &&
+					globalThis?.location?.search != null
+				) ?
+					`${globalThis.location.pathname}${globalThis.location.search}`
+				:	"/";
+			try {
+				globalThis?.sessionStorage?.setItem(
+					"mpplaygo.oauth.next",
+					nextPath,
+				);
+			} catch {
+				// ignore storage errors
+			}
+			const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider: "google",
