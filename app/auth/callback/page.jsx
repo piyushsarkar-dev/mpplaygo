@@ -1,5 +1,3 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 function buildErrorUrl({ error, errorCode, errorDescription }) {
@@ -44,34 +42,9 @@ export default async function AuthCallbackPage({ searchParams }) {
 		);
 	}
 
-	const cookieStore = await cookies();
-	const supabase = createServerClient(
-		process.env.NEXT_PUBLIC_SUPABASE_URL,
-		process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN ??
-			process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-		{
-			cookies: {
-				getAll() {
-					return cookieStore.getAll();
-				},
-				setAll(cookiesToSet) {
-					cookiesToSet.forEach(({ name, value, options }) =>
-						cookieStore.set(name, value, options),
-					);
-				},
-			},
-		},
+	redirect(
+		`/auth/callback/exchange?code=${encodeURIComponent(code)}&next=${encodeURIComponent(
+			nextPath,
+		)}`,
 	);
-
-	const { error } = await supabase.auth.exchangeCodeForSession(code);
-	if (error) {
-		redirect(
-			buildErrorUrl({
-				error: "exchange_code_for_session_failed",
-				errorDescription: error.message,
-			}),
-		);
-	}
-
-	redirect(nextPath);
 }
