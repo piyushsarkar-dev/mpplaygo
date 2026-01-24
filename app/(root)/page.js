@@ -3,20 +3,19 @@ import SongCard from "@/components/cards/song";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import {
-	getSongsByQuery,
-	getSongsByQueryPaged,
-	searchAlbumByQuery,
+    getSongsByQuery,
+    getSongsByQueryPaged,
+    searchAlbumByQuery,
 } from "@/lib/fetch";
 import { ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
@@ -28,7 +27,6 @@ import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 export default function Page() {
 	const FOR_YOU_LIMIT = 6;
 	const PAGE_SIZE = FOR_YOU_LIMIT;
-	const ARTIST_PREVIEW_COUNT = 10;
 	const [latest, setLatest] = useState([]);
 	const [popular, setPopular] = useState([]);
 	const [albums, setAlbums] = useState([]);
@@ -43,6 +41,9 @@ export default function Page() {
 	const [recommended, setRecommended] = useState([]);
 	const [artistModalOpen, setArtistModalOpen] = useState(false);
 	const [artistQuery, setArtistQuery] = useState("");
+	const [artistsExpanded, setArtistsExpanded] = useState(false);
+	const [artistRowSlots, setArtistRowSlots] = useState(0);
+	const artistRowRef = useRef(null);
 
 	const { user, supabase } = useSupabase();
 
@@ -88,6 +89,28 @@ export default function Page() {
 		if (!q) return artists;
 		return artists.filter((a) => a.name.toLowerCase().includes(q));
 	}, [artists, artistQuery]);
+
+	useEffect(() => {
+		const el = artistRowRef.current;
+		if (!el) return;
+
+		const ITEM_SIZE = 160; // w-40 (desktop)
+		const GAP = 32; // gap-8
+		const MIN_SLOTS = 2; // at least 1 artist + show more
+
+		const computeSlots = () => {
+			const width = el.clientWidth || 0;
+			if (!width) return;
+			const slots = Math.floor((width + GAP) / (ITEM_SIZE + GAP));
+			setArtistRowSlots(Math.max(MIN_SLOTS, slots));
+		};
+
+		computeSlots();
+		if (typeof ResizeObserver === "undefined") return;
+		const ro = new ResizeObserver(() => computeSlots());
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
 
 	useEffect(() => {
 		const fetchRecommendations = async () => {
@@ -357,20 +380,37 @@ export default function Page() {
 						<ChevronRight className="w-5 h-5 text-zinc-500" />
 					</h2>
 				</div>
-				<ScrollArea className="w-full whitespace-nowrap pb-6">
-					<div className="flex w-max space-x-8 px-2">
+				<div
+					ref={artistRowRef}
+					className="w-full px-2 pb-6">
+					<div
+						className={
+							artistsExpanded
+								? "flex flex-wrap gap-8"
+								: "flex flex-nowrap gap-8 overflow-hidden"
+						}>
 						{artists.length > 0 ?
-							artists.slice(0, ARTIST_PREVIEW_COUNT).map((a) => (
-								<Link
-									key={a.id}
-									href={`/search/${a.name || "artist"}`}
-									className="flex flex-col items-center gap-4 group cursor-pointer">
-									<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
-										<img
-											src={a.image}
-											alt={a.name}
-											className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-											onError={(e) => {
+							(artistsExpanded
+								? artists
+								: artists.slice(
+										0,
+										Math.max(
+											0,
+											(artistRowSlots || 2) - 1,
+										),
+									)
+								)
+								.map((a) => (
+									<Link
+										key={a.id}
+										href={`/search/${a.name || "artist"}`}
+										className="flex flex-col items-center gap-4 group cursor-pointer">
+										<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
+											<img
+												src={a.image}
+												alt={a.name}
+												className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+												onError={(e) => {
 												e.currentTarget.src =
 													"https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&auto=format&fit=crop&q=60";
 											}}
@@ -381,15 +421,14 @@ export default function Page() {
 									</span>
 								</Link>
 							))
-						:	Array.from({ length: 8 }).map((_, i) => (
+						: Array.from({ length: Math.max(0, (artistRowSlots || 6) - 1) }).map((_, i) => (
 								<div
 									key={i}
 									className="flex flex-col items-center gap-4">
 									<Skeleton className="w-32 h-32 rounded-full" />
 									<Skeleton className="w-20 h-4" />
 								</div>
-							))
-						}
+							))}
 
 						{/* Show more (at the end of the row) */}
 						<Dialog
@@ -401,6 +440,7 @@ export default function Page() {
 							<DialogTrigger asChild>
 								<button
 									type="button"
+									onClick={() => setArtistsExpanded(true)}
 									className="flex flex-col items-center gap-4 group cursor-pointer">
 									<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
 										<ChevronRight className="w-10 h-10 text-white/70 group-hover:text-white transition" />
@@ -486,8 +526,7 @@ export default function Page() {
 							</DialogContent>
 						</Dialog>
 					</div>
-					<ScrollBar orientation="horizontal" />
-				</ScrollArea>
+				</div>
 			</section>
 
 			{/* 3. For You Section - Infinite List (Vertical) */}
