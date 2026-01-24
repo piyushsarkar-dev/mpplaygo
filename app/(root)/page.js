@@ -47,6 +47,8 @@ export default function Page() {
 	const [artistApiResults, setArtistApiResults] = useState([]);
 	const [artistApiLoading, setArtistApiLoading] = useState(false);
 	const artistRowRef = useRef(null);
+	const artistSearchCacheRef = useRef(new Map());
+	const artistSearchDebounceRef = useRef(null);
 
 	const { user, supabase } = useSupabase();
 
@@ -104,33 +106,56 @@ export default function Page() {
 	useEffect(() => {
 		if (!artistModalOpen) return;
 		const q = artistQuery.trim();
-		if (!q) {
+		const MIN_CHARS = 2;
+		const DEBOUNCE_MS = 500;
+
+		if (artistSearchDebounceRef.current) {
+			clearTimeout(artistSearchDebounceRef.current);
+			artistSearchDebounceRef.current = null;
+		}
+
+		if (!q || q.length < MIN_CHARS) {
 			setArtistApiResults([]);
+			setArtistApiLoading(false);
+			return;
+		}
+
+		const cacheKey = q.toLowerCase();
+		if (artistSearchCacheRef.current.has(cacheKey)) {
+			setArtistApiResults(artistSearchCacheRef.current.get(cacheKey) || []);
 			setArtistApiLoading(false);
 			return;
 		}
 
 		let cancelled = false;
 		setArtistApiLoading(true);
-		(async () => {
-			try {
-				const res = await searchArtistsByQueryPaged(q, {
-					page: 1,
-					limit: 50,
-				});
-				const json = await res?.json();
-				if (cancelled) return;
-				setArtistApiResults(json?.data?.results || []);
-			} catch {
-				if (cancelled) return;
-				setArtistApiResults([]);
-			} finally {
-				if (!cancelled) setArtistApiLoading(false);
-			}
-		})();
+		artistSearchDebounceRef.current = setTimeout(() => {
+			(async () => {
+				try {
+					const res = await searchArtistsByQueryPaged(q, {
+						page: 1,
+						limit: 50,
+					});
+					const json = await res?.json();
+					if (cancelled) return;
+					const results = json?.data?.results || [];
+					artistSearchCacheRef.current.set(cacheKey, results);
+					setArtistApiResults(results);
+				} catch {
+					if (cancelled) return;
+					setArtistApiResults([]);
+				} finally {
+					if (!cancelled) setArtistApiLoading(false);
+				}
+			})();
+		}, DEBOUNCE_MS);
 
 		return () => {
 			cancelled = true;
+			if (artistSearchDebounceRef.current) {
+				clearTimeout(artistSearchDebounceRef.current);
+				artistSearchDebounceRef.current = null;
+			}
 		};
 	}, [artistModalOpen, artistQuery]);
 

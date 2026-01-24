@@ -26,6 +26,7 @@ export default function Player({ id }) {
 	const { current, setCurrent, setDownloadProgress, downloadProgress } =
 		useMusicProvider();
 	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
+	const QUEUE_KEY = "mpplaygo_queue";
 	const userInitiatedRef = useRef(false);
 
 	useEffect(() => {
@@ -36,6 +37,33 @@ export default function Player({ id }) {
 			userInitiatedRef.current = false;
 		}
 	}, []);
+
+	useEffect(() => {
+		// If an artist queue is active, set the Next card from the queue.
+		try {
+			const raw = sessionStorage.getItem(QUEUE_KEY);
+			if (!raw) return;
+			const queue = JSON.parse(raw);
+			if (queue?.type !== "artist" || !Array.isArray(queue?.items)) return;
+			const idx = queue.items.findIndex(
+				(x) => String(x?.id) === String(id)
+			);
+			const nextItem = idx >= 0 ? queue.items[idx + 1] : null;
+			if (nextItem?.id) {
+				next.setNextData({
+					id: nextItem.id,
+					name: nextItem.name,
+					artist: nextItem.artist || "unknown",
+					image: nextItem.image,
+				});
+			} else {
+				next.setNextData(null);
+			}
+		} catch {
+			// ignore queue parsing issues
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const getSong = async () => {
 		const get = await getSongsById(id);
@@ -196,14 +224,41 @@ export default function Player({ id }) {
 		}
 	}, [audioURL, playing]);
 	useEffect(() => {
-		const handleRedirect = () => {
-			if (currentTime === duration && !isLooping && duration !== 0) {
-				window.location.href = `https://${window.location.host}/${next?.nextData?.id}`;
-			}
-		};
 		if (isLooping || duration === 0) return;
-		return handleRedirect();
-	}, [currentTime, duration, isLooping, next?.nextData?.id]);
+		if (currentTime !== duration) return;
+
+		// Prefer artist queue navigation (no mixing).
+		try {
+			const raw = sessionStorage.getItem(QUEUE_KEY);
+			if (raw) {
+				const queue = JSON.parse(raw);
+				if (queue?.type === "artist" && Array.isArray(queue?.items)) {
+					const idx = queue.items.findIndex(
+						(x) => String(x?.id) === String(id)
+					);
+					const nextItem = idx >= 0 ? queue.items[idx + 1] : null;
+					if (nextItem?.id) {
+						try {
+							sessionStorage.setItem(USER_PLAY_KEY, "true");
+							localStorage.setItem("p", "true");
+						} catch {}
+						window.location.href = `https://${window.location.host}/${nextItem.id}`;
+						return;
+					}
+					// End of queue
+					try {
+						sessionStorage.removeItem(QUEUE_KEY);
+					} catch {}
+					return;
+				}
+			}
+		} catch {}
+
+		// Fallback to recommendation-based next.
+		if (next?.nextData?.id) {
+			window.location.href = `https://${window.location.host}/${next.nextData.id}`;
+		}
+	}, [currentTime, duration, isLooping, id, next?.nextData?.id]);
 	return (
 		<div className="mb-3 mt-10">
 			<audio

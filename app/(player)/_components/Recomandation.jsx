@@ -1,18 +1,16 @@
 "use client";
 
-import AlbumCard from "@/components/cards/album";
 import Next from "@/components/cards/next";
-import SongCard from "@/components/cards/song";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNextMusicProvider } from "@/hooks/use-context";
 import { getSongsSuggestions } from "@/lib/fetch";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Recomandation({ id }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const next = useNextMusicProvider();
+  const QUEUE_KEY = "mpplaygo_queue";
 
   const getData = async () => {
     await getSongsSuggestions(id)
@@ -37,8 +35,20 @@ export default function Recomandation({ id }) {
       });
   };
   useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(QUEUE_KEY);
+      if (raw) {
+        const queue = JSON.parse(raw);
+        if (queue?.type === "artist" && Array.isArray(queue?.items)) {
+          setLoading(false);
+          setData(false);
+          return;
+        }
+      }
+    } catch {}
     getData();
   }, []);
+  if (!loading && !data) return null;
   return (
     <section className="py-10 px-6 md:px-20 lg:px-32">
       <div>

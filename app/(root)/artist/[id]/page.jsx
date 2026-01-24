@@ -1,131 +1,236 @@
 "use client";
 
-import SongCard from "@/components/cards/song";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getArtistSongsByIdPaged } from "@/lib/fetch";
+import { Play } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function Page({ params }) {
 	const artistId = params?.id;
-	const PAGE_SIZE = 30;
+	const PAGE_SIZE = 100;
+	const MAX_PAGES = 15;
+	const QUEUE_KEY = "mpplaygo_queue";
+	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
+	const CACHE_KEY = `mpplaygo_artist_cache_${artistId}`;
+	const router = useRouter();
 
 	const [songs, setSongs] = useState([]);
+	const [artist, setArtist] = useState(null);
 	const [loading, setLoading] = useState(false);
-	const [hasMore, setHasMore] = useState(true);
-	const pageRef = useRef(1);
 	const loadingRef = useRef(false);
-	const hasMoreRef = useRef(true);
+	const fetchOnceRef = useRef(false);
+	const [error, setError] = useState(null);
 
 	const setLoadingSafe = (v) => {
 		loadingRef.current = v;
 		setLoading(v);
 	};
-	const setHasMoreSafe = (v) => {
-		hasMoreRef.current = v;
-		setHasMore(v);
+	const artistMeta = useMemo(() => {
+		const name = artist?.name || `Artist ${artistId}`;
+		const image =
+			artist?.image?.[2]?.url ||
+			artist?.image?.[1]?.url ||
+			artist?.image?.[0]?.url ||
+			"";
+		return { name, image };
+	}, [artist, artistId]);
+
+	const startArtistQueue = (startIndex = 0) => {
+		const items = (songs || []).map((s) => ({
+			id: s?.id,
+			name: s?.name,
+			artist: s?.artists?.primary?.[0]?.name,
+			image: s?.image?.[1]?.url || s?.image?.[2]?.url || s?.image?.[0]?.url,
+		}));
+		const filtered = items.filter((x) => x?.id);
+		const start = filtered[startIndex];
+		if (!start?.id) return;
+
+		try {
+			sessionStorage.setItem(
+				QUEUE_KEY,
+				JSON.stringify({ type: "artist", artistId, items: filtered }),
+			);
+			sessionStorage.setItem(USER_PLAY_KEY, "true");
+		} catch {}
+		try {
+			localStorage.setItem("p", "true");
+		} catch {}
+		router.push(`/${start.id}`);
 	};
 
-	const mergeUniqueById = (prev, next) => {
-		const seen = new Set(prev.map((x) => x?.id).filter(Boolean));
-		const merged = prev.slice();
-		for (const item of next || []) {
-			if (!item?.id) continue;
-			if (seen.has(item.id)) continue;
-			seen.add(item.id);
-			merged.push(item);
-		}
-		return merged;
-	};
-
-	const title = useMemo(() => `Artist ${artistId}`, [artistId]);
-
-	const loadSongs = async (pageToLoad) => {
+	const fetchArtistAndSongsOnce = async () => {
 		if (!artistId) return;
 		if (loadingRef.current) return;
-		if (!hasMoreRef.current && pageToLoad !== 1) return;
+		if (fetchOnceRef.current) return;
+		fetchOnceRef.current = true;
 
+		setError(null);
 		setLoadingSafe(true);
 		try {
-			const res = await getArtistSongsByIdPaged(artistId, {
-				page: pageToLoad,
-				limit: PAGE_SIZE,
-			});
-			const json = await res?.json();
-			const nextResults = json?.data?.results || [];
-			const total = json?.data?.total;
+			// Cache check (prevents re-fetching same artist repeatedly)
+			try {
+				const cachedRaw = sessionStorage.getItem(CACHE_KEY);
+				if (cachedRaw) {
+					const cached = JSON.parse(cachedRaw);
+					if (cached?.artist && Array.isArray(cached?.songs)) {
+						setArtist(cached.artist);
+						setSongs(cached.songs);
+						setLoadingSafe(false);
+						return;
+					}
+				}
+			} catch {}
 
-			setSongs((prev) => {
-				const merged =
-					pageToLoad === 1 ? nextResults : mergeUniqueById(prev, nextResults);
-				if (!nextResults.length) setHasMoreSafe(false);
-				if (typeof total === "number" && merged.length >= total)
-					setHasMoreSafe(false);
-				return merged;
-			});
-		} catch {
-			setHasMoreSafe(false);
+			// 1) Fetch artist details (once)
+			const artistRes = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}artists/${artistId}`,
+			);
+			const artistJson = await artistRes.json();
+			setArtist(artistJson?.data || null);
+
+			// 2) Fetch ALL songs in one controlled flow (paged loop)
+			const seen = new Set();
+			let all = [];
+			let total = null;
+			for (let page = 1; page <= MAX_PAGES; page += 1) {
+				const res = await getArtistSongsByIdPaged(artistId, {
+					page,
+					limit: PAGE_SIZE,
+				});
+				const json = await res?.json();
+				const nextSongs = json?.data?.songs || [];
+				if (typeof json?.data?.total === "number") total = json.data.total;
+
+				let added = 0;
+				for (const s of nextSongs) {
+					const sid = s?.id;
+					if (!sid) continue;
+					if (seen.has(sid)) continue;
+					seen.add(sid);
+					all.push(s);
+					added += 1;
+				}
+
+				// Stop conditions
+				if (!nextSongs.length) break;
+				if (added === 0) break; // API repeating pages; avoid infinite loop
+				if (nextSongs.length < PAGE_SIZE) break;
+				if (typeof total === "number" && all.length >= total) break;
+			}
+
+			if (all.length === 0) {
+				setError("No songs found for this artist.");
+			}
+			setSongs(all);
+
+			// Save cache
+			try {
+				sessionStorage.setItem(
+					CACHE_KEY,
+					JSON.stringify({ artist: artistJson?.data || null, songs: all }),
+				);
+			} catch {}
+		} catch (e) {
+			setError("Failed to load artist songs.");
 		} finally {
 			setLoadingSafe(false);
 		}
 	};
 
 	useEffect(() => {
-		pageRef.current = 1;
+		fetchOnceRef.current = false;
+		setArtist(null);
 		setSongs([]);
-		setHasMoreSafe(true);
 		setLoadingSafe(false);
-		loadSongs(1);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		fetchArtistAndSongsOnce();
 	}, [artistId]);
 
 	return (
 		<main className="flex flex-col gap-6 w-full pb-10">
-			<div className="px-1">
-				<h1 className="text-xl font-bold text-white">{title}</h1>
-				<p className="text-sm text-white/60">
-					Showing songs for this artist only.
-				</p>
-			</div>
-
-			<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-8 gap-y-10 px-2">
-				{songs.map((song, i) => (
-					<div
-						key={`${song.id}-${i}`}
-						className="transition-transform hover:scale-[1.02] origin-top">
-						<SongCard
-							item={song}
-							id={song.id}
-							image={song.image?.[2]?.url}
-							title={song.name}
-							artist={song.artists?.primary?.[0]?.name}
-							className="w-full"
-							imageClassName="h-[300px]"
-						/>
+			{/* Artist header */}
+			<div className="px-2 py-2">
+				<div className="flex items-center gap-5">
+					<div className="h-28 w-28 rounded-full overflow-hidden bg-white/5 border border-white/10 shrink-0">
+						{artistMeta.image ? (
+							// eslint-disable-next-line @next/next/no-img-element
+							<img
+								src={artistMeta.image}
+								alt={artistMeta.name}
+								className="h-full w-full object-cover"
+								onError={(e) => {
+									e.currentTarget.src = "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&auto=format&fit=crop&q=60";
+								}}
+							/>
+						) : (
+							<Skeleton className="h-full w-full rounded-full" />
+						)}
 					</div>
-				))}
 
-				{loading && songs.length === 0 &&
-					Array.from({ length: 12 }).map((_, i) => (
-						<div key={i} className="w-full">
-							<Skeleton className="w-full h-[210px] rounded-md" />
-							<Skeleton className="w-[70%] h-4 mt-3" />
-							<Skeleton className="w-20 h-3 mt-2" />
+					<div className="min-w-0 flex-1">
+						<h1 className="text-2xl font-bold text-white truncate">
+							{artistMeta.name}
+						</h1>
+						<p className="text-sm text-white/60 mt-1">Artist songs</p>
+						<div className="mt-4">
+							<Button
+								type="button"
+								className="rounded-full"
+								onClick={() => startArtistQueue(0)}
+								disabled={songs.length === 0}>
+								<Play className="h-4 w-4 mr-2" />
+								Play
+							</Button>
 						</div>
-					))}
+					</div>
+				</div>
 			</div>
 
+			{/* Song list */}
 			<div className="px-2">
-				{hasMore && !loading && songs.length > 0 && (
-					<button
-						type="button"
-						className="text-xs px-4 py-2 rounded-md border border-white/10 hover:bg-white/5"
-						onClick={() => {
-							const next = pageRef.current + 1;
-							pageRef.current = next;
-							loadSongs(next);
-						}}>
-						Load more songs
-					</button>
+				{error && (
+					<p className="text-sm text-white/60">{error}</p>
+				)}
+				{songs.length > 0 ? (
+					<div className="flex flex-col gap-2">
+						{songs.map((song, i) => (
+							<button
+								key={`${song.id}-${i}`}
+								type="button"
+								onClick={() => startArtistQueue(i)}
+								className="w-full text-left flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition px-4 py-3">
+								<span className="w-8 text-sm text-white/60 tabular-nums">
+									{i + 1}
+								</span>
+								<div className="min-w-0 flex-1">
+									<p className="text-white font-medium truncate">
+										{song?.name}
+									</p>
+									<p className="text-xs text-white/50 truncate">
+										{song?.album?.name || ""}
+									</p>
+								</div>
+								<div className="text-xs text-white/50">
+									{song?.duration ? `${Math.floor(song.duration / 60)}:${String(song.duration % 60).padStart(2, "0")}` : ""}
+								</div>
+							</button>
+						))}
+					</div>
+				) : loading ? (
+					<div className="flex flex-col gap-3">
+						{Array.from({ length: 10 }).map((_, i) => (
+							<div
+								key={i}
+								className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
+								<Skeleton className="h-4 w-[60%]" />
+								<Skeleton className="h-3 w-[35%] mt-2" />
+							</div>
+						))}
+					</div>
+				) : (
+					<p className="text-sm text-white/60">No songs found.</p>
 				)}
 			</div>
 		</main>
