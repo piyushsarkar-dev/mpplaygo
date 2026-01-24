@@ -16,6 +16,7 @@ import {
     getSongsByQuery,
     getSongsByQueryPaged,
     searchAlbumByQuery,
+    searchArtistsByQueryPaged,
 } from "@/lib/fetch";
 import { ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
@@ -43,13 +44,15 @@ export default function Page() {
 	const [artistQuery, setArtistQuery] = useState("");
 	const [artistsExpanded, setArtistsExpanded] = useState(false);
 	const [artistRowSlots, setArtistRowSlots] = useState(0);
+	const [artistApiResults, setArtistApiResults] = useState([]);
+	const [artistApiLoading, setArtistApiLoading] = useState(false);
 	const artistRowRef = useRef(null);
 
 	const { user, supabase } = useSupabase();
 
 	const artists = useMemo(() => {
-		// Prefer history-based ranking when available, else fallback to trending/popular
-		const source = user && historySongs.length > 0 ? historySongs : popular;
+		// Popular Artists must be global (same for all users)
+		const source = popular;
 		const counts = new Map();
 
 		for (const item of source || []) {
@@ -82,13 +85,54 @@ export default function Page() {
 		}
 
 		return [...counts.values()].sort((x, y) => y.count - x.count);
-	}, [popular, historySongs, user]);
+	}, [popular]);
 
-	const filteredArtists = useMemo(() => {
-		const q = artistQuery.trim().toLowerCase();
+	const sidebarArtists = useMemo(() => {
+		const q = artistQuery.trim();
 		if (!q) return artists;
-		return artists.filter((a) => a.name.toLowerCase().includes(q));
-	}, [artists, artistQuery]);
+		return (artistApiResults || []).map((a) => ({
+			id: a?.id,
+			name: a?.name,
+			image:
+				a?.image?.[2]?.url ||
+				a?.image?.[1]?.url ||
+				a?.image?.[0]?.url ||
+				"",
+		}));
+	}, [artistApiResults, artistQuery, artists]);
+
+	useEffect(() => {
+		if (!artistModalOpen) return;
+		const q = artistQuery.trim();
+		if (!q) {
+			setArtistApiResults([]);
+			setArtistApiLoading(false);
+			return;
+		}
+
+		let cancelled = false;
+		setArtistApiLoading(true);
+		(async () => {
+			try {
+				const res = await searchArtistsByQueryPaged(q, {
+					page: 1,
+					limit: 50,
+				});
+				const json = await res?.json();
+				if (cancelled) return;
+				setArtistApiResults(json?.data?.results || []);
+			} catch {
+				if (cancelled) return;
+				setArtistApiResults([]);
+			} finally {
+				if (!cancelled) setArtistApiLoading(false);
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [artistModalOpen, artistQuery]);
 
 	useEffect(() => {
 		const el = artistRowRef.current;
@@ -222,9 +266,13 @@ export default function Page() {
 	const feedHasMoreRef = useRef(true);
 	const feedAbortRef = useRef(null);
 	const feedCacheRef = useRef(new Map());
+	const ensuredPopularArtistsRef = useRef(false);
 
 	const getSongs = async (e, type) => {
-		const get = await getSongsByQuery(e);
+		const get =
+			type === "popular" ?
+				await getSongsByQueryPaged(e, { page: 1, limit: 60 })
+			: 	await getSongsByQuery(e);
 		const data = await get.json();
 		if (type === "latest") {
 			setLatest(data.data.results);
@@ -244,6 +292,37 @@ export default function Page() {
 		}
 		return merged;
 	};
+
+	useEffect(() => {
+		if (ensuredPopularArtistsRef.current) return;
+		if (!popular || popular.length === 0) return;
+
+		const uniqueArtistIds = new Set();
+		for (const song of popular) {
+			const id = song?.artists?.primary?.[0]?.id;
+			if (id) uniqueArtistIds.add(id);
+		}
+		if (uniqueArtistIds.size >= 8) {
+			ensuredPopularArtistsRef.current = true;
+			return;
+		}
+
+		ensuredPopularArtistsRef.current = true;
+		(async () => {
+			try {
+				const res = await getSongsByQueryPaged("trending", {
+					page: 2,
+					limit: 60,
+				});
+				const json = await res?.json();
+				const nextResults = json?.data?.results || [];
+				if (!nextResults.length) return;
+				setPopular((prev) => mergeUniqueById(prev, nextResults));
+			} catch {
+				// ignore; best-effort to reach minimum artist count
+			}
+		})();
+	}, [popular]);
 
 	const setFeedLoadingSafe = (v) => {
 		feedLoadingRef.current = v;
@@ -403,7 +482,7 @@ export default function Page() {
 								.map((a) => (
 									<Link
 										key={a.id}
-										href={`/search/${a.name || "artist"}`}
+										href={a.id ? `/artist/${a.id}` : `/search/${a.name || "artist"}`}
 										className="flex flex-col items-center gap-4 group cursor-pointer">
 										<div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
 											<img
@@ -481,15 +560,19 @@ export default function Page() {
 									</div>
 
 									<div className="mt-5 max-h-[70vh] overflow-y-auto pr-1">
-										{filteredArtists.length === 0 ?
+													{artistQuery.trim().length > 0 && artistApiLoading ?
+														<p className="text-sm text-muted-foreground">
+															Searching artists...
+														</p>
+												: sidebarArtists.length === 0 ?
 											<p className="text-sm text-muted-foreground">
 												No artists found.
 											</p>
-										:	<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-												{filteredArtists.map((a) => (
+												: 	<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+													{sidebarArtists.map((a) => (
 													<Link
 														key={a.id}
-														href={`/search/${a.name}`}
+															href={a.id ? `/artist/${a.id}` : `/search/${a.name}`}
 														onClick={() =>
 															setArtistModalOpen(
 																false,

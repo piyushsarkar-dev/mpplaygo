@@ -3,10 +3,7 @@ import Link from "next/link";
 export default function ArtistCard({ image, name, id }) {
 	return (
 		<Link
-			href={
-				"/search/" +
-				`${encodeURI(name.toLowerCase().split(" ").join("+"))}`
-			}>
+			href={id ? `/artist/${id}` : "/search/" + `${encodeURI(name.toLowerCase().split(" ").join("+"))}`}>
 			<div className="overflow-hidden h-[100px] w-[100px] rounded-md">
 				<img
 					src={
