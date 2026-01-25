@@ -194,7 +194,7 @@ export default function Search() {
 			className="relative z-10 w-full max-w-2xl mx-auto">
 			<form
 				onSubmit={handleSubmit}
-				className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-2xl transition-all duration-300 overflow-hidden h-12">
+				className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-full transition-all duration-300 overflow-hidden h-12">
 				<Input
 					ref={inpRef}
 					value={query}
@@ -207,7 +207,7 @@ export default function Search() {
 					onKeyDown={onKeyDown}
 					autoComplete="off"
 					type="search"
-					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-4xl focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-full focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
 					name="query"
 					placeholder="Search here"
 				/>
