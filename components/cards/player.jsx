@@ -2,7 +2,16 @@
 import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { useMusicProvider } from "@/hooks/use-context";
 import { getSongsById } from "@/lib/fetch";
-import { Download, Heart, Play, SkipBack, SkipForward, X } from "lucide-react";
+import {
+    Download,
+    Heart,
+    Play,
+    SkipBack,
+    SkipForward,
+    Volume2,
+    VolumeX,
+    X,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IoPause } from "react-icons/io5";
@@ -18,9 +27,14 @@ export default function Player() {
 	const [duration, setDuration] = useState(0);
 	const [audioURL, setAudioURL] = useState("");
 	const [isLooping, setIsLooping] = useState(false);
+	const [volume, setVolume] = useState(100);
+	const [muted, setMuted] = useState(false);
+	const lastNonZeroVolumeRef = useRef(50);
 	const { music, setMusic, current, setCurrent } = useMusicProvider();
 	const userInitiatedRef = useRef(false);
 	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
+	const VOLUME_KEY = "mpplaygo_volume";
+	const MUTED_KEY = "mpplaygo_muted";
 
 	useEffect(() => {
 		try {
@@ -30,6 +44,34 @@ export default function Player() {
 			userInitiatedRef.current = false;
 		}
 	}, []);
+
+	useEffect(() => {
+		// Restore volume/mute from localStorage.
+		try {
+			const v = localStorage.getItem(VOLUME_KEY);
+			const m = localStorage.getItem(MUTED_KEY);
+			const parsed = v ? Number(v) : 100;
+			if (!Number.isNaN(parsed)) {
+				setVolume(Math.min(100, Math.max(0, parsed)));
+				if (parsed > 0) lastNonZeroVolumeRef.current = parsed;
+			}
+			setMuted(m === "true");
+		} catch {}
+	}, []);
+
+	useEffect(() => {
+		// Apply volume/mute to the audio element.
+		if (!audioRef.current) return;
+		try {
+			audioRef.current.volume = Math.min(1, Math.max(0, volume / 100));
+			audioRef.current.muted = Boolean(muted);
+		} catch {}
+		try {
+			localStorage.setItem(VOLUME_KEY, String(volume));
+			localStorage.setItem(MUTED_KEY, muted ? "true" : "false");
+		} catch {}
+		if (volume > 0) lastNonZeroVolumeRef.current = volume;
+	}, [volume, muted]);
 
 	const getSong = async () => {
 		const get = await getSongsById(music);
@@ -83,6 +125,16 @@ export default function Player() {
 	const loopSong = () => {
 		audioRef.current.loop = !audioRef.current.loop;
 		setIsLooping(!isLooping);
+	};
+
+	const effectiveMuted = muted || volume === 0;
+	const toggleMute = () => {
+		if (effectiveMuted) {
+			setMuted(false);
+			if (volume === 0) setVolume(lastNonZeroVolumeRef.current || 50);
+			return;
+		}
+		setMuted(true);
 	};
 
 	useEffect(() => {
@@ -270,6 +322,39 @@ export default function Player() {
 							</Button>
 						</a>
 					)}
+
+					{/* Volume */}
+					<div className="hidden md:flex items-center gap-2 ml-1">
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+							onClick={toggleMute}
+							title={effectiveMuted ? "Unmute" : "Mute"}>
+							{effectiveMuted ? (
+								<VolumeX className="w-5 h-5" />
+							) : (
+								<Volume2 className="w-5 h-5" />
+							)}
+						</Button>
+						<div className="w-24">
+							<Slider
+								value={[volume]}
+								max={100}
+								step={1}
+								onValueChange={(v) => {
+									const next = v?.[0] ?? 100;
+									setVolume(next);
+									if (muted && next > 0) setMuted(false);
+								}}
+								thumbClassName="h-3 w-3 bg-white border-none"
+								trackClassName="h-1 bg-white/20"
+								rangeClassName="bg-white"
+								className="w-full"
+							/>
+						</div>
+					</div>
+
 					<Button
 						size="icon"
 						variant="ghost"
