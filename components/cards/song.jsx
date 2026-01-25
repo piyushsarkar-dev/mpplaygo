@@ -31,7 +31,7 @@ export default function SongCard({
 	return (
 		<div
 			className={cn(
-				"group h-fit w-[200px] rounded-xl bg-white/[0.03] border border-white/10 hover:border-white/20 shadow-lg hover:shadow-2xl transition-all duration-300",
+				"group h-fit w-[200px] rounded-xl bg-white/[0.03] shadow-lg hover:shadow-2xl transition-all duration-300",
 				className,
 			)}>
 			<div className="p-3">
