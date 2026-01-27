@@ -57,7 +57,7 @@ export default function FriendSearch({ className }) {
 		<div
 			ref={wrapperRef}
 			className={cn("relative w-full max-w-[280px]", className)}>
-			<div className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-full transition-all duration-300 overflow-hidden h-12">
+			<div className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-full transition-all duration-300 overflow-hidden h-10">
 				<Input
 					value={query}
 					onChange={(e) => {
@@ -67,7 +67,7 @@ export default function FriendSearch({ className }) {
 					onFocus={() => setOpen(true)}
 					placeholder="Search friends"
 					autoComplete="off"
-					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-base font-normal rounded-full"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-sm font-normal rounded-full"
 				/>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
