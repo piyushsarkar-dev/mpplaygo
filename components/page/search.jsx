@@ -198,7 +198,7 @@ export default function Search({ className }) {
 			)}>
 			<form
 				onSubmit={handleSubmit}
-				className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-full transition-all duration-300 overflow-hidden h-10">
+				className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-full transition-all duration-300 overflow-hidden h-11">
 				<Input
 					ref={inpRef}
 					value={query}
@@ -211,7 +211,7 @@ export default function Search({ className }) {
 					onKeyDown={onKeyDown}
 					autoComplete="off"
 					type="search"
-					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-full focus-visible:ring-offset-0 px-4 h-full text-sm font-normal"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-full focus-visible:ring-offset-0 pl-5 pr-24 h-full text-base font-normal"
 					name="query"
 					placeholder="Search here"
 				/>
@@ -219,8 +219,8 @@ export default function Search({ className }) {
 					variant="ghost"
 					type="submit"
 					size="icon"
-					className="mr-1 text-white/40 hover:text-white transition rounded-xl hover:bg-white/10 w-9 h-9">
-					<SearchIcon className="w-4 h-4" />
+					className="absolute right-1 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition rounded-full bg-transparent hover:bg-transparent w-10 h-10 shrink-0">
+					<SearchIcon className="w-5 h-5" />
 				</Button>
 				{trimmed.length > 0 && (
 					<Button
@@ -229,8 +229,8 @@ export default function Search({ className }) {
 						size="icon"
 						onMouseDown={(e) => e.preventDefault()}
 						onClick={clearQuery}
-						className="mr-1 text-white/40 hover:text-white transition rounded-full hover:bg-white/10 w-7 h-7 absolute right-9">
-						<X className="w-4 h-4" />
+						className="absolute right-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition rounded-full hover:bg-white/10 w-9 h-9 shrink-0">
+						<X className="w-5 h-5" />
 					</Button>
 				)}
 			</form>

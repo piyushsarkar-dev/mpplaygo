@@ -17,26 +17,26 @@ export default function Header() {
 
 	return (
 		<header className="fixed top-0 left-0 right-0 z-50">
-			<div className="w-full h-16 bg-[#1A1A1A]/90 backdrop-blur-xl border-b border-white/10 grid grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-4 md:px-8">
+			<div className="w-full h-[72px] bg-black/80 supports-[backdrop-filter]:bg-black/40 backdrop-blur-xl grid grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
 				{/* Left Section: Logo & Nav */}
 				<div className="flex items-center gap-6 shrink-0 justify-self-start">
 					<Link
 						href="/"
-						className="text-lg font-bold text-white tracking-tight">
+						className="text-xl font-bold text-white tracking-tight">
 						Mp Play go
 					</Link>
 				</div>
 
 				{/* Center Section: Main Search */}
 				<div className="min-w-0 w-full justify-self-center">
-					<div className="flex w-full items-center gap-2">
+					<div className="flex w-full items-center gap-3">
 						<Button
 							variant="ghost"
 							size="icon"
 							asChild
-							className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-9 h-9 transition-all duration-300 shrink-0">
+							className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0">
 							<Link href="/">
-								<Home className="w-4 h-4" />
+								<Home className="w-5 h-5" />
 							</Link>
 						</Button>
 
@@ -44,8 +44,8 @@ export default function Header() {
 							<Button
 								variant="ghost"
 								size="icon"
-								className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-9 h-9 transition-all duration-300 shrink-0">
-								<List className="w-4 h-4" />
+								className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0">
+								<List className="w-5 h-5" />
 							</Button>
 						</PlaylistDrawer>
 
@@ -61,7 +61,7 @@ export default function Header() {
 
 					{user ?
 						<UserProfileDropdown>
-							<div className="w-9 h-9 rounded-full cursor-pointer hover:opacity-80 transition-opacity">
+							<div className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity">
 								<Avatar className="w-full h-full rounded-full">
 									<AvatarImage
 										src={user?.user_metadata?.avatar_url}
@@ -75,7 +75,7 @@ export default function Header() {
 							</div>
 						</UserProfileDropdown>
 					:	<AuthModal>
-							<Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-5 h-9">
+							<Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6 h-10">
 								Login
 							</Button>
 						</AuthModal>
