@@ -29,15 +29,10 @@ export default function RecentPlayedCarousel({
 		songs.length < 7 ? [...songs, ...songs, ...songs].slice(0, 14) : songs;
 
 	return (
-		<div className="w-full pt-2 pb-3 flex flex-col items-center overflow-hidden">
-			<div className="w-full max-w-[1700px] px-8 md:px-12  md:mb-4 flex items-center justify-between">
-				<h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-white">
-					{title} <ArrowRight className="w-5 h-5 opacity-70" />
-				</h2>
-			</div>
+		<div className="w-full pt-2 pb-3 px-5 md:px-10 flex flex-col overflow-hidden">
 
 			<div
-				className="relative w-full max-w-6xl h-[320px] md:h-[420px] flex items-center justify-center perspective-1000"
+				className="relative w-full h-[320px] md:h-[420px] flex items-center justify-center perspective-1000"
 				role="region"
 				aria-label={`${title} carousel`}
 				tabIndex={0}
@@ -45,18 +40,22 @@ export default function RecentPlayedCarousel({
 					if (e.key === "ArrowLeft") handlePrev();
 					if (e.key === "ArrowRight") handleNext();
 				}}>
+				{/* Title overlay */}
+				<h2 className="absolute top-3 left-4 md:left-6 text-sm md:text-base font-medium flex items-center gap-2 text-white bg-black/30 backdrop-blur-sm px-3 py-1 rounded">
+					{title} <ArrowRight className="w-4 h-4 opacity-70 ml-1" />
+				</h2>
 				{/* Navigation Buttons */}
 				<button
-					onClick={handlePrev}
-					aria-label="Previous"
-					className="absolute left-4 md:left-0 z-50 p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
-					<ChevronLeft className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
+						onClick={handlePrev}
+						aria-label="Previous"
+						className="hidden md:block absolute left-3 md:left-3 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
+					<ChevronLeft className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
 				</button>
 				<button
-					onClick={handleNext}
-					aria-label="Next"
-					className="absolute right-4 md:right-0 z-50 p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
-					<ChevronRight className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
+						onClick={handleNext}
+						aria-label="Next"
+						className="hidden md:block absolute right-3 md:right-3 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
+					<ChevronRight className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
 				</button>
 
 				{/* Cards */}

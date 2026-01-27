@@ -3,20 +3,20 @@ import SongCard from "@/components/cards/song";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import {
-    getSongsByQuery,
-    getSongsByQueryPaged,
-    searchAlbumByQuery,
-    searchArtistsByQueryPaged,
+	getSongsByQuery,
+	getSongsByQueryPaged,
+	searchAlbumByQuery,
+	searchArtistsByQueryPaged,
 } from "@/lib/fetch";
 import { ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
@@ -471,7 +471,7 @@ export default function Page() {
 					/>
 				:	<FeaturedCarousel
 						songs={recommended}
-						title="Recommended For You"
+						title="Recent Played"
 					/>
 				}
 			</div>

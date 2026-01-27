@@ -1,12 +1,13 @@
 "use client";
 import { getSongsByQuery } from "@/lib/fetch";
+import { cn } from "@/lib/utils";
 import { Clock, SearchIcon, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
-export default function Search() {
+export default function Search({ className }) {
 	const router = useRouter();
 	const [query, setQuery] = useState("");
 	const [open, setOpen] = useState(false);
@@ -191,10 +192,13 @@ export default function Search() {
 	return (
 		<div
 			ref={containerRef}
-			className="relative z-10 w-full max-w-2xl mx-auto">
+			className={cn(
+				"relative z-10 w-full max-w-2xl mx-auto",
+				className,
+			)}>
 			<form
 				onSubmit={handleSubmit}
-				className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-full transition-all duration-300 overflow-hidden h-12">
+				className="relative group flex items-center bg-white/5 border border-white/5 focus-within:bg-white/10 focus-within:border-white/20 rounded-full transition-all duration-300 overflow-hidden h-11">
 				<Input
 					ref={inpRef}
 					value={query}
@@ -207,7 +211,7 @@ export default function Search() {
 					onKeyDown={onKeyDown}
 					autoComplete="off"
 					type="search"
-					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-full focus-visible:ring-offset-0 px-4 h-full text-base font-normal"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-full focus-visible:ring-offset-0 pl-5 pr-24 h-full text-base font-normal"
 					name="query"
 					placeholder="Search here"
 				/>
@@ -215,7 +219,7 @@ export default function Search() {
 					variant="ghost"
 					type="submit"
 					size="icon"
-					className="mr-1 text-white/40 hover:text-white transition rounded-xl hover:bg-white/10 w-10 h-10">
+					className="absolute right-1 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition rounded-full bg-transparent hover:bg-transparent w-10 h-10 shrink-0">
 					<SearchIcon className="w-5 h-5" />
 				</Button>
 				{trimmed.length > 0 && (
@@ -225,8 +229,8 @@ export default function Search() {
 						size="icon"
 						onMouseDown={(e) => e.preventDefault()}
 						onClick={clearQuery}
-						className="mr-1 text-white/40 hover:text-white transition rounded-full hover:bg-white/10 w-8 h-8 absolute right-10">
-						<X className="w-4 h-4" />
+						className="absolute right-12 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition rounded-full hover:bg-white/10 w-9 h-9 shrink-0">
+						<X className="w-5 h-5" />
 					</Button>
 				)}
 			</form>
