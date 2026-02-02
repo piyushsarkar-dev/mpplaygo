@@ -211,7 +211,7 @@ export default function Search({ className }) {
 					onKeyDown={onKeyDown}
 					autoComplete="off"
 					type="search"
-					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-full focus-visible:ring-offset-0 pl-3 pr-11 h-full py-2 text-sm font-normal"
+					className="flex-1 bg-transparent border-0 text-white placeholder:text-white/40 focus-visible:ring-0 rounded-full focus-visible:ring-offset-0 pl-3 pr-11 h-full py-2 text-[12px] font-normal placeholder:text-[12px]"
 					name="query"
 					placeholder="Search here"
 				/>

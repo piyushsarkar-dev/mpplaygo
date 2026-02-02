@@ -124,14 +124,14 @@ export default function Header() {
 				{/* Login / All Pill */}
 				<div className="shrink-0">
 					{user ?
-						<div className="bg-[#1DB954] hover:bg-[#1ed760] transition-colors rounded-full px-4 py-1.5 text-black font-bold text-xs h-9 flex items-center">
+						<div className="bg-[#1DB954] hover:bg-[#1ed760] transition-colors rounded-full px-4 py-1.5 text-black font-bold text-xs h-8 flex items-center">
 							All
 						</div>
 					:	<AuthModal>
 							<Button
 								variant="default"
 								size="sm"
-								className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-4 h-9 text-xs">
+								className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-4 h-8 text-xs">
 								Login
 							</Button>
 						</AuthModal>
