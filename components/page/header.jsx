@@ -17,7 +17,7 @@ export default function Header() {
 
 	return (
 		<header className="fixed top-0 left-0 right-0 z-50">
-			<div className="w-full h-[72px] bg-black/80 supports-[backdrop-filter]:bg-black/40 backdrop-blur-xl grid grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
+			<div className="hidden md:grid w-full h-[72px] bg-black/80 supports-[backdrop-filter]:bg-black/40 backdrop-blur-xl grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
 				{/* Left Section: Logo & Nav */}
 				<div className="flex items-center gap-6 shrink-0 justify-self-start">
 					<Link
@@ -50,7 +50,7 @@ export default function Header() {
 						</PlaylistDrawer>
 
 						<div className="min-w-0 flex-1">
-							<Search className="max-w-none mx-0" />
+							<Search className="max-w-none mx-0 h-11" />
 						</div>
 					</div>
 				</div>
@@ -80,6 +80,67 @@ export default function Header() {
 							</Button>
 						</AuthModal>
 					}
+				</div>
+			</div>
+
+			{/* Mobile Header */}
+			<div className="flex md:hidden w-full h-[52px] bg-black/80 supports-[backdrop-filter]:bg-black/40 backdrop-blur-xl items-center px-3 py-2 gap-2.5">
+				{/* Profile Icon */}
+				<div className="shrink-0">
+					{user ?
+						<UserProfileDropdown>
+							<div className="w-9 h-9 rounded-full cursor-pointer hover:opacity-80 transition-opacity">
+								<Avatar className="w-full h-full rounded-full">
+									<AvatarImage
+										src={user?.user_metadata?.avatar_url}
+										style={{ objectFit: "cover" }}
+									/>
+									<AvatarFallback className="bg-neutral-800 text-white font-bold text-xs">
+										{user?.user_metadata?.full_name?.[0] ||
+											"U"}
+									</AvatarFallback>
+								</Avatar>
+							</div>
+						</UserProfileDropdown>
+					:	<div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+							<div className="w-full h-full rounded-full bg-neutral-800/50 flex items-center justify-center text-white/50">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									className="w-5 h-5">
+									<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+									<circle cx="12" cy="7" r="4" />
+								</svg>
+							</div>
+						</div>
+					}
+				</div>
+
+				{/* Login / All Pill */}
+				<div className="shrink-0">
+					{user ?
+						<div className="bg-[#1DB954] hover:bg-[#1ed760] transition-colors rounded-full px-4 py-1.5 text-black font-bold text-xs h-9 flex items-center">
+							All
+						</div>
+					:	<AuthModal>
+							<Button
+								variant="default"
+								size="sm"
+								className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-4 h-9 text-xs">
+								Login
+							</Button>
+						</AuthModal>
+					}
+				</div>
+
+				{/* Search Bar */}
+				<div className="min-w-0 w-[160px] ml-auto">
+					<Search className="max-w-none h-[32px] text-xs" />
 				</div>
 			</div>
 		</header>
