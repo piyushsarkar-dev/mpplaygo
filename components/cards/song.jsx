@@ -31,10 +31,10 @@ export default function SongCard({
 	return (
 		<div
 			className={cn(
-				"group h-fit w-[200px] rounded-xl bg-white/[0.03] shadow-lg hover:shadow-2xl transition-all duration-300",
+				"group h-fit w-full rounded-xl bg-white/[0.03] shadow-lg hover:shadow-2xl transition-all duration-300",
 				className,
 			)}>
-			<div className="p-3">
+			<div className="p-2 md:p-3">
 				<div className="relative overflow-hidden rounded-xl">
 					{image ?
 						<div
@@ -99,7 +99,7 @@ export default function SongCard({
 					}
 				</div>
 
-				<div className="pt-3">
+				<div className="pt-2 md:pt-3">
 					{title ?
 						<div
 							className="cursor-pointer"
@@ -107,7 +107,7 @@ export default function SongCard({
 								ids.setMusic(id);
 								setLastPlayed();
 							}}>
-							<h1 className="text-[15px] font-heading font-semibold text-white leading-snug">
+							<h1 className="text-[13px] md:text-[15px] font-heading font-semibold text-white leading-snug line-clamp-2">
 								{title.slice(0, 28)}
 								{title.length > 28 && "..."}
 							</h1>
@@ -115,11 +115,11 @@ export default function SongCard({
 					:	<Skeleton className="w-[70%] h-4 mt-2" />}
 
 					{artist ?
-						<p className="mt-1 text-sm text-white/60">
+						<p className="mt-0.5 md:mt-1 text-xs md:text-sm text-white/60 line-clamp-1">
 							{artist.slice(0, 34)}
 							{artist.length > 34 && "..."}
 						</p>
-					:	<Skeleton className="w-24 h-3 mt-2" />}
+					:	<Skeleton className="w-20 md:w-24 h-3 mt-2" />}
 
 					{desc && (
 						<p className="mt-1 text-xs text-white/45">

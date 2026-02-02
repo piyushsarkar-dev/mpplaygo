@@ -29,10 +29,10 @@ export default function RecentPlayedCarousel({
 		songs.length < 7 ? [...songs, ...songs, ...songs].slice(0, 14) : songs;
 
 	return (
-		<div className="w-full pt-2 pb-3 px-5 md:px-10 flex flex-col overflow-hidden">
+		<div className="w-full pt-2 pb-3 px-2 md:px-5 lg:px-10 flex flex-col overflow-hidden">
 
 			<div
-				className="relative w-full h-[320px] md:h-[420px] flex items-center justify-center perspective-1000"
+				className="relative w-full h-[280px] md:h-[420px] flex items-center justify-center perspective-1000"
 				role="region"
 				aria-label={`${title} carousel`}
 				tabIndex={0}
@@ -41,21 +41,21 @@ export default function RecentPlayedCarousel({
 					if (e.key === "ArrowRight") handleNext();
 				}}>
 				{/* Title overlay */}
-				<h2 className="absolute top-3 left-4 md:left-6 text-sm md:text-base font-medium flex items-center gap-2 text-white bg-black/30 backdrop-blur-sm px-3 py-1 rounded">
+				<h2 className="absolute top-2 md:top-3 left-3 md:left-6 text-sm md:text-base font-medium flex items-center gap-2 text-white bg-black/30 backdrop-blur-sm px-3 py-1 rounded">
 					{title} <ArrowRight className="w-4 h-4 opacity-70 ml-1" />
 				</h2>
 				{/* Navigation Buttons */}
 				<button
 						onClick={handlePrev}
 						aria-label="Previous"
-						className="hidden md:block absolute left-3 md:left-3 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
-					<ChevronLeft className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+						className="absolute left-1 md:left-3 z-50 p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
+					<ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white group-hover:scale-110 transition-transform" />
 				</button>
 				<button
 						onClick={handleNext}
 						aria-label="Next"
-						className="hidden md:block absolute right-3 md:right-3 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
-					<ChevronRight className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+						className="absolute right-1 md:right-3 z-50 p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/5 group">
+					<ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white group-hover:scale-110 transition-transform" />
 				</button>
 
 				{/* Cards */}
@@ -90,39 +90,39 @@ export default function RecentPlayedCarousel({
 
 					if (diff === 0) {
 						xTranslate = "0%";
-						scale = 1.25; // "boro boro"
+						scale = 1.2; // Center card
 						zIndex = 50;
 						rotateY = "0deg";
 					} else if (diff === 1) {
-						xTranslate = "60%";
-						scale = 0.9;
+						xTranslate = "65%";
+						scale = 0.85;
 						zIndex = 40;
-						rotateY = "-10deg"; // rotated away
+						rotateY = "-12deg"; // rotated away
 					} else if (diff === -1) {
-						xTranslate = "-60%";
-						scale = 0.9;
+						xTranslate = "-65%";
+						scale = 0.85;
 						zIndex = 40;
-						rotateY = "10deg";
+						rotateY = "12deg";
 					} else if (diff === 2) {
-						xTranslate = "105%";
-						scale = 0.75;
+						xTranslate = "110%";
+						scale = 0.7;
 						zIndex = 30;
-						rotateY = "-20deg";
+						rotateY = "-22deg";
 					} else if (diff === -2) {
-						xTranslate = "-105%";
-						scale = 0.75;
+						xTranslate = "-110%";
+						scale = 0.7;
 						zIndex = 30;
-						rotateY = "20deg";
+						rotateY = "22deg";
 					} else if (diff === 3) {
-						xTranslate = "145%";
-						scale = 0.62;
+						xTranslate = "150%";
+						scale = 0.6;
 						zIndex = 20;
-						rotateY = "-28deg";
+						rotateY = "-30deg";
 					} else if (diff === -3) {
-						xTranslate = "-145%";
-						scale = 0.62;
+						xTranslate = "-150%";
+						scale = 0.6;
 						zIndex = 20;
-						rotateY = "28deg";
+						rotateY = "30deg";
 					}
 
 					return (
@@ -134,10 +134,10 @@ export default function RecentPlayedCarousel({
 								: handlePrev()
 							}
 							className={cn(
-								"absolute transition-all duration-500 ease-out cursor-pointer rounded-3xl overflow-hidden shadow-2xl bg-[#282828] border border-white/5",
+								"absolute transition-all duration-500 ease-out cursor-pointer rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-[#282828] border border-white/5",
 								isCenter ?
-									"w-[280px] h-[280px] md:w-[350px] md:h-[350px]"
-								:	"w-[260px] h-[260px] md:w-[320px] md:h-[320px]",
+									"w-[200px] h-[200px] md:w-[350px] md:h-[350px]"
+								:	"w-[180px] h-[180px] md:w-[320px] md:h-[320px]",
 							)}
 							style={{
 								transform: `translateX(${xTranslate}) scale(${scale}) perspective(1000px) rotateY(${rotateY})`,
@@ -184,13 +184,13 @@ export default function RecentPlayedCarousel({
 								{/* Info (Only for center) */}
 								<div
 									className={cn(
-										"absolute bottom-0 left-0 right-0 p-6 text-left transition-opacity duration-300",
+										"absolute bottom-0 left-0 right-0 p-3 md:p-6 text-left transition-opacity duration-300",
 										isCenter ? "opacity-100" : "opacity-0",
 									)}>
-									<h3 className="text-white font-bold text-xl md:text-2xl truncate mb-1">
+									<h3 className="text-white font-bold text-base md:text-2xl truncate mb-0.5 md:mb-1">
 										{song.name}
 									</h3>
-									<p className="text-white/60 text-sm md:text-base truncate">
+									<p className="text-white/60 text-xs md:text-base truncate">
 										{song.artist || song.primaryArtists}
 									</p>
 								</div>
