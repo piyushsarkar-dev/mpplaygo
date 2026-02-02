@@ -31,6 +31,12 @@ export default function RecentPlayedCarousel({
 	return (
 		<div className="w-full pt-2 pb-3 px-2 md:px-5 lg:px-10 flex flex-col overflow-hidden">
 
+			<div className="flex items-center justify-between mb-3 px-1">
+				<h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+					{title} <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
+				</h2>
+			</div>
+
 			<div
 				className="relative w-full h-[280px] md:h-[420px] flex items-center justify-center perspective-1000"
 				role="region"
@@ -40,10 +46,7 @@ export default function RecentPlayedCarousel({
 					if (e.key === "ArrowLeft") handlePrev();
 					if (e.key === "ArrowRight") handleNext();
 				}}>
-				{/* Title overlay */}
-				<h2 className="absolute top-2 md:top-3 left-3 md:left-6 text-sm md:text-base font-medium flex items-center gap-2 text-white bg-black/30 backdrop-blur-sm px-3 py-1 rounded">
-					{title} <ArrowRight className="w-4 h-4 opacity-70 ml-1" />
-				</h2>
+				{/* Navigation Buttons */}
 				{/* Navigation Buttons */}
 				<button
 						onClick={handlePrev}
