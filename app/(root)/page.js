@@ -486,7 +486,7 @@ export default function Page() {
 				</div>
 				<div
 					ref={artistRowRef}
-					className="w-full px-1 md:px-2 pb-4 md:pb-6">
+					className="w-full px-1 md:px-2 pb-0 md:pb-6">
 					{/* Mobile: Horizontal Scroll | Desktop: Flex Wrap */}
 					<div
 						className={
@@ -636,9 +636,9 @@ export default function Page() {
 			</section>
 
 			{/* 3. For You Section - Infinite List (Vertical) */}
-			<section className="pb-10">
-				<div className="flex items-center justify-between mb-3 md:mb-6 px-1">
-					<h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+			<section className="pb-10 -mt-2">
+				<div className="flex items-center justify-between mb-3 md:mb-6 pl-0">
+					<h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2">
 						For you{" "}
 						<ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
 					</h2>
