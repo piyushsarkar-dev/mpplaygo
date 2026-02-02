@@ -236,7 +236,7 @@ export default function Search({ className }) {
 			</form>
 
 			{open && (trimmed.length > 0 || recent.length > 0) && (
-				<div className="absolute top-full left-0 right-0 mt-3 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+				<div className="fixed left-3 right-3 top-[56px] mt-0 md:absolute md:top-full md:left-0 md:right-0 md:mt-3 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 					<div className="p-2">
 						{loading && (
 							<div className="px-3 py-2 text-sm text-muted-foreground">
