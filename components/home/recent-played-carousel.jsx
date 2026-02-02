@@ -29,16 +29,16 @@ export default function RecentPlayedCarousel({
 		songs.length < 7 ? [...songs, ...songs, ...songs].slice(0, 14) : songs;
 
 	return (
-		<div className="w-full pt-2 pb-3 px-0 md:px-5 lg:px-10 flex flex-col overflow-hidden">
+		<div className="w-full pt-2 pb-0 px-0 md:px-5 lg:px-10 flex flex-col overflow-hidden">
 
 			<div className="flex items-center justify-between mb-3 pl-0">
-				<h2 className="text-base md:text-xl font-normal text-white flex items-center gap-2">
+				<h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2">
 					{title} <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
 				</h2>
 			</div>
 
 			<div
-				className="relative w-full h-[280px] md:h-[420px] flex items-center justify-center perspective-1000"
+				className="relative w-full h-[180px] md:h-[420px] flex items-center justify-center perspective-1000"
 				role="region"
 				aria-label={`${title} carousel`}
 				tabIndex={0}

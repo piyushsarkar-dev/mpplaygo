@@ -461,7 +461,7 @@ export default function Page() {
 	});
 
 	return (
-		<main className="flex flex-col gap-6 md:gap-8 w-full pb-10">
+		<main className="flex flex-col gap-4 md:gap-8 w-full pb-10">
 			{/* Carousel Section: History or Recommendations */}
 			<div className="w-full">
 				{user && historySongs.length > 0 ?
@@ -478,8 +478,8 @@ export default function Page() {
 
 			{/* 2. Popular Artists - Circular Row */}
 			<section>
-				<div className="flex items-center justify-between mb-3 md:mb-6 px-1">
-					<h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2 cursor-pointer hover:text-primary transition">
+				<div className="flex items-center justify-between mb-3 pl-0">
+					<h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2 cursor-pointer hover:text-primary transition">
 						Popular Artist{" "}
 						<ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
 					</h2>
