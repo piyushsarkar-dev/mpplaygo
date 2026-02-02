@@ -34,7 +34,7 @@ export default function SongCard({
 				"group h-fit w-full rounded-xl bg-white/[0.03] shadow-lg hover:shadow-2xl transition-all duration-300",
 				className,
 			)}>
-			<div className="p-2 md:p-3">
+			<div className="p-0 md:p-3">
 				<div className="relative overflow-hidden rounded-xl">
 					{image ?
 						<div
@@ -68,8 +68,8 @@ export default function SongCard({
 									setLastPlayed();
 								}}
 								className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-								<span className="h-14 w-14 rounded-full bg-green-500 shadow-xl flex items-center justify-center scale-95 group-hover:scale-100 transition-transform duration-200">
-									<IoPlay className="w-6 h-6 ml-0.5 fill-black text-black" />
+								<span className="h-[48px] w-[48px] md:h-14 md:w-14 rounded-full bg-[#1DB954] shadow-xl flex items-center justify-center scale-95 group-hover:scale-100 transition-transform duration-200">
+									<IoPlay className="w-6 h-6 md:w-6 md:h-6 ml-0.5 fill-black text-black" />
 								</span>
 							</button>
 
@@ -107,7 +107,7 @@ export default function SongCard({
 								ids.setMusic(id);
 								setLastPlayed();
 							}}>
-							<h1 className="text-[13px] md:text-[15px] font-heading font-semibold text-white leading-snug line-clamp-2">
+							<h1 className="text-[13px] md:text-base font-heading font-semibold text-white leading-snug line-clamp-2">
 								{title.slice(0, 28)}
 								{title.length > 28 && "..."}
 							</h1>
@@ -115,7 +115,7 @@ export default function SongCard({
 					:	<Skeleton className="w-[70%] h-4 mt-2" />}
 
 					{artist ?
-						<p className="mt-0.5 md:mt-1 text-xs md:text-sm text-white/60 line-clamp-1">
+						<p className="mt-0.5 md:mt-1 text-[11px] md:text-sm text-zinc-400 font-light line-clamp-1">
 							{artist.slice(0, 34)}
 							{artist.length > 34 && "..."}
 						</p>

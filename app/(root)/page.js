@@ -461,7 +461,7 @@ export default function Page() {
 	});
 
 	return (
-		<main className="flex flex-col gap-6 md:gap-8 w-full pb-10">
+		<main className="flex flex-col gap-4 md:gap-8 w-full pb-10">
 			{/* Carousel Section: History or Recommendations */}
 			<div className="w-full">
 				{user && historySongs.length > 0 ?
@@ -478,15 +478,15 @@ export default function Page() {
 
 			{/* 2. Popular Artists - Circular Row */}
 			<section>
-				<div className="flex items-center justify-between mb-3 md:mb-6 px-1">
-					<h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2 cursor-pointer hover:text-primary transition">
+				<div className="flex items-center justify-between mb-3 pl-0">
+					<h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2 cursor-pointer hover:text-primary transition">
 						Popular Artist{" "}
 						<ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
 					</h2>
 				</div>
 				<div
 					ref={artistRowRef}
-					className="w-full px-1 md:px-2 pb-4 md:pb-6">
+					className="w-full px-1 md:px-2 pb-0 md:pb-6">
 					{/* Mobile: Horizontal Scroll | Desktop: Flex Wrap */}
 					<div
 						className={
@@ -507,7 +507,7 @@ export default function Page() {
 										key={a.id}
 										href={a.id ? `/artist/${a.id}` : `/search/${a.name || "artist"}`}
 										className="flex flex-col items-center gap-3 md:gap-4 group cursor-pointer flex-shrink-0">
-										<div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
+										<div className="w-[76px] h-[76px] md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
 											<img
 												src={a.image}
 												alt={a.name}
@@ -518,7 +518,7 @@ export default function Page() {
 											}}
 										/>
 									</div>
-									<span className="text-zinc-400 group-hover:text-white font-medium text-sm md:text-base text-center max-w-[96px] md:max-w-[140px] truncate transition">
+									<span className="text-zinc-400 group-hover:text-white font-medium text-[11px] md:text-base text-center max-w-[76px] md:max-w-[140px] truncate transition">
 										{a.name}
 									</span>
 								</Link>
@@ -527,7 +527,7 @@ export default function Page() {
 								<div
 									key={i}
 									className="flex flex-col items-center gap-4 flex-shrink-0">
-									<Skeleton className="w-24 h-24 md:w-32 md:h-32 rounded-full" />
+									<Skeleton className="w-[76px] h-[76px] md:w-32 md:h-32 rounded-full" />
 									<Skeleton className="w-16 md:w-20 h-3 md:h-4" />
 								</div>
 							))}
@@ -544,10 +544,10 @@ export default function Page() {
 									type="button"
 									onClick={() => setArtistsExpanded(true)}
 									className="flex flex-col items-center gap-3 md:gap-4 group cursor-pointer flex-shrink-0">
-									<div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
+									<div className="w-[76px] h-[76px] md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
 										<ChevronRight className="w-8 h-8 md:w-10 md:h-10 text-white/70 group-hover:text-white transition" />
 									</div>
-									<span className="text-zinc-400 group-hover:text-white font-medium text-sm md:text-base text-center max-w-[96px] md:max-w-[140px] truncate transition">
+									<span className="text-zinc-400 group-hover:text-white font-medium text-[11px] md:text-base text-center max-w-[76px] md:max-w-[140px] truncate transition">
 										Show more
 									</span>
 								</button>
@@ -636,15 +636,15 @@ export default function Page() {
 			</section>
 
 			{/* 3. For You Section - Infinite List (Vertical) */}
-			<section className="pb-10">
-				<div className="flex items-center justify-between mb-3 md:mb-6 px-1">
-					<h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+			<section className="pb-10 -mt-2">
+				<div className="flex items-center justify-between mb-3 md:mb-6 pl-0">
+					<h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2">
 						For you{" "}
 						<ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
 					</h2>
 				</div>
 
-				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-8 gap-y-5 md:gap-y-10 px-1 md:px-2">
+				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-8 gap-y-3 md:gap-y-10 px-0 md:px-2">
 					{feed.map((song, i) => (
 						<div
 							key={`${song.id}-${i}`}
@@ -655,8 +655,8 @@ export default function Page() {
 								image={song.image?.[2]?.url}
 								title={song.name}
 								artist={song.artists?.primary?.[0]?.name}
-								className="w-full"
-								imageClassName="h-[180px] md:h-[300px]"
+								className="w-[215px] md:w-full"
+								imageClassName="h-[215px] md:h-[300px]"
 							/>
 						</div>
 					))}
@@ -664,8 +664,8 @@ export default function Page() {
 						Array.from({ length: FOR_YOU_LIMIT }).map((_, i) => (
 							<div
 								key={i}
-								className="w-full">
-								<Skeleton className="w-full h-[180px] md:h-[210px] rounded-md" />
+								className="w-[215px] md:w-full">
+								<Skeleton className="w-full h-[215px] md:h-[210px] rounded-md" />
 								<Skeleton className="w-[70%] h-4 mt-3" />
 								<Skeleton className="w-16 md:w-20 h-3 mt-2" />
 							</div>

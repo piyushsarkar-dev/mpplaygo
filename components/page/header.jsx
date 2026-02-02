@@ -131,7 +131,7 @@ export default function Header() {
 							<Button
 								variant="default"
 								size="sm"
-								className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-4 h-8 text-xs">
+								className="rounded-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-bold px-4 h-8 text-xs">
 								Login
 							</Button>
 						</AuthModal>
