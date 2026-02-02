@@ -499,10 +499,7 @@ export default function Page() {
 								artists
 							:	artists.slice(
 									0,
-									Math.max(
-										0,
-										(artistRowSlots || 8) - 1,
-									),
+									artistRowSlots > 0 ? Math.max(0, (artistRowSlots || 8) - 1) : 5,
 								)
 							)
 								.map((a) => (
