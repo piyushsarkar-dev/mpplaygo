@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,6 +45,9 @@ export default function Page() {
   const [artistRowSlots, setArtistRowSlots] = useState(0);
   const [artistApiResults, setArtistApiResults] = useState([]);
   const [artistApiLoading, setArtistApiLoading] = useState(false);
+  // NEW: State for randomized popular artists
+  const [randomArtists, setRandomArtists] = useState([]);
+
   const artistRowRef = useRef(null);
   const artistSearchCacheRef = useRef(new Map());
   const artistSearchDebounceRef = useRef(null);
@@ -66,22 +68,12 @@ export default function Page() {
       const current = counts.get(key) || {
         id: a?.id || name,
         name,
-        image:
-          a?.image?.[2]?.url ||
-          a?.image?.[1]?.url ||
-          item?.image?.[2]?.url ||
-          item?.image?.[1]?.url ||
-          "",
+        image: a?.image?.[2]?.url || a?.image?.[1]?.url || "",
         count: 0,
       };
       current.count += 1;
       if (!current.image) {
-        current.image =
-          a?.image?.[2]?.url ||
-          a?.image?.[1]?.url ||
-          item?.image?.[2]?.url ||
-          item?.image?.[1]?.url ||
-          "";
+        current.image = a?.image?.[2]?.url || a?.image?.[1]?.url || "";
       }
       counts.set(key, current);
     }
@@ -99,6 +91,21 @@ export default function Page() {
         a?.image?.[2]?.url || a?.image?.[1]?.url || a?.image?.[0]?.url || "",
     }));
   }, [artistApiResults, artistQuery, artists]);
+
+  // NEW: Randomize artists on mount/update
+  useEffect(() => {
+    if (artists.length > 0) {
+      // Pick top 50 to ensure decent quality/popularity
+      const pool = artists.slice(0, 50);
+      // Shuffle array
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      // Take first 3
+      setRandomArtists(pool.slice(0, 3));
+    }
+  }, [artists]);
 
   useEffect(() => {
     if (!artistModalOpen) return;
@@ -474,12 +481,50 @@ export default function Page() {
         <div
           ref={artistRowRef}
           className="w-full px-1 md:px-2 pb-0 md:pb-6">
-          {/* Mobile: Horizontal Scroll | Desktop: Flex Wrap */}
+          <div className="flex flex-nowrap gap-4 overflow-x-auto md:hidden scrollbar-hide px-2">
+            {randomArtists.slice(0, 3).map((a) => (
+              <Link
+                key={a.id}
+                href={
+                  a.id ? `/artist/${a.id}` : `/search/${a.name || "artist"}`
+                }
+                className="flex flex-col items-center gap-3 group cursor-pointer flex-shrink-0">
+                <div className="w-[76px] h-[76px] rounded-full overflow-hidden border-3 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
+                  <img
+                    src={a.image}
+                    alt={a.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&auto=format&fit=crop&q=60";
+                    }}
+                  />
+                </div>
+                <span className="text-zinc-400 group-hover:text-white font-medium text-[11px] text-center max-w-[76px] truncate transition">
+                  {a.name}
+                </span>
+              </Link>
+            ))}
+            {/* Mobile Show More Button */}
+            <button
+              type="button"
+              onClick={() => setArtistModalOpen(true)}
+              className="flex flex-col items-center gap-3 group cursor-pointer flex-shrink-0">
+              <div className="w-[76px] h-[76px] rounded-full overflow-hidden border-3 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
+                <ChevronRight className="w-8 h-8 text-white/70 group-hover:text-white transition" />
+              </div>
+              <span className="text-zinc-400 group-hover:text-white font-medium text-[11px] text-center max-w-[76px] truncate transition">
+                Show more
+              </span>
+            </button>
+          </div>
+
+          {/* DESKTOP RENDER: Original logic */}
           <div
             className={
               artistsExpanded ?
-                "flex flex-wrap gap-6 md:gap-8"
-              : "flex flex-nowrap gap-6 md:gap-8 overflow-x-auto md:overflow-hidden scrollbar-hide"
+                "hidden md:flex flex-wrap gap-8"
+              : "hidden md:flex flex-nowrap gap-8 overflow-hidden"
             }>
             {artists.length > 0 ?
               (artistsExpanded ? artists : (
@@ -496,8 +541,8 @@ export default function Page() {
                   href={
                     a.id ? `/artist/${a.id}` : `/search/${a.name || "artist"}`
                   }
-                  className="flex flex-col items-center gap-3 md:gap-4 group cursor-pointer flex-shrink-0">
-                  <div className="w-[76px] h-[76px] md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
+                  className="flex flex-col items-center gap-4 group cursor-pointer flex-shrink-0">
+                  <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
                     <img
                       src={a.image}
                       alt={a.name}
@@ -508,7 +553,7 @@ export default function Page() {
                       }}
                     />
                   </div>
-                  <span className="text-zinc-400 group-hover:text-white font-medium text-[11px] md:text-base text-center max-w-[76px] md:max-w-[140px] truncate transition">
+                  <span className="text-zinc-400 group-hover:text-white font-medium text-base text-center max-w-[140px] truncate transition">
                     {a.name}
                   </span>
                 </Link>
@@ -526,99 +571,95 @@ export default function Page() {
             }
 
             {/* Show more (at the end of the row) */}
-            <Dialog
-              open={artistModalOpen}
-              onOpenChange={(v) => {
-                setArtistModalOpen(v);
-                if (!v) setArtistQuery("");
-              }}>
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setArtistsExpanded(true)}
-                  className="flex flex-col items-center gap-3 md:gap-4 group cursor-pointer flex-shrink-0">
-                  <div className="w-[76px] h-[76px] md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
-                    <ChevronRight className="w-8 h-8 md:w-10 md:h-10 text-white/70 group-hover:text-white transition" />
-                  </div>
-                  <span className="text-zinc-400 group-hover:text-white font-medium text-[11px] md:text-base text-center max-w-[76px] md:max-w-[140px] truncate transition">
-                    Show more
-                  </span>
-                </button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[900px]">
-                <DialogHeader>
-                  <DialogTitle>Artists</DialogTitle>
-                </DialogHeader>
-
-                <div className="mt-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                    <Input
-                      value={artistQuery}
-                      onChange={(e) => setArtistQuery(e.target.value)}
-                      placeholder="Search artists"
-                      className="pl-9 pr-9"
-                    />
-                    {artistQuery.trim().length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        type="button"
-                        onClick={() => setArtistQuery("")}
-                        className="absolute right-1 top-1/2 -translate-y-1/2">
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="mt-5 max-h-[70vh] overflow-y-auto pr-1">
-                    {artistQuery.trim().length > 0 && artistApiLoading ?
-                      <p className="text-sm text-muted-foreground">
-                        Searching artists...
-                      </p>
-                    : sidebarArtists.length === 0 ?
-                      <p className="text-sm text-muted-foreground">
-                        No artists found.
-                      </p>
-                    : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {sidebarArtists.map((a) => (
-                          <Link
-                            key={a.id}
-                            href={
-                              a.id ? `/artist/${a.id}` : `/search/${a.name}`
-                            }
-                            onClick={() => setArtistModalOpen(false)}
-                            className="flex items-center gap-3 rounded-xl p-3 border border-white/10 hover:border-white/20 hover:bg-white/5 transition">
-                            <div className="h-12 w-12 rounded-full overflow-hidden bg-white/5 border border-white/10">
-                              <img
-                                src={a.image}
-                                alt={a.name}
-                                className="h-full w-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.src =
-                                    "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=200&auto=format&fit=crop&q=60";
-                                }}
-                              />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-white truncate">
-                                {a.name}
-                              </p>
-                              <p className="text-xs text-white/50">
-                                Top listens
-                              </p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    }
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <button
+              type="button"
+              onClick={() => setArtistModalOpen(true)}
+              className="flex flex-col items-center gap-4 group cursor-pointer flex-shrink-0">
+              <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
+                <ChevronRight className="w-10 h-10 text-white/70 group-hover:text-white transition" />
+              </div>
+              <span className="text-zinc-400 group-hover:text-white font-medium text-base text-center max-w-[140px] truncate transition">
+                Show more
+              </span>
+            </button>
           </div>
         </div>
       </section>
+
+      {/* Shared Artist Dialog */}
+      <Dialog
+        open={artistModalOpen}
+        onOpenChange={(v) => {
+          setArtistModalOpen(v);
+          if (!v) setArtistQuery("");
+        }}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>Artists</DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+              <Input
+                value={artistQuery}
+                onChange={(e) => setArtistQuery(e.target.value)}
+                placeholder="Search artists"
+                className="pl-9 pr-9"
+              />
+              {artistQuery.trim().length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={() => setArtistQuery("")}
+                  className="absolute right-1 top-1/2 -translate-y-1/2">
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+
+            <div className="mt-5 max-h-[70vh] overflow-y-auto pr-1">
+              {artistQuery.trim().length > 0 && artistApiLoading ?
+                <p className="text-sm text-muted-foreground">
+                  Searching artists...
+                </p>
+              : sidebarArtists.length === 0 ?
+                <p className="text-sm text-muted-foreground">
+                  No artists found.
+                </p>
+              : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {sidebarArtists.map((a) => (
+                    <Link
+                      key={a.id}
+                      href={a.id ? `/artist/${a.id}` : `/search/${a.name}`}
+                      onClick={() => setArtistModalOpen(false)}
+                      className="flex items-center gap-3 rounded-xl p-3 border border-white/10 hover:border-white/20 hover:bg-white/5 transition">
+                      <div className="h-12 w-12 rounded-full overflow-hidden bg-white/5 border border-white/10">
+                        <img
+                          src={a.image}
+                          alt={a.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=200&auto=format&fit=crop&q=60";
+                          }}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white truncate">
+                          {a.name}
+                        </p>
+                        <p className="text-xs text-white/50">Top listens</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              }
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* 3. For You Section - Infinite List (Vertical) */}
       <section className="pb-10 -mt-2">
