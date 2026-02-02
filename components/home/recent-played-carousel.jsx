@@ -29,10 +29,10 @@ export default function RecentPlayedCarousel({
 		songs.length < 7 ? [...songs, ...songs, ...songs].slice(0, 14) : songs;
 
 	return (
-		<div className="w-full pt-2 pb-3 px-2 md:px-5 lg:px-10 flex flex-col overflow-hidden">
+		<div className="w-full pt-2 pb-3 px-0 md:px-5 lg:px-10 flex flex-col overflow-hidden">
 
-			<div className="flex items-center justify-between mb-3 px-1">
-				<h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+			<div className="flex items-center justify-between mb-3 pl-0">
+				<h2 className="text-base md:text-xl font-normal text-white flex items-center gap-2">
 					{title} <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
 				</h2>
 			</div>
