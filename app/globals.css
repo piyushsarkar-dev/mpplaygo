@@ -70,6 +70,13 @@
 	::-webkit-scrollbar-track {
 		@apply bg-transparent;
 	}
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
 	.blurz {
 		animation: blur 0.7s forwards;
 	}
