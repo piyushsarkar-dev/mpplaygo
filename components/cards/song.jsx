@@ -34,7 +34,7 @@ export default function SongCard({
 				"group h-fit w-full rounded-xl bg-white/[0.03] shadow-lg hover:shadow-2xl transition-all duration-300",
 				className,
 			)}>
-			<div className="p-2 md:p-3">
+			<div className="p-0 md:p-3">
 				<div className="relative overflow-hidden rounded-xl">
 					{image ?
 						<div
@@ -107,7 +107,7 @@ export default function SongCard({
 								ids.setMusic(id);
 								setLastPlayed();
 							}}>
-							<h1 className="text-[13px] md:text-[15px] font-heading font-semibold text-white leading-snug line-clamp-2">
+							<h1 className="text-[13px] md:text-base font-heading font-semibold text-white leading-snug line-clamp-2">
 								{title.slice(0, 28)}
 								{title.length > 28 && "..."}
 							</h1>
@@ -115,7 +115,7 @@ export default function SongCard({
 					:	<Skeleton className="w-[70%] h-4 mt-2" />}
 
 					{artist ?
-						<p className="mt-0.5 md:mt-1 text-xs md:text-sm text-white/60 line-clamp-1">
+						<p className="mt-0.5 md:mt-1 text-[11px] md:text-sm text-zinc-400 font-light line-clamp-1">
 							{artist.slice(0, 34)}
 							{artist.length > 34 && "..."}
 						</p>
