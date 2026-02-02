@@ -507,7 +507,7 @@ export default function Page() {
 										key={a.id}
 										href={a.id ? `/artist/${a.id}` : `/search/${a.name || "artist"}`}
 										className="flex flex-col items-center gap-3 md:gap-4 group cursor-pointer flex-shrink-0">
-										<div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
+										<div className="w-[76px] h-[76px] md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative">
 											<img
 												src={a.image}
 												alt={a.name}
@@ -518,7 +518,7 @@ export default function Page() {
 											}}
 										/>
 									</div>
-									<span className="text-zinc-400 group-hover:text-white font-medium text-sm md:text-base text-center max-w-[96px] md:max-w-[140px] truncate transition">
+									<span className="text-zinc-400 group-hover:text-white font-medium text-[11px] md:text-base text-center max-w-[76px] md:max-w-[140px] truncate transition">
 										{a.name}
 									</span>
 								</Link>
@@ -527,7 +527,7 @@ export default function Page() {
 								<div
 									key={i}
 									className="flex flex-col items-center gap-4 flex-shrink-0">
-									<Skeleton className="w-24 h-24 md:w-32 md:h-32 rounded-full" />
+									<Skeleton className="w-[76px] h-[76px] md:w-32 md:h-32 rounded-full" />
 									<Skeleton className="w-16 md:w-20 h-3 md:h-4" />
 								</div>
 							))}
@@ -544,10 +544,10 @@ export default function Page() {
 									type="button"
 									onClick={() => setArtistsExpanded(true)}
 									className="flex flex-col items-center gap-3 md:gap-4 group cursor-pointer flex-shrink-0">
-									<div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
+									<div className="w-[76px] h-[76px] md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-3 md:border-4 border-zinc-800 group-hover:border-white transition-all shadow-xl relative flex items-center justify-center bg-white/5">
 										<ChevronRight className="w-8 h-8 md:w-10 md:h-10 text-white/70 group-hover:text-white transition" />
 									</div>
-									<span className="text-zinc-400 group-hover:text-white font-medium text-sm md:text-base text-center max-w-[96px] md:max-w-[140px] truncate transition">
+									<span className="text-zinc-400 group-hover:text-white font-medium text-[11px] md:text-base text-center max-w-[76px] md:max-w-[140px] truncate transition">
 										Show more
 									</span>
 								</button>
