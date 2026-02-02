@@ -201,8 +201,8 @@ export default function RecentPlayedCarousel({
 								{/* Play Button Overlay (Center Only) */}
 								{isCenter && (
 									<div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity group">
-										<div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
-											<Play className="w-8 h-8 text-black fill-black ml-1" />
+										<div className="w-[48px] h-[48px] md:w-16 md:h-16 bg-[#1DB954] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+											<Play className="w-6 h-6 md:w-8 md:h-8 text-black fill-black ml-[2px] md:ml-1" />
 										</div>
 									</div>
 								)}

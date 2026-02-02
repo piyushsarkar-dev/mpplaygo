@@ -68,8 +68,8 @@ export default function SongCard({
 									setLastPlayed();
 								}}
 								className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-								<span className="h-14 w-14 rounded-full bg-green-500 shadow-xl flex items-center justify-center scale-95 group-hover:scale-100 transition-transform duration-200">
-									<IoPlay className="w-6 h-6 ml-0.5 fill-black text-black" />
+								<span className="h-[48px] w-[48px] md:h-14 md:w-14 rounded-full bg-[#1DB954] shadow-xl flex items-center justify-center scale-95 group-hover:scale-100 transition-transform duration-200">
+									<IoPlay className="w-6 h-6 md:w-6 md:h-6 ml-0.5 fill-black text-black" />
 								</span>
 							</button>
 
