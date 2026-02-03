@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-export default function FriendSearch({ className }) {
+export default function FriendSearch({ className, onUserClick }) {
   const { supabase } = useSupabase();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -105,6 +105,7 @@ export default function FriendSearch({ className }) {
                   onClick={() => {
                     setOpen(false);
                     setQuery("");
+                    if (onUserClick) onUserClick();
                   }}
                   className="flex items-center gap-3 px-3 py-2 hover:bg-secondary/40 transition">
                   <div className="h-7 w-7 rounded-full overflow-hidden border bg-secondary/40">

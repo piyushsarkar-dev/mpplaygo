@@ -176,17 +176,8 @@ export default function MobileMenu() {
 
       {/* Mobile Search Popup - Reuses Desktop FriendSearch Component */}
       {searchOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-start justify-center pt-12 px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto"
-          onMouseDown={(e) => {
-            // Close only if clicking the backdrop (not the modal content)
-            if (e.target === e.currentTarget) {
-              setSearchOpen(false);
-            }
-          }}>
-          <div
-            className="w-full max-w-md bg-[#121212] rounded-2xl shadow-2xl border border-white/10 px-4 py-3 animate-in slide-in-from-top-4 duration-300 pointer-events-auto"
-            onMouseDown={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-12 px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto">
+          <div className="w-full max-w-md bg-[#121212] rounded-2xl shadow-2xl border border-white/10 px-4 py-3 animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold text-white">Search Friends</h2>
@@ -198,7 +189,10 @@ export default function MobileMenu() {
             </div>
 
             {/* Reuse Desktop Search Component */}
-            <FriendSearch className="max-w-full" />
+            <FriendSearch
+              className="max-w-full"
+              onUserClick={() => setSearchOpen(false)}
+            />
           </div>
         </div>
       )}
