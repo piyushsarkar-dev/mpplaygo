@@ -26,7 +26,7 @@ export default function MobileMenu() {
 	];
 
 	return (
-		<div className="fixed z-50 bottom-8 left-0 right-0 flex items-end justify-center pointer-events-none px-4 gap-3">
+		<div className="fixed z-50 bottom-3 left-0 right-0 flex items-end justify-center pointer-events-none px-4 gap-3">
 			{/* Navigation Pill */}
 			<div className="flex bg-[#2a2a2a]/95 backdrop-blur-2xl border border-white/10 justify-between items-center px-2 py-2 h-[62px] rounded-[2rem] shadow-2xl pointer-events-auto w-[260px]">
 				{navItems.map((item) => {
@@ -64,7 +64,7 @@ export default function MobileMenu() {
 			{/* Search Button */}
 			<Link
 				href="/search/latest"
-				className="pointer-events-auto h-[62px] w-[62px] rounded-full bg-[#3a3a3a]/95 backdrop-blur-2xl border border-white/10 flex items-center justify-center text-neutral-200 shadow-2xl transition-all active:scale-95 hover:bg-white/10 hover:text-white">
+				className="pointer-events-auto h-[62px] w-[62px] rounded-full bg-[#3a3a3a]/95 backdrop-blur-2xl border border-white/10 flex items-center justify-center text-neutral-200 shadow-2xl transition-all active:scale-95">
 				<Search className="w-6 h-6 opacity-90" />
 			</Link>
 		</div>
