@@ -1,12 +1,12 @@
 "use client";
+import FriendSearch from "@/components/page/friend-search";
+import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
+import { useSupabase } from "@/components/providers/supabase-provider";
 import { cn } from "@/lib/utils";
 import { Home, ListMusic, Search, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
-import { useSupabase } from "@/components/providers/supabase-provider";
-import FriendSearch from "@/components/page/friend-search";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function MobileMenu() {
   const pathname = usePathname();
@@ -65,7 +65,10 @@ export default function MobileMenu() {
       {/* Navigation Pill - Glassmorphism Style */}
       <div className="flex glass-mobile-nav justify-between items-center px-2 py-2 h-[62px] rounded-[2rem] pointer-events-auto w-[260px]">
         {navItems.map((item) => {
-          const isActive = item.href ? pathname === item.href : (item.type === "profile" && pathname.includes("/profile"));
+          const isActive =
+            item.href ?
+              pathname === item.href
+            : item.type === "profile" && pathname.includes("/profile");
           const Icon = item.icon;
 
           // Home - Regular Link
@@ -173,18 +176,17 @@ export default function MobileMenu() {
 
       {/* Mobile Search Popup - Reuses Desktop FriendSearch Component */}
       {searchOpen && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-          style={{ touchAction: "none" }}
-          onClick={(e) => {
+        <div
+          className="fixed inset-0 z-[100] flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto"
+          onMouseDown={(e) => {
             // Close only if clicking the backdrop (not the modal content)
             if (e.target === e.currentTarget) {
               setSearchOpen(false);
             }
           }}>
-          <div 
-            className="w-full max-w-md bg-[#1a1a1a] rounded-2xl shadow-2xl border border-white/10 p-6 animate-in slide-in-from-top-4 duration-300 relative z-[101]"
-            onClick={(e) => e.stopPropagation()}>
+          <div
+            className="w-full max-w-md bg-[#1a1a1a] rounded-2xl shadow-2xl border border-white/10 p-6 animate-in slide-in-from-top-4 duration-300 pointer-events-auto"
+            onMouseDown={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-white">Search Friends</h2>
@@ -196,9 +198,7 @@ export default function MobileMenu() {
             </div>
 
             {/* Reuse Desktop Search Component */}
-            <div className="relative z-[102]">
-              <FriendSearch className="max-w-full" />
-            </div>
+            <FriendSearch className="max-w-full" />
           </div>
         </div>
       )}
