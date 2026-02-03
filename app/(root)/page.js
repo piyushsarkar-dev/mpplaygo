@@ -670,7 +670,7 @@ export default function Page() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-8 gap-y-3 md:gap-y-10 px-0 md:px-2">
+        <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-8 gap-y-3 md:gap-y-10 px-0 md:px-2">
           {feed.map((song, i) => (
             <div
               key={`${song.id}-${i}`}
@@ -681,8 +681,8 @@ export default function Page() {
                 image={song.image?.[2]?.url}
                 title={song.name}
                 artist={song.artists?.primary?.[0]?.name}
-                className="w-[215px] md:w-full"
-                imageClassName="h-[215px] md:h-[300px]"
+                className="w-full"
+                imageClassName="w-full h-auto aspect-square object-cover"
               />
             </div>
           ))}
@@ -690,8 +690,8 @@ export default function Page() {
             Array.from({ length: FOR_YOU_LIMIT }).map((_, i) => (
               <div
                 key={i}
-                className="w-[215px] md:w-full">
-                <Skeleton className="w-full h-[215px] md:h-[210px] rounded-md" />
+                className="w-full">
+                <Skeleton className="w-full aspect-square rounded-md" />
                 <Skeleton className="w-[70%] h-4 mt-3" />
                 <Skeleton className="w-16 md:w-20 h-3 mt-2" />
               </div>
