@@ -138,11 +138,25 @@ export default function Player() {
   };
 
   const handleNext = () => {
-    playNext();
+    const nextId = playNext();
+    if (nextId) {
+      // Music state will be updated by playNext(), 
+      // component will re-render with new music ID
+      try {
+        sessionStorage.setItem(USER_PLAY_KEY, "true");
+      } catch {}
+    }
   };
 
   const handlePrevious = () => {
-    playPrevious();
+    const prevId = playPrevious();
+    if (prevId) {
+      // Music state will be updated by playPrevious(),
+      // component will re-render with new music ID
+      try {
+        sessionStorage.setItem(USER_PLAY_KEY, "true");
+      } catch {}
+    }
   };
 
   useEffect(() => {
