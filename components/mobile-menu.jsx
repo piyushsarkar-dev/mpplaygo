@@ -27,8 +27,8 @@ export default function MobileMenu() {
 
 	return (
 		<div className="fixed z-50 bottom-3 left-0 right-0 flex items-end justify-center pointer-events-none px-4 gap-3">
-			{/* Navigation Pill */}
-			<div className="flex bg-[#2a2a2a]/95 backdrop-blur-2xl border border-white/10 justify-between items-center px-2 py-2 h-[62px] rounded-[2rem] shadow-2xl pointer-events-auto w-[260px]">
+			{/* Navigation Pill - Glassmorphism Style */}
+			<div className="flex glass-mobile-nav justify-between items-center px-2 py-2 h-[62px] rounded-[2rem] pointer-events-auto w-[260px]">
 				{navItems.map((item) => {
 					const isActive = pathname === item.href;
 					const Icon = item.icon;
@@ -37,15 +37,15 @@ export default function MobileMenu() {
 							key={item.href}
 							href={item.href}
 							className={cn(
-								"flex flex-col items-center justify-center h-full flex-1 rounded-[1.7rem] transition-all duration-300 gap-0.5",
+								"flex flex-col items-center justify-center h-full flex-1 rounded-[1.7rem] transition-all duration-400 gap-0.5",
 								isActive
-									? "bg-white/10 text-white"
-									: "text-neutral-400 hover:text-white hover:bg-white/5"
+									? "glass-mobile-nav-item-active text-white"
+									: "text-white/60 hover:text-white hover:bg-white/5"
 							)}>
 							<Icon
 								className={cn(
-									"w-5 h-5",
-									isActive ? "opacity-100" : "opacity-70"
+									"w-5 h-5 transition-all duration-200",
+									isActive ? "opacity-100 scale-110" : "opacity-70 hover:scale-105"
 								)}
 								strokeWidth={isActive ? 2.5 : 2}
 							/>
@@ -61,11 +61,11 @@ export default function MobileMenu() {
 				})}
 			</div>
 
-			{/* Search Button */}
+			{/* Search Button - Glassmorphism Style */}
 			<Link
 				href="/search/latest"
-				className="pointer-events-auto h-[62px] w-[62px] rounded-full bg-[#3a3a3a]/95 backdrop-blur-2xl border border-white/10 flex items-center justify-center text-neutral-200 shadow-2xl transition-all active:scale-95">
-				<Search className="w-6 h-6 opacity-90" />
+				className="pointer-events-auto h-[62px] w-[62px] rounded-full glass-mobile-search-btn flex items-center justify-center text-white transition-all duration-400">
+				<Search className="w-6 h-6" />
 			</Link>
 		</div>
 	);

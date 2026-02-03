@@ -193,11 +193,11 @@ export default function Player() {
 				src={audioURL}
 				ref={audioRef}></audio>
 
-            {/* Mobile Player (Capsule) - Hidden on md+ */}
-			<div className="md:hidden w-[328px] mx-auto h-[58px] bg-[#2a2a2a]/95 backdrop-blur-2xl border border-white/10 rounded-full flex items-center pr-2 pl-2 shadow-2xl relative overflow-hidden pointer-events-auto">
+            {/* Mobile Player (Glassmorphism Capsule) - Hidden on md+ */}
+			<div className="md:hidden w-[328px] mx-auto h-[58px] glass-mobile-player rounded-full flex items-center pr-2 pl-2 relative overflow-hidden pointer-events-auto">
 				
 				{/* Album Art */}
-				<div className="h-[42px] w-[42px] rounded-full overflow-hidden relative shrink-0 border border-white/10">
+				<div className="h-[42px] w-[42px] rounded-full overflow-hidden relative shrink-0 border border-white/20">
 					<img
 						src={data.image ? data?.image[1]?.url : ""}
 						alt={data?.name}
@@ -208,10 +208,10 @@ export default function Player() {
 
 				{/* Song Info */}
 				<Link href={`/${music}`} className="flex flex-col justify-center flex-1 ml-3 overflow-hidden mr-2">
-					<h3 className="text-gray-100 font-bold text-sm truncate leading-tight">
+					<h3 className="text-white font-bold text-sm truncate leading-tight drop-shadow-md">
 						{data?.name || "Loading..."}
 					</h3>
-					<p className="text-gray-400 text-[11px] truncate leading-tight">
+					<p className="text-white/60 text-[11px] truncate leading-tight">
 						{data?.artists?.primary[0]?.name || "Artist"}
 					</p>
 				</Link>
@@ -219,7 +219,7 @@ export default function Player() {
 				{/* Controls */}
 				<div className="flex items-center gap-1">
 					<button
-						className="p-2 text-white/70 hover:text-white transition active:scale-90"
+						className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90"
 						onClick={() => {
 							if (audioRef.current) audioRef.current.currentTime -= 10;
 						}}>
@@ -227,13 +227,13 @@ export default function Player() {
 					</button>
 
 					<button
-						className="p-2 text-white hover:scale-105 transition active:scale-95"
+						className="p-2 text-white hover:scale-110 transition-all duration-200 active:scale-95"
 						onClick={togglePlayPause}>
 						{playing ? <IoPause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current" />}
 					</button>
 
 					<button
-						className="p-2 text-white/70 hover:text-white transition active:scale-90"
+						className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90"
 						onClick={() => {
 							if (audioRef.current) audioRef.current.currentTime += 10;
 						}}>
