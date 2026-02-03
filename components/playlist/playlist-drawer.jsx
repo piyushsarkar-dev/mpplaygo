@@ -10,8 +10,9 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import { MusicContext } from "@/hooks/use-context";
-import { ArrowLeft, Globe, ListMusic, Lock, Play, Plus } from "lucide-react";
+import { ArrowLeft, Globe, ListMusic, Lock, Play, Plus, Share2, Trash2 } from "lucide-react";
 import { useCallback, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { CreatePlaylistModal } from "./create-playlist-modal";
 
 export function PlaylistDrawer({ children }) {
@@ -78,6 +79,69 @@ export function PlaylistDrawer({ children }) {
 		} catch {}
 		musicContext.setMusic(songId);
 		setOpen(false);
+	};
+
+	const handleRemoveSong = async (e, songDbId, songTitle) => {
+		e.stopPropagation();
+		const { error } = await supabase
+			.from("playlist_songs")
+			.delete()
+			.eq("id", songDbId);
+		
+		if (error) {
+			toast.error("Failed to remove song");
+		} else {
+			toast.success(`Removed "${songTitle}"`);
+			setPlaylistSongs(playlistSongs.filter(s => s.id !== songDbId));
+			setPlaylists(playlists.map(p => 
+				p.id === selectedPlaylist.id 
+					? { ...p, songCount: (p.songCount || 1) - 1 }
+					: p
+			));
+		}
+	};
+
+	const handleSharePlaylist = async () => {
+		const url = `${window.location.origin}/playlist/${selectedPlaylist.id}`;
+		try {
+			if (navigator.share) {
+				await navigator.share({
+					title: selectedPlaylist.name,
+					text: `Check out my playlist "${selectedPlaylist.name}"`,
+					url: url
+				});
+				toast.success("Shared successfully!");
+			} else {
+				await navigator.clipboard.writeText(url);
+				toast.success("Link copied to clipboard!");
+			}
+		} catch (error) {
+			if (error.name !== 'AbortError') {
+				toast.error("Failed to share");
+			}
+		}
+	};
+
+	const handleTogglePublic = async () => {
+		const newPublicState = !selectedPlaylist.is_public;
+		const { data, error } = await supabase
+			.from("playlists")
+			.update({ is_public: newPublicState })
+			.eq("id", selectedPlaylist.id)
+			.select()
+			.single();
+		
+		if (error) {
+			toast.error("Failed to update playlist");
+		} else {
+			toast.success(newPublicState ? "Playlist is now public" : "Playlist is now private");
+			setSelectedPlaylist({ ...selectedPlaylist, is_public: newPublicState });
+			setPlaylists(playlists.map(p => 
+				p.id === selectedPlaylist.id 
+					? { ...p, is_public: newPublicState }
+					: p
+			));
+		}
 	};
 
 	useEffect(() => {
@@ -183,17 +247,24 @@ export function PlaylistDrawer({ children }) {
 				) : (
 					<div className="flex flex-col h-full">
 						<SheetHeader className="pt-8 pb-6 px-6 border-b border-white/10 space-y-4">
-							<div className="flex items-center gap-3">
+							<div className="flex items-center gap-2">
 								<Button
 									variant="ghost"
 									size="icon"
-									className="text-white hover:bg-white/10 rounded-xl h-11 w-11"
+									className="text-white hover:bg-white/10 rounded-xl h-11 w-11 flex-shrink-0"
 									onClick={handleBack}>
 									<ArrowLeft className="w-5 h-5" />
 								</Button>
 								<SheetTitle className="text-xl font-bold text-white flex-1 truncate">
 									{selectedPlaylist.name}
 								</SheetTitle>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="text-white hover:bg-white/10 rounded-xl h-11 w-11 flex-shrink-0"
+									onClick={handleSharePlaylist}>
+									<Share2 className="w-5 h-5" />
+								</Button>
 							</div>
 							<div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl p-4 border border-white/10">
 								<div className="flex items-center gap-4">
@@ -220,15 +291,36 @@ export function PlaylistDrawer({ children }) {
 									</div>
 									<div className="flex-1 min-w-0">
 										<p className="text-white font-bold text-lg truncate mb-2">{selectedPlaylist.name}</p>
-										<div className="flex items-center gap-2">
-											<div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${selectedPlaylist.is_public ? 'bg-green-500/20 text-green-400 ring-1 ring-green-500/40' : 'bg-white/10 text-white/70'}`}>
-												{selectedPlaylist.is_public ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-												<span>{selectedPlaylist.is_public ? "Public" : "Private"}</span>
-											</div>
-											<span className="text-sm text-white/60">{playlistSongs.length} {playlistSongs.length === 1 ? 'song' : 'songs'}</span>
+									<div className="flex items-center gap-2 flex-wrap">
+										<div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${selectedPlaylist.is_public ? 'bg-green-500/20 text-green-400 ring-1 ring-green-500/40' : 'bg-white/10 text-white/70'}`}>
+											{selectedPlaylist.is_public ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+											<span>{selectedPlaylist.is_public ? "Public" : "Private"}</span>
 										</div>
+										<span className="text-sm text-white/60 font-medium">{playlistSongs.length} {playlistSongs.length === 1 ? 'song' : 'songs'}</span>
 									</div>
 								</div>
+							</div>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleTogglePublic}
+								className={`w-full mt-3 border transition-all ${
+									selectedPlaylist.is_public 
+										? 'border-white/20 hover:border-white/30 text-white/90 hover:bg-white/5' 
+										: 'border-green-500/30 hover:border-green-500/50 text-green-400 hover:bg-green-500/10'
+								}`}>
+								{selectedPlaylist.is_public ? (
+									<>
+										<Lock className="w-4 h-4 mr-2" />
+										Make Private
+									</>
+								) : (
+									<>
+										<Globe className="w-4 h-4 mr-2" />
+										Make Public
+									</>
+								)}
+							</Button>
 							</div>
 						</SheetHeader>
 
@@ -250,22 +342,36 @@ export function PlaylistDrawer({ children }) {
 								)}
 
 								{playlistSongs.map((song, index) => (
-									<button
+									<div
 										key={song.id}
-										onClick={() => handlePlaySong(song.song_id)}
-										className="group flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 active:bg-white/15 transition-all text-left w-full border border-transparent hover:border-white/10">
+										className="group flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-all border border-transparent hover:border-white/10">
 										<div className="w-9 text-center text-sm text-white/50 font-semibold group-hover:hidden">{index + 1}</div>
-										<div className="w-9 h-9 hidden group-hover:flex items-center justify-center">
-											<div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-1 ring-primary/30">
+										<button
+											onClick={() => handlePlaySong(song.song_id)}
+											className="w-9 h-9 hidden group-hover:flex items-center justify-center">
+											<div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-1 ring-primary/30 hover:scale-110 transition-transform">
 												<Play className="w-4 h-4 fill-primary text-primary ml-0.5" />
 											</div>
-										</div>
-										<img src={song.thumbnail} alt={song.song_title} className="w-14 h-14 rounded-lg object-cover shadow-md ring-1 ring-white/10 group-hover:scale-105 transition" />
-										<div className="flex-1 min-w-0">
+										</button>
+										<button 
+											onClick={() => handlePlaySong(song.song_id)}
+											className="flex-shrink-0">
+											<img src={song.thumbnail} alt={song.song_title} className="w-14 h-14 rounded-lg object-cover shadow-md ring-1 ring-white/10 group-hover:scale-105 transition" />
+										</button>
+										<button 
+											onClick={() => handlePlaySong(song.song_id)}
+											className="flex-1 min-w-0 text-left">
 											<p className="text-white font-semibold truncate text-sm group-hover:text-primary transition">{song.song_title}</p>
 											<p className="text-xs text-white/50 truncate">{song.artist}</p>
-										</div>
-									</button>
+										</button>
+										<Button
+											variant="ghost"
+											size="icon"
+											className="text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg h-9 w-9 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+											onClick={(e) => handleRemoveSong(e, song.id, song.song_title)}>
+											<Trash2 className="w-4 h-4" />
+										</Button>
+									</div>
 								))}
 							</div>
 						</ScrollArea>
