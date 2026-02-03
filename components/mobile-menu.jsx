@@ -61,10 +61,10 @@ export default function MobileMenu() {
 				})}
 			</div>
 
-			{/* Search Button - Glassmorphism Style */}
+			{/* Search Button - Separate Circle with Glass Effect */}
 			<Link
 				href="/search/latest"
-				className="pointer-events-auto h-[62px] w-[62px] rounded-full glass-mobile-search-btn flex items-center justify-center text-white transition-all duration-400">
+				className="pointer-events-auto h-[62px] w-[62px] rounded-full glass-mobile-nav flex items-center justify-center text-white transition-all duration-400">
 				<Search className="w-6 h-6" />
 			</Link>
 		</div>
