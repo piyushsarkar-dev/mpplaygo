@@ -30,7 +30,7 @@ export default function Player() {
   const [volume, setVolume] = useState(100);
   const [muted, setMuted] = useState(false);
   const lastNonZeroVolumeRef = useRef(50);
-  const { music, setMusic, current, setCurrent } = useMusicProvider();
+  const { music, setMusic, current, setCurrent, playNext, playPrevious, hasNext, hasPrevious } = useMusicProvider();
   const userInitiatedRef = useRef(false);
   const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
   const VOLUME_KEY = "mpplaygo_volume";
@@ -137,6 +137,14 @@ export default function Player() {
     setMuted(true);
   };
 
+  const handleNext = () => {
+    playNext();
+  };
+
+  const handlePrevious = () => {
+    playPrevious();
+  };
+
   useEffect(() => {
     if (music) {
       getSong();
@@ -177,6 +185,24 @@ export default function Player() {
     }
   }, [audioURL, playing]);
 
+  // Auto-play next song when current ends
+  useEffect(() => {
+    if (!audioRef.current) return;
+    
+    const handleEnded = () => {
+      if (isLooping) return; // Don't auto-play if looping is enabled
+      playNext();
+    };
+    
+    audioRef.current.addEventListener("ended", handleEnded);
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener("ended", handleEnded);
+      }
+    };
+  }, [isLooping, playNext]);
+
   if (!music) return <audio ref={audioRef} />;
 
   return (
@@ -216,10 +242,9 @@ export default function Player() {
         {/* Controls */}
         <div className="flex items-center gap-1">
           <button
-            className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90"
-            onClick={() => {
-              if (audioRef.current) audioRef.current.currentTime -= 10;
-            }}>
+            className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+            onClick={handlePrevious}
+            disabled={!hasPrevious}>
             <SkipBack className="w-5 h-5 fill-current" />
           </button>
 
@@ -232,10 +257,9 @@ export default function Player() {
           </button>
 
           <button
-            className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90"
-            onClick={() => {
-              if (audioRef.current) audioRef.current.currentTime += 10;
-            }}>
+            className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+            onClick={handleNext}
+            disabled={!hasNext}>
             <SkipForward className="w-5 h-5 fill-current" />
           </button>
         </div>
@@ -283,10 +307,9 @@ export default function Player() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white"
-              onClick={() => {
-                if (audioRef.current) audioRef.current.currentTime -= 10;
-              }}>
+              className="text-white/70 hover:text-white disabled:opacity-30"
+              onClick={handlePrevious}
+              disabled={!hasPrevious}>
               <SkipBack className="w-6 h-6 fill-white/20" />
             </Button>
 
@@ -301,10 +324,9 @@ export default function Player() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white"
-              onClick={() => {
-                if (audioRef.current) audioRef.current.currentTime += 10;
-              }}>
+              className="text-white/70 hover:text-white disabled:opacity-30"
+              onClick={handleNext}
+              disabled={!hasNext}>
               <SkipForward className="w-6 h-6 fill-white/20" />
             </Button>
           </div>
