@@ -5,9 +5,9 @@ import { getSongsById } from "@/lib/fetch";
 import {
     Download,
     Heart,
-    Play,
-    SkipBack,
-    SkipForward,
+	Play,
+	SkipBack,
+	SkipForward,
     Volume2,
     VolumeX,
     X,
@@ -86,7 +86,7 @@ export default function Player() {
 		}
 	};
 
-	const formatTime = (time) => {
+    const formatTime = (time) => {
 		const minutes = Math.floor(time / 60);
 		const seconds = Math.floor(time % 60);
 		return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
@@ -116,7 +116,7 @@ export default function Player() {
 		}
 	};
 
-	const handleSeek = (e) => {
+    const handleSeek = (e) => {
 		const seekTime = e[0];
 		audioRef.current.currentTime = seekTime;
 		setCurrentTime(seekTime);
@@ -181,7 +181,6 @@ export default function Player() {
 		}
 	}, [audioURL, playing]);
 
-	// UI Redesign: Floating Glassmorphism Player
 	if (!music) return <audio ref={audioRef} />;
 
 	return (
@@ -194,7 +193,57 @@ export default function Player() {
 				src={audioURL}
 				ref={audioRef}></audio>
 
-			<div className="w-full max-w-6xl mx-auto h-24 bg-black/60 backdrop-blur-xl border border-white/10 rounded-[2rem] flex items-center px-4 md:px-8 shadow-2xl relative overflow-hidden group">
+            {/* Mobile Player (Capsule) - Hidden on md+ */}
+			<div className="md:hidden w-[328px] mx-auto h-[58px] bg-[#2a2a2a]/95 backdrop-blur-2xl border border-white/10 rounded-full flex items-center pr-2 pl-2 shadow-2xl relative overflow-hidden pointer-events-auto">
+				
+				{/* Album Art */}
+				<div className="h-[42px] w-[42px] rounded-full overflow-hidden relative shrink-0 border border-white/10">
+					<img
+						src={data.image ? data?.image[1]?.url : ""}
+						alt={data?.name}
+						className={`h-full w-full object-cover ${playing ? "animate-spin-slow" : ""}`}
+						style={{ animationDuration: "10s" }}
+					/>
+				</div>
+
+				{/* Song Info */}
+				<Link href={`/${music}`} className="flex flex-col justify-center flex-1 ml-3 overflow-hidden mr-2">
+					<h3 className="text-gray-100 font-bold text-sm truncate leading-tight">
+						{data?.name || "Loading..."}
+					</h3>
+					<p className="text-gray-400 text-[11px] truncate leading-tight">
+						{data?.artists?.primary[0]?.name || "Artist"}
+					</p>
+				</Link>
+
+				{/* Controls */}
+				<div className="flex items-center gap-1">
+					<button
+						className="p-2 text-white/70 hover:text-white transition active:scale-90"
+						onClick={() => {
+							if (audioRef.current) audioRef.current.currentTime -= 10;
+						}}>
+						<SkipBack className="w-5 h-5 fill-current" />
+					</button>
+
+					<button
+						className="p-2 text-white hover:scale-105 transition active:scale-95"
+						onClick={togglePlayPause}>
+						{playing ? <IoPause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current" />}
+					</button>
+
+					<button
+						className="p-2 text-white/70 hover:text-white transition active:scale-90"
+						onClick={() => {
+							if (audioRef.current) audioRef.current.currentTime += 10;
+						}}>
+						<SkipForward className="w-5 h-5 fill-current" />
+					</button>
+				</div>
+			</div>
+
+            {/* Desktop Player (Full Bar) - Hidden on small screens, Visible on md+ */}
+			<div className="hidden md:flex w-full max-w-6xl mx-auto h-24 bg-black/60 backdrop-blur-xl border border-white/10 rounded-[2rem] items-center px-4 md:px-8 shadow-2xl relative overflow-hidden group">
 				{/* Background Blur Mesh (Optional aesthetic) */}
 				<div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
 
