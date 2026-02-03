@@ -175,14 +175,40 @@ export default function PlaylistPage({ params }) {
 		<div className="container mx-auto py-10 px-4 md:px-0">
 			{/* Header */}
 			<div className="flex flex-col md:flex-row gap-8 items-end mb-10">
-				<div className="h-52 w-52 bg-secondary/50 rounded-lg flex items-center justify-center shadow-2xl">
-					{songs.length > 0 && songs[0].thumbnail ?
-						<img
-							src={songs[0].thumbnail}
-							alt={playlist.name}
-							className="h-full w-full object-cover rounded-lg"
-						/>
-					:	<Play className="h-20 w-20 text-muted-foreground/50" />}
+				<div className="h-52 w-52 bg-secondary/50 rounded-lg overflow-hidden shadow-2xl">
+					{songs.length > 0 ? (
+						songs.length === 1 ? (
+							// Single thumbnail for 1 song
+							<img
+								src={songs[0].thumbnail}
+								alt={playlist.name}
+								className="h-full w-full object-cover"
+							/>
+						) : (
+							// Grid layout for multiple songs (Spotify style)
+							<div className="grid grid-cols-2 gap-0 h-full w-full">
+								{[0, 1, 2, 3].map((index) => (
+									<div key={index} className="relative aspect-square bg-secondary/40">
+										{songs[index]?.thumbnail ? (
+											<img
+												src={songs[index].thumbnail}
+												alt=""
+												className="w-full h-full object-cover"
+											/>
+										) : (
+											<div className="w-full h-full flex items-center justify-center">
+												<Play className="h-8 w-8 text-muted-foreground/30" />
+											</div>
+										)}
+									</div>
+								))}
+							</div>
+						)
+					) : (
+						<div className="h-full w-full flex items-center justify-center">
+							<Play className="h-20 w-20 text-muted-foreground/50" />
+						</div>
+					)}
 				</div>
 				<div className="flex-1 space-y-4">
 					<p className="uppercase text-xs font-bold tracking-wider text-muted-foreground">
