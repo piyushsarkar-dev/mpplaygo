@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
 			</div>
 
 			{/* Player Bar */}
-			<div className="fixed bottom-6 left-6 right-6 z-50 flex justify-center pointer-events-none">
+			<div className="fixed bottom-[80px] md:bottom-6 left-2 right-2 md:left-6 md:right-6 z-40 flex justify-center pointer-events-none">
 				<div className="w-full pointer-events-auto">
 					<Player />
 				</div>
