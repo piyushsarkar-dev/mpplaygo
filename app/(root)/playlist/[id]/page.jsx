@@ -172,133 +172,152 @@ export default function PlaylistPage({ params }) {
 	};
 
 	return (
-		<div className="container mx-auto py-10 px-4 md:px-0">
-			{/* Header */}
-			<div className="flex flex-col md:flex-row gap-8 items-end mb-10">
-				<div className="h-52 w-52 bg-secondary/50 rounded-lg overflow-hidden shadow-2xl">
-					{songs.length > 0 ? (
-						songs.length === 1 ? (
-							// Single thumbnail for 1 song
-							<img
-								src={songs[0].thumbnail}
-								alt={playlist.name}
-								className="h-full w-full object-cover"
-							/>
+		<div className="container mx-auto py-6 md:py-10 px-4 md:px-6 max-w-7xl">
+			{/* Header Section */}
+			<div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-8 md:mb-12">
+				{/* Playlist Cover */}
+				<div className="mx-auto md:mx-0 w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 flex-shrink-0">
+					<div className="w-full h-full bg-gradient-to-br from-secondary/30 to-secondary/60 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+						{songs.length > 0 ? (
+							songs.length === 1 ? (
+								// Single thumbnail for 1 song
+								<img
+									src={songs[0].thumbnail}
+									alt={playlist.name}
+									className="h-full w-full object-cover"
+								/>
+							) : (
+								// Grid layout for multiple songs (Spotify style)
+								<div className="grid grid-cols-2 gap-0.5 h-full w-full bg-black/20 p-0.5">
+									{[0, 1, 2, 3].map((index) => (
+										<div key={index} className="relative bg-secondary/60 overflow-hidden">
+											{songs[index]?.thumbnail ? (
+												<img
+													src={songs[index].thumbnail}
+													alt=""
+													className="w-full h-full object-cover"
+												/>
+											) : (
+												<div className="w-full h-full flex items-center justify-center">
+													<Play className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground/40" />
+												</div>
+											)}
+										</div>
+									))}
+								</div>
+							)
 						) : (
-							// Grid layout for multiple songs (Spotify style)
-							<div className="grid grid-cols-2 gap-0 h-full w-full">
-								{[0, 1, 2, 3].map((index) => (
-									<div key={index} className="relative aspect-square bg-secondary/40">
-										{songs[index]?.thumbnail ? (
-											<img
-												src={songs[index].thumbnail}
-												alt=""
-												className="w-full h-full object-cover"
-											/>
-										) : (
-											<div className="w-full h-full flex items-center justify-center">
-												<Play className="h-8 w-8 text-muted-foreground/30" />
-											</div>
-										)}
-									</div>
-								))}
+							<div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/60">
+								<Play className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/50" />
 							</div>
-						)
-					) : (
-						<div className="h-full w-full flex items-center justify-center">
-							<Play className="h-20 w-20 text-muted-foreground/50" />
-						</div>
-					)}
+						)}
+					</div>
 				</div>
-				<div className="flex-1 space-y-4">
-					<p className="uppercase text-xs font-bold tracking-wider text-muted-foreground">
+
+				{/* Playlist Info */}
+				<div className="flex-1 flex flex-col justify-center text-center md:text-left space-y-3 md:space-y-4">
+					<p className="uppercase text-xs font-bold tracking-widest text-muted-foreground/80">
 						Playlist
 					</p>
-					<h1 className="text-4xl md:text-6xl font-bold">
+					<h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight line-clamp-2">
 						{playlist.name}
 					</h1>
-					<p className="text-muted-foreground">
-						Created by{" "}
-						<span className="text-foreground font-medium">
-							{playlist.profiles?.username}
-						</span>{" "}
-						• {songs.length} songs
-					</p>
-					<div className="flex items-center gap-1 text-xs text-muted-foreground/80">
-						{playlist.is_public ?
-							<Globe className="h-3 w-3" />
-						:	<Lock className="h-3 w-3" />}
-						<span>{playlist.is_public ? "Public" : "Private"}</span>
+					<div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 text-sm">
+						<span className="text-muted-foreground">
+							Created by{" "}
+							<span className="text-foreground font-semibold hover:underline cursor-pointer">
+								{playlist.profiles?.username}
+							</span>
+						</span>
+						<span className="hidden md:inline text-muted-foreground/50">•</span>
+						<span className="text-muted-foreground font-medium">{songs.length} {songs.length === 1 ? 'song' : 'songs'}</span>
 					</div>
-					{isOwner && (
-						<Button
-							variant="outline"
-							onClick={handleTogglePublic}
-							disabled={togglingPublic}>
-							{togglingPublic ?
-								"Updating…"
-							: playlist.is_public ?
-								"Make private"
-							:	"Make public"}
-						</Button>
-					)}
-					{canCopy && (
-						<Button
-							variant="secondary"
-							onClick={handleCopyPlaylist}
-							disabled={copying}>
-							{copying ? "Copying…" : "Copy playlist"}
-						</Button>
-					)}
+					<div className="flex items-center justify-center md:justify-start gap-2 text-xs">
+						<div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${playlist.is_public ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
+							{playlist.is_public ?
+								<Globe className="h-3.5 w-3.5" />
+							:	<Lock className="h-3.5 w-3.5" />}
+							<span className="font-medium">{playlist.is_public ? "Public" : "Private"}</span>
+						</div>
+					</div>
+					
+					{/* Action Buttons */}
+					<div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-2">
+						{isOwner && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleTogglePublic}
+								disabled={togglingPublic}
+								className="min-w-[120px]">
+								{togglingPublic ?
+									"Updating…"
+								: playlist.is_public ?
+									"Make Private"
+								:	"Make Public"}
+							</Button>
+						)}
+						{canCopy && (
+							<Button
+								variant="secondary"
+								size="sm"
+								onClick={handleCopyPlaylist}
+								disabled={copying}
+								className="min-w-[120px]">
+								{copying ? "Copying…" : "Copy Playlist"}
+							</Button>
+						)}
+						{isOwner && (
+							<Button
+								variant="destructive"
+								size="sm"
+								onClick={handleDeletePlaylist}
+								className="gap-2">
+								<Trash2 className="h-3.5 w-3.5" />
+								Delete
+							</Button>
+						)}
+					</div>
 				</div>
-				{isOwner && (
-					<Button
-						variant="destructive"
-						size="icon"
-						onClick={handleDeletePlaylist}>
-						<Trash2 className="h-4 w-4" />
-					</Button>
-				)}
 			</div>
 
 			{/* Songs List */}
-			<div className="space-y-2">
+			<div className="space-y-1 bg-black/20 rounded-xl p-2 md:p-3">
 				{songs.map((song, index) => (
 					<div
 						key={song.id}
-						className="group flex items-center gap-4 p-2 rounded-md hover:bg-secondary/50 transition-colors">
-						<div className="w-8 text-center text-muted-foreground group-hover:hidden">
+						className="group flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-lg hover:bg-white/5 transition-all duration-200">
+						<div className="w-8 md:w-10 text-center text-sm text-muted-foreground/80 group-hover:hidden font-medium">
 							{index + 1}
 						</div>
 						<div
-							className="w-8 h-8 hidden group-hover:flex items-center justify-center cursor-pointer"
+							className="w-8 md:w-10 h-8 md:h-10 hidden group-hover:flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
 							onClick={() => handlePlaySong(song.song_id)}>
-							<Play className="h-4 w-4 fill-current" />
+							<Play className="h-5 w-5 fill-current text-primary" />
 						</div>
 
 						<img
 							src={song.thumbnail}
-							alt={song.title}
-							className="h-10 w-10 rounded object-cover bg-secondary"
+							alt={song.song_title}
+							className="h-12 w-12 md:h-14 md:w-14 rounded-md object-cover bg-secondary shadow-md ring-1 ring-white/5"
 						/>
 
 						<div className="flex-1 min-w-0">
 							<p
-								className="font-medium truncate cursor-pointer hover:underline"
+								className="font-semibold truncate cursor-pointer hover:underline text-sm md:text-base"
 								onClick={() => handlePlaySong(song.song_id)}>
 								{song.song_title}
 							</p>
-							<p className="text-xs text-muted-foreground truncate">
+							<p className="text-xs md:text-sm text-muted-foreground truncate">
 								{song.artist}
 							</p>
 						</div>
 
-						{/* Add Song Actions (Like remove) here */}
 						{isOwner && (
 							<Button
 								variant="ghost"
 								size="icon"
-								className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+								className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all h-8 w-8 md:h-9 md:w-9"
 								onClick={() => handleDeleteSong(song.id)}>
 								<Trash2 className="h-4 w-4" />
 							</Button>
