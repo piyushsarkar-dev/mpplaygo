@@ -4,7 +4,7 @@ import { EditProfileModal } from "@/components/auth/edit-profile-modal";
 import { CreatePlaylistModal } from "@/components/playlist/create-playlist-modal";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
-import { Globe, Lock, Play } from "lucide-react";
+import { Globe, Lock, Music, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -36,14 +36,25 @@ export default function ProfilePage({ params }) {
 			}
 			setProfile(profileData);
 
-			// Fetch Playlists
-			const { data: playlistData, error: playlistError } = await supabase
-				.from("playlists")
-				.select("*")
-				.eq("user_id", profileData.id)
-				.order("created_at", { ascending: false });
+		// Fetch Playlists with first 4 song thumbnails
+		const { data: playlistData, error: playlistError } = await supabase
+			.from("playlists")
+			.select(`
+				*,
+				playlist_songs(song_id, thumbnail)
+			`)
+			.eq("user_id", profileData.id)
+			.order("created_at", { ascending: false });
 
-			if (playlistData) setPlaylists(playlistData);
+		if (playlistData) {
+			// Get first 4 thumbnails for each playlist
+			const playlistsWithThumbnails = playlistData.map(playlist => ({
+				...playlist,
+				thumbnails: playlist.playlist_songs?.slice(0, 4).map(s => s.thumbnail).filter(Boolean) || []
+			}));
+			console.log('Playlists with thumbnails:', playlistsWithThumbnails);
+			setPlaylists(playlistsWithThumbnails);
+		}
 			setLoading(false);
 		};
 
@@ -118,10 +129,38 @@ export default function ProfilePage({ params }) {
 								href={`/playlist/${playlist.id}`}
 								key={playlist.id}
 								className="group relative aspect-square bg-secondary/20 rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all">
-								<div className="absolute inset-0 flex items-center justify-center bg-secondary/40 group-hover:bg-secondary/60 transition-colors">
+								{/* Playlist Cover Grid (Spotify style) */}
+								{playlist.thumbnails && playlist.thumbnails.length > 0 ? (
+									<div className="grid grid-cols-2 gap-0 h-full">
+										{[0, 1, 2, 3].map((index) => (
+											<div key={index} className="relative aspect-square bg-secondary/40">
+												{playlist.thumbnails[index] ? (
+													<img
+														src={playlist.thumbnails[index]}
+														alt=""
+														className="w-full h-full object-cover"
+													/>
+												) : (
+													<div className="w-full h-full flex items-center justify-center">
+														<Music className="h-6 w-6 text-muted-foreground/30" />
+													</div>
+												)}
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="absolute inset-0 flex items-center justify-center bg-secondary/40">
+										<Music className="h-12 w-12 text-muted-foreground/30" />
+									</div>
+								)}
+								
+								{/* Hover Play Button */}
+								<div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
 									<Play className="h-10 w-10 text-primary opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0" />
 								</div>
-								<div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+								
+								{/* Playlist Info */}
+								<div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
 									<h3 className="font-semibold truncate">
 										{playlist.name}
 									</h3>

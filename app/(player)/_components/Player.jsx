@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { useMusicProvider, useNextMusicProvider } from "@/hooks/use-context";
 import { getSongsById } from "@/lib/fetch";
-import { Download, Play, Repeat, Repeat1, Share2 } from "lucide-react";
+import { Download, Play, Repeat, Repeat1, Share2, SkipBack, SkipForward } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -23,7 +23,7 @@ export default function Player({ id }) {
 	const [audioURL, setAudioURL] = useState("");
 	const params = useSearchParams();
 	const next = useNextMusicProvider();
-	const { current, setCurrent, setDownloadProgress, downloadProgress } =
+	const { current, setCurrent, setDownloadProgress, downloadProgress, playNext, playPrevious, hasNext, hasPrevious } =
 		useMusicProvider();
 	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
 	const QUEUE_KEY = "mpplaygo_queue";
@@ -172,6 +172,20 @@ export default function Player({ id }) {
 		setIsLooping(!isLooping);
 	};
 
+	const handleNext = () => {
+		const nextId = playNext();
+		if (nextId) {
+			window.location.href = `/${nextId}`;
+		}
+	};
+
+	const handlePrevious = () => {
+		const prevId = playPrevious();
+		if (prevId) {
+			window.location.href = `/${prevId}`;
+		}
+	};
+
 	const handleShare = () => {
 		try {
 			navigator.share({
@@ -227,6 +241,17 @@ export default function Player({ id }) {
 		if (isLooping || duration === 0) return;
 		if (currentTime !== duration) return;
 
+		// Auto-play next song when current ends
+		const nextId = playNext();
+		if (nextId) {
+			try {
+				sessionStorage.setItem(USER_PLAY_KEY, "true");
+				localStorage.setItem("p", "true");
+			} catch {}
+			window.location.href = `/${nextId}`;
+			return;
+		}
+
 		// Prefer artist queue navigation (no mixing).
 		try {
 			const raw = sessionStorage.getItem(QUEUE_KEY);
@@ -258,7 +283,7 @@ export default function Player({ id }) {
 		if (next?.nextData?.id) {
 			window.location.href = `https://${window.location.host}/${next.nextData.id}`;
 		}
-	}, [currentTime, duration, isLooping, id, next?.nextData?.id]);
+	}, [currentTime, duration, isLooping, id, next?.nextData?.id, playNext]);
 	return (
 		<div className="mb-3 mt-10">
 			<audio
@@ -345,19 +370,37 @@ export default function Player({ id }) {
 									</span>
 								</div>
 								<div className="flex items-center mt-1 justify-between w-full sm:mt-2">
-									<Button
-										variant={
-											playing ? "default" : "secondary"
-										}
-										className="gap-1 rounded-full"
-										onClick={togglePlayPause}>
-										{playing ? (
-											<IoPause className="h-4 w-4" />
-										) : (
-											<Play className="h-4 w-4" />
-										)}
-										{playing ? "Pause" : "Play"}
-									</Button>
+									<div className="flex items-center gap-2">
+										<Button
+											size="icon"
+											variant="ghost"
+											onClick={handlePrevious}
+											disabled={!hasPrevious}
+											className="disabled:opacity-50">
+											<SkipBack className="h-4 w-4" />
+										</Button>
+										<Button
+											variant={
+												playing ? "default" : "secondary"
+											}
+											className="gap-1 rounded-full"
+											onClick={togglePlayPause}>
+											{playing ? (
+												<IoPause className="h-4 w-4" />
+											) : (
+												<Play className="h-4 w-4" />
+											)}
+											{playing ? "Pause" : "Play"}
+										</Button>
+										<Button
+											size="icon"
+											variant="ghost"
+											onClick={handleNext}
+											disabled={!hasNext}
+											className="disabled:opacity-50">
+											<SkipForward className="h-4 w-4" />
+										</Button>
+									</div>
 									<div className="flex items-center gap-2 sm:gap-3 sm:mt-0">
 										<Button
 											size="icon"
