@@ -373,11 +373,19 @@ export default function Page() {
     if (feedCacheRef.current.has(cacheKey)) {
       const cached = feedCacheRef.current.get(cacheKey);
       setFeed((prev) => {
+        // Filter out already shown songs
+        const filteredResults = cached.results.filter(song => !shownSongsRef.current.has(song.id));
+        
+        // Add to shown songs
+        filteredResults.forEach(song => {
+          if (song.id) shownSongsRef.current.add(song.id);
+        });
+        
         const merged =
           pageToLoad === 1 ?
-            cached.results
-          : mergeUniqueById(prev, cached.results);
-        if (!cached.results.length) setFeedHasMoreSafe(false);
+            filteredResults
+          : mergeUniqueById(prev, filteredResults);
+        if (!filteredResults.length) setFeedHasMoreSafe(false);
         if (typeof cached.total === "number" && merged.length >= cached.total)
           setFeedHasMoreSafe(false);
         return merged;
@@ -393,7 +401,7 @@ export default function Page() {
     try {
       const res = await getSongsByQueryPaged(query, {
         page: pageToLoad,
-        limit: PAGE_SIZE,
+        limit: PAGE_SIZE * 3, // Fetch more to account for filtering
         signal: controller.signal,
       });
       const json = await res?.json();
@@ -401,13 +409,21 @@ export default function Page() {
       const nextResults = json?.data?.results || [];
       const total = json?.data?.total;
 
-      feedCacheRef.current.set(cacheKey, { results: nextResults, total });
+      // Filter out already shown songs
+      const filteredResults = nextResults.filter(song => !shownSongsRef.current.has(song.id));
+      
+      // Add to shown songs
+      filteredResults.forEach(song => {
+        if (song.id) shownSongsRef.current.add(song.id);
+      });
+
+      feedCacheRef.current.set(cacheKey, { results: filteredResults, total });
 
       setFeed((prev) => {
         const merged =
-          pageToLoad === 1 ? nextResults : mergeUniqueById(prev, nextResults);
+          pageToLoad === 1 ? filteredResults : mergeUniqueById(prev, filteredResults);
         if (
-          !nextResults.length ||
+          !filteredResults.length ||
           (pageToLoad !== 1 && merged.length === prev.length)
         ) {
           setFeedHasMoreSafe(false);
