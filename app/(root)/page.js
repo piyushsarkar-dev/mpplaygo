@@ -422,8 +422,6 @@ export default function Page() {
     setAlbums(data.data.results);
   };
 
-  };
-
   useEffect(() => {
     getSongs("latest", "latest");
     getSongs("trending", "popular");
