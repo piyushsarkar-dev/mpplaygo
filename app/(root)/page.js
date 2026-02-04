@@ -47,6 +47,8 @@ export default function Page() {
   const [artistApiLoading, setArtistApiLoading] = useState(false);
   // NEW: State for randomized popular artists
   const [randomArtists, setRandomArtists] = useState([]);
+  // Track shown songs to avoid duplicates
+  const shownSongsRef = useRef(new Set());
 
   const artistRowRef = useRef(null);
   const artistSearchCacheRef = useRef(new Map());
@@ -357,11 +359,17 @@ export default function Page() {
     setFeedHasMore(v);
   };
 
-  const getFeed = async (pageToLoad) => {
+  const getFeed = async (pageToLoad, initialQuery = null) => {
     if (feedLoadingRef.current) return;
     if (!feedHasMoreRef.current && pageToLoad !== 1) return;
 
-    const cacheKey = `trending|${pageToLoad}`;
+    // For first page load, use varied queries for variety on each refresh
+    let query = "trending";
+    if (pageToLoad === 1 && initialQuery) {
+      query = initialQuery;
+    }
+
+    const cacheKey = `${query}|${pageToLoad}`;
     if (feedCacheRef.current.has(cacheKey)) {
       const cached = feedCacheRef.current.get(cacheKey);
       setFeed((prev) => {
@@ -383,7 +391,7 @@ export default function Page() {
 
     setFeedLoadingSafe(true);
     try {
-      const res = await getSongsByQueryPaged("trending", {
+      const res = await getSongsByQueryPaged(query, {
         page: pageToLoad,
         limit: PAGE_SIZE,
         signal: controller.signal,
@@ -427,7 +435,7 @@ export default function Page() {
     getSongs("trending", "popular");
     getAlbum();
 
-    // YouTube-style feed
+    // YouTube-style feed with variety on each page refresh
     feedAbortRef.current?.abort?.();
     feedCacheRef.current.clear();
     setFeed([]);
@@ -435,7 +443,19 @@ export default function Page() {
     setFeedPage(1);
     setFeedHasMoreSafe(true);
     setFeedLoadingSafe(false);
-    getFeed(1);
+
+    // Randomize query for variety on each page refresh
+    const queries = [
+      "trending",
+      "popular hits",
+      "viral songs",
+      "top songs",
+      "latest hits",
+      "popular music"
+    ];
+    const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+    
+    getFeed(1, randomQuery);
   }, []);
 
   const loadMoreFeed = () => {
