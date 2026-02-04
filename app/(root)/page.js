@@ -47,8 +47,28 @@ export default function Page() {
   const [artistApiLoading, setArtistApiLoading] = useState(false);
   // NEW: State for randomized popular artists
   const [randomArtists, setRandomArtists] = useState([]);
-  // Track shown songs to avoid duplicates
+  
+  // Track shown songs to avoid duplicates - persist in localStorage
   const shownSongsRef = useRef(new Set());
+
+  // Load shown songs from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('shownSongs');
+      if (stored) {
+        const data = JSON.parse(stored);
+        // Only keep songs shown in last 7 days
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        const validSongs = data.filter(item => item.timestamp > sevenDaysAgo);
+        shownSongsRef.current = new Set(validSongs.map(item => item.id));
+        
+        // Update localStorage with cleaned data
+        localStorage.setItem('shownSongs', JSON.stringify(validSongs));
+      }
+    } catch (e) {
+      console.error('Failed to load shown songs:', e);
+    }
+  }, []);
 
   const artistRowRef = useRef(null);
   const artistSearchCacheRef = useRef(new Map());
@@ -359,6 +379,24 @@ export default function Page() {
     setFeedHasMore(v);
   };
 
+  // Save shown songs to localStorage
+  const saveShownSongs = (songId) => {
+    try {
+      const stored = localStorage.getItem('shownSongs');
+      const data = stored ? JSON.parse(stored) : [];
+      
+      // Add new song with timestamp
+      data.push({ id: songId, timestamp: Date.now() });
+      
+      // Keep only last 1000 songs to prevent localStorage from getting too large
+      const limited = data.slice(-1000);
+      
+      localStorage.setItem('shownSongs', JSON.stringify(limited));
+    } catch (e) {
+      console.error('Failed to save shown songs:', e);
+    }
+  };
+
   const getFeed = async (pageToLoad, initialQuery = null) => {
     if (feedLoadingRef.current) return;
     if (!feedHasMoreRef.current && pageToLoad !== 1) return;
@@ -374,11 +412,27 @@ export default function Page() {
       const cached = feedCacheRef.current.get(cacheKey);
       setFeed((prev) => {
         // Filter out already shown songs
-        const filteredResults = cached.results.filter(song => !shownSongsRef.current.has(song.id));
+        let filteredResults = cached.results.filter(song => !shownSongsRef.current.has(song.id));
         
-        // Add to shown songs
+        // If no new songs found and it's the first page, show all anyway
+        if (filteredResults.length === 0 && pageToLoad === 1) {
+          console.log('No new songs in cache, showing all');
+          filteredResults = cached.results;
+          // Clear the shown songs
+          shownSongsRef.current.clear();
+          try {
+            localStorage.removeItem('shownSongs');
+          } catch (e) {
+            console.error('Failed to clear shown songs:', e);
+          }
+        }
+        
+        // Add to shown songs and save to localStorage
         filteredResults.forEach(song => {
-          if (song.id) shownSongsRef.current.add(song.id);
+          if (song.id) {
+            shownSongsRef.current.add(song.id);
+            saveShownSongs(song.id);
+          }
         });
         
         const merged =
@@ -410,11 +464,27 @@ export default function Page() {
       const total = json?.data?.total;
 
       // Filter out already shown songs
-      const filteredResults = nextResults.filter(song => !shownSongsRef.current.has(song.id));
+      let filteredResults = nextResults.filter(song => !shownSongsRef.current.has(song.id));
       
-      // Add to shown songs
+      // If no new songs found and it's the first page, clear history and show all
+      if (filteredResults.length === 0 && pageToLoad === 1) {
+        console.log('No new songs found, showing all results');
+        filteredResults = nextResults;
+        // Clear the shown songs to allow fresh content
+        shownSongsRef.current.clear();
+        try {
+          localStorage.removeItem('shownSongs');
+        } catch (e) {
+          console.error('Failed to clear shown songs:', e);
+        }
+      }
+      
+      // Add to shown songs and save to localStorage
       filteredResults.forEach(song => {
-        if (song.id) shownSongsRef.current.add(song.id);
+        if (song.id) {
+          shownSongsRef.current.add(song.id);
+          saveShownSongs(song.id);
+        }
       });
 
       feedCacheRef.current.set(cacheKey, { results: filteredResults, total });
