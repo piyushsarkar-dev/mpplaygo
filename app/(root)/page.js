@@ -20,13 +20,15 @@ import {
 import { ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 import FeaturedCarousel from "@/components/home/recent-played-carousel";
 import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 
 export default function Page() {
-  const FOR_YOU_LIMIT = 6;
-  const PAGE_SIZE = FOR_YOU_LIMIT;
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const PAGE_SIZE = isMobile ? 20 : 40;
+  const FOR_YOU_LIMIT = PAGE_SIZE;
   const [latest, setLatest] = useState([]);
   const [popular, setPopular] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -527,7 +529,7 @@ export default function Page() {
     setFeed([]);
     feedPageRef.current = 1;
     setFeedPage(1);
-    setFeedHasMoreSafe(true);
+    setFeedHasMoreSafe(false); // Disable infinite scroll
     setFeedLoadingSafe(false);
 
     // Randomize query for variety on each page refresh
@@ -542,7 +544,7 @@ export default function Page() {
     const randomQuery = queries[Math.floor(Math.random() * queries.length)];
     
     getFeed(1, randomQuery);
-  }, []);
+  }, [isMobile]);
 
   const loadMoreFeed = () => {
     if (feedLoadingRef.current || !feedHasMoreRef.current) return;
@@ -553,7 +555,7 @@ export default function Page() {
   };
 
   const { sentinelRef: feedSentinelRef } = useInfiniteScroll({
-    enabled: feedHasMore && !feedLoading && feed.length >= PAGE_SIZE,
+    enabled: false, // Disable infinite scroll
     onLoadMore: loadMoreFeed,
     // Vertical page scroll: preload when nearing the bottom
     rootMargin: "600px 0px",
@@ -803,11 +805,6 @@ export default function Page() {
               </div>
             ))}
         </div>
-        {/* Sentinel for vertical infinite loading */}
-        <div
-          ref={feedSentinelRef}
-          className="h-6"
-        />
       </section>
     </main>
   );
