@@ -280,7 +280,7 @@ export default function Player() {
       </div>
 
       {/* Desktop Player (Full Bar) - Hidden on small screens, Visible on md+ */}
-      <div className="hidden md:flex w-full max-w-6xl mx-auto h-24 bg-black/60 backdrop-blur-xl border border-white/10 rounded-[2rem] items-center px-4 md:px-8 shadow-2xl relative overflow-hidden group">
+      <div className="hidden md:flex w-full max-w-6xl mx-auto h-24 glass-desktop-player rounded-[2rem] items-center px-4 md:px-8 shadow-2xl relative overflow-hidden group">
         {/* Background Blur Mesh (Optional aesthetic) */}
         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
 
