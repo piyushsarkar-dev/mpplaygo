@@ -286,7 +286,7 @@ export default function Player() {
 
         {/* Left: Song Info */}
         <div className="flex items-center gap-4 w-[25%] min-w-[200px]">
-          <div className="h-16 w-16 rounded-xl overflow-hidden relative shrink-0 shadow-lg">
+          <div className="h-16 w-16 rounded-full overflow-hidden relative shrink-0 shadow-2xl ring-2 ring-white/20 ring-offset-2 ring-offset-transparent">
             <img
               src={data.image ? data?.image[1]?.url : ""}
               alt={data?.name}
