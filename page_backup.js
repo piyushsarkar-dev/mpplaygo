@@ -17,7 +17,7 @@ import {
   searchAlbumByQuery,
   searchArtistsByQueryPaged,
 } from "@/lib/fetch";
-import { ChevronRight, Search, X } from "lucide-react";
+import { ChevronRight, Search, X, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -47,6 +47,9 @@ export default function Page() {
   const [artistApiLoading, setArtistApiLoading] = useState(false);
   // NEW: State for randomized popular artists
   const [randomArtists, setRandomArtists] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
+  const [personalizationInfo, setPersonalizationInfo] = useState(null);
 
   const artistRowRef = useRef(null);
   const artistSearchCacheRef = useRef(new Map());
@@ -422,6 +425,126 @@ export default function Page() {
     setAlbums(data.data.results);
   };
 
+  // Refresh For You recommendations based on listening history
+  const refreshForYou = async () => {
+    if (isRefreshing) return;
+    
+    // Prevent too frequent refreshes (minimum 5 seconds)
+    const now = Date.now();
+    if (lastRefreshTime && (now - lastRefreshTime) < 5000) {
+      return;
+    }
+    
+    setIsRefreshing(true);
+    setLastRefreshTime(now);
+    
+    try {
+      feedAbortRef.current?.abort?.();
+      feedCacheRef.current.clear();
+      
+      if (!user) {
+        // Guest user - show trending with variety
+        const queries = ["trending", "popular hits", "viral songs"];
+        const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+        const res = await getSongsByQueryPaged(randomQuery, {
+          page: 1,
+          limit: PAGE_SIZE,
+        });
+        const json = await res?.json();
+        const results = json?.data?.results || [];
+        setFeed(results);
+        setFeedHasMoreSafe(true);
+      } else {
+        // Logged in user - personalized based on history
+        const { data: history } = await supabase
+          .from("user_history")
+          .select("*")
+          .order("listened_at", { ascending: false })
+          .limit(50);
+        
+        if (history && history.length > 0) {
+          // Analyze listening patterns
+          const artistCounts = {};
+          const langCounts = {};
+          
+          history.forEach((h) => {
+            if (h.artist) {
+              artistCounts[h.artist] = (artistCounts[h.artist] || 0) + 1;
+            }
+            if (h.language) {
+              langCounts[h.language] = (langCounts[h.language] || 0) + 1;
+            }
+          });
+          
+          // Get top artist and language
+          const topArtist = Object.keys(artistCounts).length > 0 ?
+            Object.keys(artistCounts).reduce((a, b) =>
+              artistCounts[a] > artistCounts[b] ? a : b
+            ) : null;
+          
+          const topLang = Object.keys(langCounts).length > 0 ?
+            Object.keys(langCounts).reduce((a, b) =>
+              langCounts[a] > langCounts[b] ? a : b
+            ) : "English";
+          
+          // Set personalization info
+          setPersonalizationInfo({
+            type: topArtist ? "artist" : "language",
+            value: topArtist || topLang,
+            count: history.length
+          });
+          
+          // Generate personalized query
+          let query = "";
+          const rand = Math.random();
+          
+          if (topArtist && rand > 0.5) {
+            query = `${topArtist} similar artists`;
+          } else {
+            const queries = [
+              `${topLang} trending`,
+              `${topLang} popular`,
+              `${topLang} new songs`,
+              `${topLang} hits 2024`
+            ];
+            query = queries[Math.floor(Math.random() * queries.length)];
+          }
+          
+          const res = await getSongsByQueryPaged(query, {
+            page: 1,
+            limit: PAGE_SIZE,
+          });
+          const json = await res?.json();
+          const results = json?.data?.results || [];
+          
+          // Filter out recently played songs
+          const recentIds = new Set(history.slice(0, 10).map(h => h.song_id));
+          const filtered = results.filter(s => !recentIds.has(s.id));
+          
+          setFeed(filtered.length > 0 ? filtered : results);
+          setFeedHasMoreSafe(true);
+        } else {
+          // No history - show trending
+          const res = await getSongsByQueryPaged("trending", {
+            page: 1,
+            limit: PAGE_SIZE,
+          });
+          const json = await res?.json();
+          const results = json?.data?.results || [];
+          setFeed(results);
+          setFeedHasMoreSafe(true);
+        }
+      }
+      
+      // Reset pagination
+      feedPageRef.current = 1;
+      setFeedPage(1);
+      
+    } catch (e) {
+      console.error("Failed to refresh recommendations", e);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -666,10 +789,30 @@ export default function Page() {
       {/* 3. For You Section - Infinite List (Vertical) */}
       <section className="pb-10 -mt-2">
         <div className="flex items-center justify-between mb-3 md:mb-6 pl-0">
-          <h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2">
-            For you{" "}
-            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2">
+              For you{" "}
+              <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
+            </h2>
+            {personalizationInfo && (
+              <span className="text-xs md:text-sm text-white/50 bg-white/5 px-2 py-1 rounded-full hidden sm:inline-flex items-center gap-1">
+                {personalizationInfo.type === "artist" ? 
+                  `Based on ${personalizationInfo.value}` 
+                : 
+                  `${personalizationInfo.value} recommendations`
+                }
+              </span>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={refreshForYou}
+            disabled={isRefreshing}
+            className="text-white/70 hover:text-white hover:bg-white/10 gap-2">
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-8 gap-y-3 md:gap-y-10 px-0 md:px-2">
