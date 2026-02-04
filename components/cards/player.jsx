@@ -30,7 +30,16 @@ export default function Player() {
   const [volume, setVolume] = useState(100);
   const [muted, setMuted] = useState(false);
   const lastNonZeroVolumeRef = useRef(50);
-  const { music, setMusic, current, setCurrent, playNext, playPrevious, hasNext, hasPrevious } = useMusicProvider();
+  const {
+    music,
+    setMusic,
+    current,
+    setCurrent,
+    playNext,
+    playPrevious,
+    hasNext,
+    hasPrevious,
+  } = useMusicProvider();
   const userInitiatedRef = useRef(false);
   const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
   const VOLUME_KEY = "mpplaygo_volume";
@@ -140,7 +149,7 @@ export default function Player() {
   const handleNext = () => {
     const nextId = playNext();
     if (nextId) {
-      // Music state will be updated by playNext(), 
+      // Music state will be updated by playNext(),
       // component will re-render with new music ID
       try {
         sessionStorage.setItem(USER_PLAY_KEY, "true");
@@ -202,14 +211,14 @@ export default function Player() {
   // Auto-play next song when current ends
   useEffect(() => {
     if (!audioRef.current) return;
-    
+
     const handleEnded = () => {
       if (isLooping) return; // Don't auto-play if looping is enabled
       playNext();
     };
-    
+
     audioRef.current.addEventListener("ended", handleEnded);
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current.removeEventListener("ended", handleEnded);

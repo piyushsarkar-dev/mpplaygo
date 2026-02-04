@@ -254,22 +254,26 @@ export default function Page() {
         const topIds = idsToFetch.slice(0, 10);
         try {
           const results = await Promise.all(
-            topIds.map(async (id) => {
+            topIds.map(async (id, index) => {
               try {
                 const res = await getSongsById(id);
-                if (!res?.ok) return null;
+                if (!res?.ok) return { data: null, index };
                 const json = await res.json().catch(() => null);
-                return json?.data?.[0] ?? null;
+                return { data: json?.data?.[0] ?? null, index };
               } catch {
-                return null;
+                return { data: null, index };
               }
             }),
           );
 
-          const enrichedHistory = results.filter(Boolean);
+          // Sort by original index to preserve order (most recent first)
+          const sortedResults = results
+            .sort((a, b) => a.index - b.index)
+            .map((r) => r.data)
+            .filter(Boolean);
 
-          if (enrichedHistory.length > 0) {
-            setHistorySongs(enrichedHistory);
+          if (sortedResults.length > 0) {
+            setHistorySongs(sortedResults);
           } else {
             // Fallback if fetch fails (use stored data but missing image)
             setHistorySongs(uniqueHistory);
