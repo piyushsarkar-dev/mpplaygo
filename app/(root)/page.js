@@ -416,9 +416,9 @@ export default function Page() {
         // Filter out already shown songs
         let filteredResults = cached.results.filter(song => !shownSongsRef.current.has(song.id));
         
-        // If no new songs found and it's the first page, show all anyway
-        if (filteredResults.length === 0 && pageToLoad === 1) {
-          console.log('No new songs in cache, showing all');
+        // If not enough songs after filtering and it's the first page, show all anyway
+        if (filteredResults.length < PAGE_SIZE && pageToLoad === 1) {
+          console.log('Not enough new songs in cache, showing all');
           filteredResults = cached.results;
           // Clear the shown songs
           shownSongsRef.current.clear();
@@ -428,6 +428,9 @@ export default function Page() {
             console.error('Failed to clear shown songs:', e);
           }
         }
+        
+        // Limit to PAGE_SIZE
+        filteredResults = filteredResults.slice(0, PAGE_SIZE);
         
         // Add to shown songs and save to localStorage
         filteredResults.forEach(song => {
@@ -457,7 +460,7 @@ export default function Page() {
     try {
       const res = await getSongsByQueryPaged(query, {
         page: pageToLoad,
-        limit: PAGE_SIZE * 3, // Fetch more to account for filtering
+        limit: PAGE_SIZE * 5, // Fetch more to ensure enough songs after filtering
         signal: controller.signal,
       });
       const json = await res?.json();
@@ -468,9 +471,9 @@ export default function Page() {
       // Filter out already shown songs
       let filteredResults = nextResults.filter(song => !shownSongsRef.current.has(song.id));
       
-      // If no new songs found and it's the first page, clear history and show all
-      if (filteredResults.length === 0 && pageToLoad === 1) {
-        console.log('No new songs found, showing all results');
+      // If we don't have enough songs after filtering, clear history and use all
+      if (filteredResults.length < PAGE_SIZE && pageToLoad === 1) {
+        console.log('Not enough new songs, clearing history');
         filteredResults = nextResults;
         // Clear the shown songs to allow fresh content
         shownSongsRef.current.clear();
@@ -480,6 +483,9 @@ export default function Page() {
           console.error('Failed to clear shown songs:', e);
         }
       }
+      
+      // Limit to PAGE_SIZE
+      filteredResults = filteredResults.slice(0, PAGE_SIZE);
       
       // Add to shown songs and save to localStorage
       filteredResults.forEach(song => {
