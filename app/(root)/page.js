@@ -307,7 +307,20 @@ export default function Page() {
       }
     };
 
+  useEffect(() => {
     if (user !== undefined) fetchRecommendations(); // Run even if user is null (for guest mode)
+  }, [user, supabase]);
+
+  // Add window focus listener to refresh history when user comes back to the tab
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) {
+        fetchRecommendations();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [user, supabase]);
 
   const feedPageRef = useRef(1);
