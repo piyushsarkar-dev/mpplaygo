@@ -209,25 +209,24 @@ export default function Page() {
     return () => ro.disconnect();
   }, []);
 
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      if (!user) {
-        // Not logged in: Fetch generic recommendations (e.g. "Trending" or "Hindi" or "English" hits)
-        // Using "Trending" or a default query
-        const get = await getSongsByQuery("Global Hits");
-        const data = await get.json();
-        if (data.data && data.data.results) {
-          setRecommended(data.data.results);
-        }
-        setHistorySongs([]);
-        return;
+  const fetchRecommendations = async () => {
+    if (!user) {
+      // Not logged in: Fetch generic recommendations (e.g. "Trending" or "Hindi" or "English" hits)
+      // Using "Trending" or a default query
+      const get = await getSongsByQuery("Global Hits");
+      const data = await get.json();
+      if (data.data && data.data.results) {
+        setRecommended(data.data.results);
       }
+      setHistorySongs([]);
+      return;
+    }
 
-      const { data: history } = await supabase
-        .from("user_history")
-        .select("*")
-        .order("listened_at", { ascending: false })
-        .limit(20);
+    const { data: history } = await supabase
+      .from("user_history")
+      .select("*")
+      .order("listened_at", { ascending: false })
+      .limit(20);
 
       // Process History for "Recent Plays"
       if (history && history.length > 0) {
@@ -249,31 +248,29 @@ export default function Page() {
         });
 
         // Fetch full details for images if possible
-        // Since getSongsById takes a single ID, we loop or Promise.all.
+        // Since getSongsById takes a single ID, we fetch sequentially to preserve order
         // Optimization: Slice to top 10 to avoid too many requests.
         const topIds = idsToFetch.slice(0, 10);
         try {
-          const results = await Promise.all(
-            topIds.map(async (id, index) => {
-              try {
-                const res = await getSongsById(id);
-                if (!res?.ok) return { data: null, index };
+          const enrichedHistory = [];
+          
+          for (const id of topIds) {
+            try {
+              const res = await getSongsById(id);
+              if (res?.ok) {
                 const json = await res.json().catch(() => null);
-                return { data: json?.data?.[0] ?? null, index };
-              } catch {
-                return { data: null, index };
+                const songData = json?.data?.[0];
+                if (songData) {
+                  enrichedHistory.push(songData);
+                }
               }
-            }),
-          );
+            } catch (e) {
+              console.error(`Error fetching song ${id}:`, e);
+            }
+          }
 
-          // Sort by original index to preserve order (most recent first)
-          const sortedResults = results
-            .sort((a, b) => a.index - b.index)
-            .map((r) => r.data)
-            .filter(Boolean);
-
-          if (sortedResults.length > 0) {
-            setHistorySongs(sortedResults);
+          if (enrichedHistory.length > 0) {
+            setHistorySongs(enrichedHistory);
           } else {
             // Fallback if fetch fails (use stored data but missing image)
             setHistorySongs(uniqueHistory);
