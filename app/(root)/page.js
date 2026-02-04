@@ -27,7 +27,7 @@ import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 
 export default function Page() {
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const PAGE_SIZE = isMobile ? 20 : 40;
+  const PAGE_SIZE = isMobile ? 20 : 42;
   const FOR_YOU_LIMIT = PAGE_SIZE;
   const [latest, setLatest] = useState([]);
   const [popular, setPopular] = useState([]);
