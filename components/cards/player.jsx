@@ -321,27 +321,27 @@ export default function Player() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white disabled:opacity-30"
+              className="text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 transition-all duration-200 rounded-full shadow-lg hover:shadow-white/20"
               onClick={handlePrevious}
               disabled={!hasPrevious}>
-              <SkipBack className="w-6 h-6 fill-white/20" />
+              <SkipBack className="w-6 h-6 fill-white/20 group-hover:fill-white/40 transition-all" />
             </Button>
 
             <button
-              className="h-12 w-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition active:scale-95 shadow-lg shadow-white/20"
+              className="h-14 w-14 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all duration-200 active:scale-95 shadow-2xl shadow-white/30 hover:shadow-white/50 ring-2 ring-white/20 ring-offset-2 ring-offset-transparent"
               onClick={togglePlayPause}>
               {playing ?
-                <IoPause className="h-5 w-5" />
-              : <Play className="h-5 w-5 ml-1" />}
+                <IoPause className="h-6 w-6" />
+              : <Play className="h-6 w-6 ml-1" />}
             </button>
 
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white disabled:opacity-30"
+              className="text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 transition-all duration-200 rounded-full shadow-lg hover:shadow-white/20"
               onClick={handleNext}
               disabled={!hasNext}>
-              <SkipForward className="w-6 h-6 fill-white/20" />
+              <SkipForward className="w-6 h-6 fill-white/20 group-hover:fill-white/40 transition-all" />
             </Button>
           </div>
 
@@ -378,7 +378,7 @@ export default function Player() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/60 hover:text-red-500 hover:bg-white/10 rounded-full transition-colors">
+              className="text-white/60 hover:text-red-500 hover:bg-white/10 hover:scale-110 rounded-full transition-all duration-200 shadow-lg hover:shadow-red-500/20">
               <Heart className="w-5 h-5" />
             </Button>
           </AddToPlaylist>
@@ -392,7 +392,7 @@ export default function Player() {
               <Button
                 size="icon"
                 variant="ghost"
-                className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                className="text-white/60 hover:text-white hover:bg-white/10 hover:scale-110 rounded-full transition-all duration-200 shadow-lg hover:shadow-white/20"
                 title="Download">
                 <Download className="w-5 h-5" />
               </Button>
@@ -404,7 +404,7 @@ export default function Player() {
             <Button
               size="icon"
               variant="ghost"
-              className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              className="text-white/60 hover:text-white hover:bg-white/10 hover:scale-110 rounded-full transition-all duration-200 shadow-lg hover:shadow-white/20"
               onClick={toggleMute}
               title={effectiveMuted ? "Unmute" : "Mute"}>
               {effectiveMuted ?
@@ -432,7 +432,7 @@ export default function Player() {
           <Button
             size="icon"
             variant="ghost"
-            className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+            className="text-white/60 hover:text-red-500 hover:bg-white/10 hover:scale-110 rounded-full transition-all duration-200 shadow-lg hover:shadow-red-500/20"
             onClick={() => {
               setMusic(null);
               setCurrent(0);
