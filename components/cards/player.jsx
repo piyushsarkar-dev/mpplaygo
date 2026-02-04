@@ -30,7 +30,16 @@ export default function Player() {
   const [volume, setVolume] = useState(100);
   const [muted, setMuted] = useState(false);
   const lastNonZeroVolumeRef = useRef(50);
-  const { music, setMusic, current, setCurrent, playNext, playPrevious, hasNext, hasPrevious } = useMusicProvider();
+  const {
+    music,
+    setMusic,
+    current,
+    setCurrent,
+    playNext,
+    playPrevious,
+    hasNext,
+    hasPrevious,
+  } = useMusicProvider();
   const userInitiatedRef = useRef(false);
   const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
   const VOLUME_KEY = "mpplaygo_volume";
@@ -140,7 +149,7 @@ export default function Player() {
   const handleNext = () => {
     const nextId = playNext();
     if (nextId) {
-      // Music state will be updated by playNext(), 
+      // Music state will be updated by playNext(),
       // component will re-render with new music ID
       try {
         sessionStorage.setItem(USER_PLAY_KEY, "true");
@@ -202,14 +211,14 @@ export default function Player() {
   // Auto-play next song when current ends
   useEffect(() => {
     if (!audioRef.current) return;
-    
+
     const handleEnded = () => {
       if (isLooping) return; // Don't auto-play if looping is enabled
       playNext();
     };
-    
+
     audioRef.current.addEventListener("ended", handleEnded);
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current.removeEventListener("ended", handleEnded);
@@ -280,13 +289,13 @@ export default function Player() {
       </div>
 
       {/* Desktop Player (Full Bar) - Hidden on small screens, Visible on md+ */}
-      <div className="hidden md:flex w-full max-w-6xl mx-auto h-24 bg-black/60 backdrop-blur-xl border border-white/10 rounded-[2rem] items-center px-4 md:px-8 shadow-2xl relative overflow-hidden group">
+      <div className="hidden md:flex w-full max-w-6xl mx-auto h-24 glass-desktop-player rounded-[2rem] items-center px-4 md:px-8 shadow-2xl relative overflow-hidden group">
         {/* Background Blur Mesh (Optional aesthetic) */}
         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
 
         {/* Left: Song Info */}
         <div className="flex items-center gap-4 w-[25%] min-w-[200px]">
-          <div className="h-16 w-16 rounded-xl overflow-hidden relative shrink-0 shadow-lg">
+          <div className="h-16 w-16 rounded-full overflow-hidden relative shrink-0 shadow-2xl ring-2 ring-white/20 ring-offset-2 ring-offset-transparent">
             <img
               src={data.image ? data?.image[1]?.url : ""}
               alt={data?.name}
@@ -321,27 +330,27 @@ export default function Player() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white disabled:opacity-30"
+              className="text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 transition-all duration-200 rounded-full shadow-lg hover:shadow-white/20"
               onClick={handlePrevious}
               disabled={!hasPrevious}>
-              <SkipBack className="w-6 h-6 fill-white/20" />
+              <SkipBack className="w-6 h-6 fill-white/20 group-hover:fill-white/40 transition-all" />
             </Button>
 
             <button
-              className="h-12 w-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition active:scale-95 shadow-lg shadow-white/20"
+              className="h-14 w-14 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all duration-200 active:scale-95 shadow-2xl shadow-white/30 hover:shadow-white/50 ring-2 ring-white/20 ring-offset-2 ring-offset-transparent"
               onClick={togglePlayPause}>
               {playing ?
-                <IoPause className="h-5 w-5" />
-              : <Play className="h-5 w-5 ml-1" />}
+                <IoPause className="h-6 w-6" />
+              : <Play className="h-6 w-6 ml-1" />}
             </button>
 
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white disabled:opacity-30"
+              className="text-white/70 hover:text-white hover:bg-white/10 hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 transition-all duration-200 rounded-full shadow-lg hover:shadow-white/20"
               onClick={handleNext}
               disabled={!hasNext}>
-              <SkipForward className="w-6 h-6 fill-white/20" />
+              <SkipForward className="w-6 h-6 fill-white/20 group-hover:fill-white/40 transition-all" />
             </Button>
           </div>
 
@@ -375,12 +384,15 @@ export default function Player() {
               artist: data.artist || data.artists?.primary?.[0]?.name,
               image: data.image,
             }}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/60 hover:text-red-500 hover:bg-white/10 rounded-full transition-colors">
-              <Heart className="w-5 h-5" />
-            </Button>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-sm" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-10 w-10 bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 hover:scale-110 rounded-full transition-all duration-300 shadow-lg hover:shadow-red-500/30">
+                <Heart className="w-5 h-5" />
+              </Button>
+            </div>
           </AddToPlaylist>
 
           {audioURL && (
@@ -389,28 +401,34 @@ export default function Player() {
               download={`${data?.name || "song"}.m4a`}
               target="_blank"
               rel="noreferrer">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-                title="Download">
-                <Download className="w-5 h-5" />
-              </Button>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-sm" />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="relative h-10 w-10 bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 hover:scale-110 rounded-full transition-all duration-300 shadow-lg hover:shadow-white/30"
+                  title="Download">
+                  <Download className="w-5 h-5" />
+                </Button>
+              </div>
             </a>
           )}
 
           {/* Volume */}
           <div className="hidden md:flex items-center gap-2 ml-1">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-              onClick={toggleMute}
-              title={effectiveMuted ? "Unmute" : "Mute"}>
-              {effectiveMuted ?
-                <VolumeX className="w-5 h-5" />
-              : <Volume2 className="w-5 h-5" />}
-            </Button>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-sm" />
+              <Button
+                size="icon"
+                variant="ghost"
+                className="relative h-10 w-10 bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 hover:scale-110 rounded-full transition-all duration-300 shadow-lg hover:shadow-white/30"
+                onClick={toggleMute}
+                title={effectiveMuted ? "Unmute" : "Mute"}>
+                {effectiveMuted ?
+                  <VolumeX className="w-5 h-5" />
+                : <Volume2 className="w-5 h-5" />}
+              </Button>
+            </div>
             <div className="w-24">
               <Slider
                 value={[volume]}
@@ -429,21 +447,24 @@ export default function Player() {
             </div>
           </div>
 
-          <Button
-            size="icon"
-            variant="ghost"
-            className="text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-            onClick={() => {
-              setMusic(null);
-              setCurrent(0);
-              localStorage.removeItem("last-played");
-              localStorage.removeItem("p");
-              audioRef.current.currentTime = 0;
-              audioRef.current.src = null;
-              setAudioURL(null);
-            }}>
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-sm" />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="relative h-10 w-10 bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 hover:scale-110 rounded-full transition-all duration-300 shadow-lg hover:shadow-red-500/30"
+              onClick={() => {
+                setMusic(null);
+                setCurrent(0);
+                localStorage.removeItem("last-played");
+                localStorage.removeItem("p");
+                audioRef.current.currentTime = 0;
+                audioRef.current.src = null;
+                setAudioURL(null);
+              }}>
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </main>

@@ -11,14 +11,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   getSongsByQuery,
   getSongsByQueryPaged,
   searchAlbumByQuery,
   searchArtistsByQueryPaged,
 } from "@/lib/fetch";
-import { ChevronRight, Search, X } from "lucide-react";
+import { ChevronRight, Search, X, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -26,9 +25,8 @@ import FeaturedCarousel from "@/components/home/recent-played-carousel";
 import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 
 export default function Page() {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const PAGE_SIZE = isMobile ? 20 : 42;
-  const FOR_YOU_LIMIT = PAGE_SIZE;
+  const FOR_YOU_LIMIT = 6;
+  const PAGE_SIZE = FOR_YOU_LIMIT;
   const [latest, setLatest] = useState([]);
   const [popular, setPopular] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -49,28 +47,9 @@ export default function Page() {
   const [artistApiLoading, setArtistApiLoading] = useState(false);
   // NEW: State for randomized popular artists
   const [randomArtists, setRandomArtists] = useState([]);
-
-  // Track shown songs to avoid duplicates - persist in localStorage
-  const shownSongsRef = useRef(new Set());
-
-  // Load shown songs from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("shownSongs");
-      if (stored) {
-        const data = JSON.parse(stored);
-        // Only keep songs shown in last 7 days
-        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        const validSongs = data.filter((item) => item.timestamp > sevenDaysAgo);
-        shownSongsRef.current = new Set(validSongs.map((item) => item.id));
-
-        // Update localStorage with cleaned data
-        localStorage.setItem("shownSongs", JSON.stringify(validSongs));
-      }
-    } catch (e) {
-      console.error("Failed to load shown songs:", e);
-    }
-  }, []);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
+  const [personalizationInfo, setPersonalizationInfo] = useState(null);
 
   const artistRowRef = useRef(null);
   const artistSearchCacheRef = useRef(new Map());
@@ -209,24 +188,25 @@ export default function Page() {
     return () => ro.disconnect();
   }, []);
 
-  const fetchRecommendations = async () => {
-    if (!user) {
-      // Not logged in: Fetch generic recommendations (e.g. "Trending" or "Hindi" or "English" hits)
-      // Using "Trending" or a default query
-      const get = await getSongsByQuery("Global Hits");
-      const data = await get.json();
-      if (data.data && data.data.results) {
-        setRecommended(data.data.results);
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (!user) {
+        // Not logged in: Fetch generic recommendations (e.g. "Trending" or "Hindi" or "English" hits)
+        // Using "Trending" or a default query
+        const get = await getSongsByQuery("Global Hits");
+        const data = await get.json();
+        if (data.data && data.data.results) {
+          setRecommended(data.data.results);
+        }
+        setHistorySongs([]);
+        return;
       }
-      setHistorySongs([]);
-      return;
-    }
 
-    const { data: history } = await supabase
-      .from("user_history")
-      .select("*")
-      .order("listened_at", { ascending: false })
-      .limit(20);
+      const { data: history } = await supabase
+        .from("user_history")
+        .select("*")
+        .order("listened_at", { ascending: false })
+        .limit(20);
 
       // Process History for "Recent Plays"
       if (history && history.length > 0) {
@@ -248,26 +228,24 @@ export default function Page() {
         });
 
         // Fetch full details for images if possible
-        // Since getSongsById takes a single ID, we fetch sequentially to preserve order
+        // Since getSongsById takes a single ID, we loop or Promise.all.
         // Optimization: Slice to top 10 to avoid too many requests.
         const topIds = idsToFetch.slice(0, 10);
         try {
-          const enrichedHistory = [];
-          
-          for (const id of topIds) {
-            try {
-              const res = await getSongsById(id);
-              if (res?.ok) {
+          const results = await Promise.all(
+            topIds.map(async (id) => {
+              try {
+                const res = await getSongsById(id);
+                if (!res?.ok) return null;
                 const json = await res.json().catch(() => null);
-                const songData = json?.data?.[0];
-                if (songData) {
-                  enrichedHistory.push(songData);
-                }
+                return json?.data?.[0] ?? null;
+              } catch {
+                return null;
               }
-            } catch (e) {
-              console.error(`Error fetching song ${id}:`, e);
-            }
-          }
+            }),
+          );
+
+          const enrichedHistory = results.filter(Boolean);
 
           if (enrichedHistory.length > 0) {
             setHistorySongs(enrichedHistory);
@@ -307,20 +285,7 @@ export default function Page() {
       }
     };
 
-  useEffect(() => {
     if (user !== undefined) fetchRecommendations(); // Run even if user is null (for guest mode)
-  }, [user, supabase]);
-
-  // Add window focus listener to refresh history when user comes back to the tab
-  useEffect(() => {
-    const handleFocus = () => {
-      if (user) {
-        fetchRecommendations();
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
   }, [user, supabase]);
 
   const feedPageRef = useRef(1);
@@ -395,72 +360,19 @@ export default function Page() {
     setFeedHasMore(v);
   };
 
-  // Save shown songs to localStorage
-  const saveShownSongs = (songId) => {
-    try {
-      const stored = localStorage.getItem("shownSongs");
-      const data = stored ? JSON.parse(stored) : [];
-
-      // Add new song with timestamp
-      data.push({ id: songId, timestamp: Date.now() });
-
-      // Keep only last 1000 songs to prevent localStorage from getting too large
-      const limited = data.slice(-1000);
-
-      localStorage.setItem("shownSongs", JSON.stringify(limited));
-    } catch (e) {
-      console.error("Failed to save shown songs:", e);
-    }
-  };
-
-  const getFeed = async (pageToLoad, initialQuery = null) => {
+  const getFeed = async (pageToLoad) => {
     if (feedLoadingRef.current) return;
     if (!feedHasMoreRef.current && pageToLoad !== 1) return;
 
-    // For first page load, use varied queries for variety on each refresh
-    let query = "trending";
-    if (pageToLoad === 1 && initialQuery) {
-      query = initialQuery;
-    }
-
-    const cacheKey = `${query}|${pageToLoad}`;
+    const cacheKey = `trending|${pageToLoad}`;
     if (feedCacheRef.current.has(cacheKey)) {
       const cached = feedCacheRef.current.get(cacheKey);
       setFeed((prev) => {
-        // Filter out already shown songs
-        let filteredResults = cached.results.filter(
-          (song) => !shownSongsRef.current.has(song.id),
-        );
-
-        // If not enough songs after filtering and it's the first page, show all anyway
-        if (filteredResults.length < PAGE_SIZE && pageToLoad === 1) {
-          console.log("Not enough new songs in cache, showing all");
-          filteredResults = cached.results;
-          // Clear the shown songs
-          shownSongsRef.current.clear();
-          try {
-            localStorage.removeItem("shownSongs");
-          } catch (e) {
-            console.error("Failed to clear shown songs:", e);
-          }
-        }
-
-        // Limit to PAGE_SIZE
-        filteredResults = filteredResults.slice(0, PAGE_SIZE);
-
-        // Add to shown songs and save to localStorage
-        filteredResults.forEach((song) => {
-          if (song.id) {
-            shownSongsRef.current.add(song.id);
-            saveShownSongs(song.id);
-          }
-        });
-
         const merged =
-          pageToLoad === 1 ? filteredResults : (
-            mergeUniqueById(prev, filteredResults)
-          );
-        if (!filteredResults.length) setFeedHasMoreSafe(false);
+          pageToLoad === 1 ?
+            cached.results
+          : mergeUniqueById(prev, cached.results);
+        if (!cached.results.length) setFeedHasMoreSafe(false);
         if (typeof cached.total === "number" && merged.length >= cached.total)
           setFeedHasMoreSafe(false);
         return merged;
@@ -474,9 +386,9 @@ export default function Page() {
 
     setFeedLoadingSafe(true);
     try {
-      const res = await getSongsByQueryPaged(query, {
+      const res = await getSongsByQueryPaged("trending", {
         page: pageToLoad,
-        limit: PAGE_SIZE * 5, // Fetch more to ensure enough songs after filtering
+        limit: PAGE_SIZE,
         signal: controller.signal,
       });
       const json = await res?.json();
@@ -484,44 +396,13 @@ export default function Page() {
       const nextResults = json?.data?.results || [];
       const total = json?.data?.total;
 
-      // Filter out already shown songs
-      let filteredResults = nextResults.filter(
-        (song) => !shownSongsRef.current.has(song.id),
-      );
-
-      // If we don't have enough songs after filtering, clear history and use all
-      if (filteredResults.length < PAGE_SIZE && pageToLoad === 1) {
-        console.log("Not enough new songs, clearing history");
-        filteredResults = nextResults;
-        // Clear the shown songs to allow fresh content
-        shownSongsRef.current.clear();
-        try {
-          localStorage.removeItem("shownSongs");
-        } catch (e) {
-          console.error("Failed to clear shown songs:", e);
-        }
-      }
-
-      // Limit to PAGE_SIZE
-      filteredResults = filteredResults.slice(0, PAGE_SIZE);
-
-      // Add to shown songs and save to localStorage
-      filteredResults.forEach((song) => {
-        if (song.id) {
-          shownSongsRef.current.add(song.id);
-          saveShownSongs(song.id);
-        }
-      });
-
-      feedCacheRef.current.set(cacheKey, { results: filteredResults, total });
+      feedCacheRef.current.set(cacheKey, { results: nextResults, total });
 
       setFeed((prev) => {
         const merged =
-          pageToLoad === 1 ? filteredResults : (
-            mergeUniqueById(prev, filteredResults)
-          );
+          pageToLoad === 1 ? nextResults : mergeUniqueById(prev, nextResults);
         if (
-          !filteredResults.length ||
+          !nextResults.length ||
           (pageToLoad !== 1 && merged.length === prev.length)
         ) {
           setFeedHasMoreSafe(false);
@@ -544,33 +425,143 @@ export default function Page() {
     setAlbums(data.data.results);
   };
 
+  // Refresh For You recommendations based on listening history
+  const refreshForYou = async () => {
+    if (isRefreshing) return;
+    
+    // Prevent too frequent refreshes (minimum 5 seconds)
+    const now = Date.now();
+    if (lastRefreshTime && (now - lastRefreshTime) < 5000) {
+      return;
+    }
+    
+    setIsRefreshing(true);
+    setLastRefreshTime(now);
+    
+    try {
+      feedAbortRef.current?.abort?.();
+      feedCacheRef.current.clear();
+      
+      if (!user) {
+        // Guest user - show trending with variety
+        const queries = ["trending", "popular hits", "viral songs"];
+        const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+        const res = await getSongsByQueryPaged(randomQuery, {
+          page: 1,
+          limit: PAGE_SIZE,
+        });
+        const json = await res?.json();
+        const results = json?.data?.results || [];
+        setFeed(results);
+        setFeedHasMoreSafe(true);
+      } else {
+        // Logged in user - personalized based on history
+        const { data: history } = await supabase
+          .from("user_history")
+          .select("*")
+          .order("listened_at", { ascending: false })
+          .limit(50);
+        
+        if (history && history.length > 0) {
+          // Analyze listening patterns
+          const artistCounts = {};
+          const langCounts = {};
+          
+          history.forEach((h) => {
+            if (h.artist) {
+              artistCounts[h.artist] = (artistCounts[h.artist] || 0) + 1;
+            }
+            if (h.language) {
+              langCounts[h.language] = (langCounts[h.language] || 0) + 1;
+            }
+          });
+          
+          // Get top artist and language
+          const topArtist = Object.keys(artistCounts).length > 0 ?
+            Object.keys(artistCounts).reduce((a, b) =>
+              artistCounts[a] > artistCounts[b] ? a : b
+            ) : null;
+          
+          const topLang = Object.keys(langCounts).length > 0 ?
+            Object.keys(langCounts).reduce((a, b) =>
+              langCounts[a] > langCounts[b] ? a : b
+            ) : "English";
+          
+          // Set personalization info
+          setPersonalizationInfo({
+            type: topArtist ? "artist" : "language",
+            value: topArtist || topLang,
+            count: history.length
+          });
+          
+          // Generate personalized query
+          let query = "";
+          const rand = Math.random();
+          
+          if (topArtist && rand > 0.5) {
+            query = `${topArtist} similar artists`;
+          } else {
+            const queries = [
+              `${topLang} trending`,
+              `${topLang} popular`,
+              `${topLang} new songs`,
+              `${topLang} hits 2024`
+            ];
+            query = queries[Math.floor(Math.random() * queries.length)];
+          }
+          
+          const res = await getSongsByQueryPaged(query, {
+            page: 1,
+            limit: PAGE_SIZE,
+          });
+          const json = await res?.json();
+          const results = json?.data?.results || [];
+          
+          // Filter out recently played songs
+          const recentIds = new Set(history.slice(0, 10).map(h => h.song_id));
+          const filtered = results.filter(s => !recentIds.has(s.id));
+          
+          setFeed(filtered.length > 0 ? filtered : results);
+          setFeedHasMoreSafe(true);
+        } else {
+          // No history - show trending
+          const res = await getSongsByQueryPaged("trending", {
+            page: 1,
+            limit: PAGE_SIZE,
+          });
+          const json = await res?.json();
+          const results = json?.data?.results || [];
+          setFeed(results);
+          setFeedHasMoreSafe(true);
+        }
+      }
+      
+      // Reset pagination
+      feedPageRef.current = 1;
+      setFeedPage(1);
+      
+    } catch (e) {
+      console.error("Failed to refresh recommendations", e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     getSongs("latest", "latest");
     getSongs("trending", "popular");
     getAlbum();
 
-    // YouTube-style feed with variety on each page refresh
+    // YouTube-style feed
     feedAbortRef.current?.abort?.();
     feedCacheRef.current.clear();
     setFeed([]);
     feedPageRef.current = 1;
     setFeedPage(1);
-    setFeedHasMoreSafe(false); // Disable infinite scroll
+    setFeedHasMoreSafe(true);
     setFeedLoadingSafe(false);
-
-    // Randomize query for variety on each page refresh
-    const queries = [
-      "trending",
-      "popular hits",
-      "viral songs",
-      "top songs",
-      "latest hits",
-      "popular music",
-    ];
-    const randomQuery = queries[Math.floor(Math.random() * queries.length)];
-
-    getFeed(1, randomQuery);
-  }, [isMobile]);
+    getFeed(1);
+  }, []);
 
   const loadMoreFeed = () => {
     if (feedLoadingRef.current || !feedHasMoreRef.current) return;
@@ -581,7 +572,7 @@ export default function Page() {
   };
 
   const { sentinelRef: feedSentinelRef } = useInfiniteScroll({
-    enabled: false, // Disable infinite scroll
+    enabled: feedHasMore && !feedLoading && feed.length >= PAGE_SIZE,
     onLoadMore: loadMoreFeed,
     // Vertical page scroll: preload when nearing the bottom
     rootMargin: "600px 0px",
@@ -798,10 +789,30 @@ export default function Page() {
       {/* 3. For You Section - Infinite List (Vertical) */}
       <section className="pb-10 -mt-2">
         <div className="flex items-center justify-between mb-3 md:mb-6 pl-0">
-          <h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2">
-            For you{" "}
-            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm md:text-xl font-normal text-white flex items-center gap-2">
+              For you{" "}
+              <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
+            </h2>
+            {personalizationInfo && (
+              <span className="text-xs md:text-sm text-white/50 bg-white/5 px-2 py-1 rounded-full hidden sm:inline-flex items-center gap-1">
+                {personalizationInfo.type === "artist" ? 
+                  `Based on ${personalizationInfo.value}` 
+                : 
+                  `${personalizationInfo.value} recommendations`
+                }
+              </span>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={refreshForYou}
+            disabled={isRefreshing}
+            className="text-white/70 hover:text-white hover:bg-white/10 gap-2">
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-8 gap-y-3 md:gap-y-10 px-0 md:px-2">
@@ -831,6 +842,11 @@ export default function Page() {
               </div>
             ))}
         </div>
+        {/* Sentinel for vertical infinite loading */}
+        <div
+          ref={feedSentinelRef}
+          className="h-6"
+        />
       </section>
     </main>
   );
