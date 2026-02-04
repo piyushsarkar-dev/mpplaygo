@@ -228,84 +228,84 @@ export default function Page() {
       .order("listened_at", { ascending: false })
       .limit(20);
 
-      // Process History for "Recent Plays"
-      if (history && history.length > 0) {
-        const uniqueHistory = [];
-        const seenIds = new Set();
-        const idsToFetch = [];
+    // Process History for "Recent Plays"
+    if (history && history.length > 0) {
+      const uniqueHistory = [];
+      const seenIds = new Set();
+      const idsToFetch = [];
 
-        history.forEach((h) => {
-          if (!seenIds.has(h.song_id)) {
-            seenIds.add(h.song_id);
-            idsToFetch.push(h.song_id);
-            uniqueHistory.push({
-              id: h.song_id,
-              name: h.song_title,
-              artist: h.artist, // artist might be missing in history table, so we need fetch
-              image: h.thumbnail, // thumbnail is likely missing based on schema
-            });
-          }
-        });
+      history.forEach((h) => {
+        if (!seenIds.has(h.song_id)) {
+          seenIds.add(h.song_id);
+          idsToFetch.push(h.song_id);
+          uniqueHistory.push({
+            id: h.song_id,
+            name: h.song_title,
+            artist: h.artist, // artist might be missing in history table, so we need fetch
+            image: h.thumbnail, // thumbnail is likely missing based on schema
+          });
+        }
+      });
 
-        // Fetch full details for images if possible
-        // Since getSongsById takes a single ID, we fetch sequentially to preserve order
-        // Optimization: Slice to top 10 to avoid too many requests.
-        const topIds = idsToFetch.slice(0, 10);
-        try {
-          const enrichedHistory = [];
-          
-          for (const id of topIds) {
-            try {
-              const res = await getSongsById(id);
-              if (res?.ok) {
-                const json = await res.json().catch(() => null);
-                const songData = json?.data?.[0];
-                if (songData) {
-                  enrichedHistory.push(songData);
-                }
+      // Fetch full details for images if possible
+      // Since getSongsById takes a single ID, we fetch sequentially to preserve order
+      // Optimization: Slice to top 10 to avoid too many requests.
+      const topIds = idsToFetch.slice(0, 10);
+      try {
+        const enrichedHistory = [];
+
+        for (const id of topIds) {
+          try {
+            const res = await getSongsById(id);
+            if (res?.ok) {
+              const json = await res.json().catch(() => null);
+              const songData = json?.data?.[0];
+              if (songData) {
+                enrichedHistory.push(songData);
               }
-            } catch (e) {
-              console.error(`Error fetching song ${id}:`, e);
             }
+          } catch (e) {
+            console.error(`Error fetching song ${id}:`, e);
           }
+        }
 
-          if (enrichedHistory.length > 0) {
-            setHistorySongs(enrichedHistory);
-          } else {
-            // Fallback if fetch fails (use stored data but missing image)
-            setHistorySongs(uniqueHistory);
-          }
-        } catch (e) {
-          console.error("Error fetching history details", e);
+        if (enrichedHistory.length > 0) {
+          setHistorySongs(enrichedHistory);
+        } else {
+          // Fallback if fetch fails (use stored data but missing image)
           setHistorySongs(uniqueHistory);
         }
+      } catch (e) {
+        console.error("Error fetching history details", e);
+        setHistorySongs(uniqueHistory);
+      }
 
-        // Recommendations Logic
-        const langCounts = {};
-        history.forEach((h) => {
-          if (h.language)
-            langCounts[h.language] = (langCounts[h.language] || 0) + 1;
-        });
+      // Recommendations Logic
+      const langCounts = {};
+      history.forEach((h) => {
+        if (h.language)
+          langCounts[h.language] = (langCounts[h.language] || 0) + 1;
+      });
 
-        let favoriteLang = "English";
-        if (Object.keys(langCounts).length > 0) {
-          favoriteLang = Object.keys(langCounts).reduce((a, b) =>
-            langCounts[a] > langCounts[b] ? a : b,
-          );
-        }
+      let favoriteLang = "English";
+      if (Object.keys(langCounts).length > 0) {
+        favoriteLang = Object.keys(langCounts).reduce((a, b) =>
+          langCounts[a] > langCounts[b] ? a : b,
+        );
+      }
 
-        if (favoriteLang) {
-          const get = await getSongsByQuery(favoriteLang + " hit songs");
-          const data = await get.json();
-          if (data.data && data.data.results) setRecommended(data.data.results);
-        }
-      } else {
-        // User logged in but no history
-        const get = await getSongsByQuery("Trending");
+      if (favoriteLang) {
+        const get = await getSongsByQuery(favoriteLang + " hit songs");
         const data = await get.json();
         if (data.data && data.data.results) setRecommended(data.data.results);
       }
-    };
+    } else {
+      // User logged in but no history
+      const get = await getSongsByQuery("Trending");
+      const data = await get.json();
+      if (data.data && data.data.results) setRecommended(data.data.results);
+    }
+  };
 
   useEffect(() => {
     if (user !== undefined) fetchRecommendations(); // Run even if user is null (for guest mode)
