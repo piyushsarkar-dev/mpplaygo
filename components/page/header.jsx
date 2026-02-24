@@ -2,12 +2,12 @@
 import { AuthModal } from "@/components/auth/auth-modal";
 import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
 import { useSupabase } from "@/components/providers/supabase-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Home, List, Radio } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProfileDropdown } from "../auth/user-profile-dropdown";
 import FriendSearch from "./friend-search";
 import Search from "./search";

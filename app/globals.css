@@ -730,9 +730,7 @@ input[type="search"]::-webkit-search-decoration {
   left: calc(var(--circle-container-offset) + 0.187em);
 }
 
-.theme-switch__checkbox:checked
-  + .theme-switch__container
-  .theme-switch__moon {
+.theme-switch__checkbox:checked + .theme-switch__container .theme-switch__moon {
   transform: translate(0);
 }
 

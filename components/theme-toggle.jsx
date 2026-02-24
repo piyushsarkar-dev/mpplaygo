@@ -18,7 +18,11 @@ export function ThemeToggle({ className = "" }) {
 
   // Avoid hydration mismatch — render nothing until mounted
   if (!mounted) {
-    return <div className={`w-[5.625em] h-[2.5em] theme-switch-placeholder ${className}`} />;
+    return (
+      <div
+        className={`w-[5.625em] h-[2.5em] theme-switch-placeholder ${className}`}
+      />
+    );
   }
 
   const isDark = resolvedTheme === "dark";
@@ -42,8 +46,7 @@ export function ThemeToggle({ className = "" }) {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 144 55"
-            fill="none"
-          >
+            fill="none">
             <path
               fillRule="evenodd"
               clipRule="evenodd"
