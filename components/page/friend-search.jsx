@@ -90,7 +90,7 @@ export default function FriendSearch({ className, onUserClick }) {
       </div>
 
       {open && (loading || results.length > 0) && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-5 w-[383px] h-[274px] bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-5 w-[383px] h-[274px] bg-popover border border-border rounded-2xl shadow-2xl p-2 z-[60] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
           {loading && (
             <div className="px-3 py-2 text-sm text-muted-foreground">
               Searching…

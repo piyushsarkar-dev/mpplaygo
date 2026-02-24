@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function RootLayout({ children }) {
 	return (
-		<main className="h-screen w-full flex flex-col bg-black p-0 gap-0 md:pt-2 md:px-2 md:pb-0 md:gap-2 overflow-hidden">
+		<main className="h-screen w-full flex flex-col bg-background p-0 gap-0 md:pt-2 md:px-2 md:pb-0 md:gap-2 overflow-hidden">
 			<div className="flex-1 flex gap-2 overflow-hidden min-h-0">
 				{/* Main Content */}
 				<div className="flex-1 overflow-hidden relative">
