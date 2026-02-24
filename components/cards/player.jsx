@@ -255,8 +255,7 @@ export default function Player() {
         </div>
 
         {/* Song Info */}
-        <div
-          className="flex flex-col justify-center flex-1 ml-3 overflow-hidden mr-2">
+        <div className="flex flex-col justify-center flex-1 ml-3 overflow-hidden mr-2">
           <h3 className="text-white font-bold text-sm truncate leading-tight drop-shadow-md">
             {data?.name || "Loading..."}
           </h3>
@@ -266,7 +265,9 @@ export default function Player() {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}>
           <button
             className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handlePrevious}
