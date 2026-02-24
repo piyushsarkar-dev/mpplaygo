@@ -308,7 +308,8 @@ export default function Page() {
           try {
             const get = await getSongsByQuery(favoriteLang + " hit songs");
             const data = await get.json();
-            if (data.data && data.data.results) setRecommended(data.data.results);
+            if (data.data && data.data.results)
+              setRecommended(data.data.results);
           } catch (e) {
             console.error("Failed to fetch language recommendations:", e);
           }
@@ -616,23 +617,22 @@ export default function Page() {
     <main className="flex flex-col gap-4 md:gap-8 w-full pb-10">
       {/* Carousel Section: History or Recommendations */}
       <div className="w-full">
-        {authLoading ? (
+        {authLoading ?
           <div className="w-full pt-2 pb-0 px-0 md:px-5 lg:px-10">
             <div className="h-[180px] md:h-[420px] flex items-center justify-center">
               <div className="w-8 h-8 border-2 border-white/15 border-t-primary rounded-full animate-spin" />
             </div>
           </div>
-        ) : user && historySongs.length > 0 ? (
+        : user && historySongs.length > 0 ?
           <FeaturedCarousel
             songs={historySongs}
             title="Recent Played"
           />
-        ) : (
-          <FeaturedCarousel
+        : <FeaturedCarousel
             songs={recommended}
             title={user ? "Recommended For You" : "Trending Now"}
           />
-        )}
+        }
       </div>
 
       {/* 2. Popular Artists - Circular Row */}
