@@ -516,7 +516,7 @@ input[type="search"]::-webkit-search-decoration {
    ══════════════════════════════════════════════════ */
 
 .theme-switch {
-  --toggle-size: 30px;
+  --toggle-size: 14px;
   --container-width: 5.625em;
   --container-height: 2.5em;
   --container-radius: 6.25em;
@@ -540,7 +540,7 @@ input[type="search"]::-webkit-search-decoration {
 /* Mobile: smaller toggle */
 @media (max-width: 767px) {
   .theme-switch {
-    --toggle-size: 16px;
+    --toggle-size: 10px;
   }
 }
 
@@ -555,11 +555,13 @@ input[type="search"]::-webkit-search-decoration {
 }
 
 .theme-switch-placeholder {
-  font-size: 30px;
+  font-size: 14px;
+  width: 5.625em;
+  height: 2.5em;
 }
 @media (max-width: 767px) {
   .theme-switch-placeholder {
-    font-size: 16px;
+    font-size: 10px;
   }
 }
 

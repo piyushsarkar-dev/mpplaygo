@@ -69,7 +69,7 @@ export default function Header() {
 
         {/* Right Section: Friends & Profile */}
         <div className="flex items-center gap-4 shrink-0 justify-self-end">
-          <ThemeToggle />
+          <ThemeToggle className="shrink-0" />
           <FriendSearch />
 
           {user ?
@@ -165,7 +165,9 @@ export default function Header() {
         )}
 
         {/* Theme Toggle (mobile) */}
-        <ThemeToggle />
+        <div className="shrink-0">
+          <ThemeToggle />
+        </div>
 
         {/* Search Bar */}
         <div className="min-w-0 w-[140px] ml-auto">

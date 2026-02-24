@@ -20,7 +20,7 @@ export function ThemeToggle({ className = "" }) {
   if (!mounted) {
     return (
       <div
-        className={`w-[5.625em] h-[2.5em] theme-switch-placeholder ${className}`}
+        className={`theme-switch-placeholder rounded-full bg-zinc-800 shrink-0 ${className}`}
       />
     );
   }
