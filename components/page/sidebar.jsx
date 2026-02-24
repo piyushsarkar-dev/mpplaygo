@@ -24,7 +24,7 @@ export default function Sidebar() {
 	];
 
 	return (
-		<div className="flex flex-col h-full bg-background text-primary-foreground gap-2 p-2 w-[280px]">
+		<div className="flex flex-col h-full bg-black text-primary-foreground gap-2 p-2 w-[280px]">
 			<div className="bg-card rounded-lg p-6 flex flex-col gap-6">
 				<Logo />
 				<div className="flex flex-col gap-y-4">
