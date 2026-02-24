@@ -2,6 +2,7 @@
 import { AuthModal } from "@/components/auth/auth-modal";
 import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
 import { useSupabase } from "@/components/providers/supabase-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Home, List, Radio } from "lucide-react";
@@ -17,7 +18,7 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
-      <div className="hidden md:grid w-full h-[72px] bg-black/80 supports-[backdrop-filter]:bg-black/40 backdrop-blur-xl grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
+      <div className="hidden md:grid w-full h-[72px] bg-background/80 supports-[backdrop-filter]:bg-background/40 backdrop-blur-xl grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
         {/* Left Section: Logo & Nav */}
         <div className="flex items-center gap-6 shrink-0 justify-self-start">
           <Link
@@ -68,6 +69,7 @@ export default function Header() {
 
         {/* Right Section: Friends & Profile */}
         <div className="flex items-center gap-4 shrink-0 justify-self-end">
+          <ThemeToggle className="shrink-0" />
           <FriendSearch />
 
           {user ?
@@ -94,7 +96,7 @@ export default function Header() {
       </div>
 
       {/* Mobile Header */}
-      <div className="flex md:hidden w-full h-[52px] bg-black/80 supports-[backdrop-filter]:bg-black/40 backdrop-blur-xl items-center px-3 py-2 gap-2.5">
+      <div className="flex md:hidden w-full h-[52px] bg-background/80 supports-[backdrop-filter]:bg-background/40 backdrop-blur-xl items-center px-3 py-2 gap-2.5">
         {/* Profile Icon */}
         <div className="shrink-0">
           {user ?
@@ -161,6 +163,11 @@ export default function Header() {
             </Link>
           </div>
         )}
+
+        {/* Theme Toggle (mobile) */}
+        <div className="shrink-0">
+          <ThemeToggle />
+        </div>
 
         {/* Search Bar */}
         <div className="min-w-0 w-[140px] ml-auto">

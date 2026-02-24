@@ -1,8 +1,6 @@
 import { getSongsById } from "@/lib/fetch";
-import Player from "../_components/Player";
 import Recomandation from "../_components/Recomandation";
-import AdvanceSearch from "../_components/AdvanceSearch";
-import Search from "@/components/page/search";
+import SongHero from "../_components/SongHero";
 
 export const generateMetadata = async ({ params }) => {
   const title = await getSongsById(params.id);
@@ -42,8 +40,8 @@ export const generateMetadata = async ({ params }) => {
 
 export default function Page({ params }) {
   return (
-    <div>
-      <Player id={params.id} />
+    <div className="pt-4 md:pt-6">
+      <SongHero id={params.id} />
       <Recomandation id={params.id} />
     </div>
   );

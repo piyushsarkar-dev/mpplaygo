@@ -42,8 +42,8 @@ export default function RootLayout({ children }) {
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange>
+            enableSystem={false}
+            storageKey="mpplaygo-theme">
             <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,0,255,0.15),rgba(255,255,255,0))] pointer-events-none" />
             <NextTopLoader
               color="hsl(var(--primary))"

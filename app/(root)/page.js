@@ -22,6 +22,7 @@ import { ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import PersonalizedSections from "@/components/home/personalized-sections";
 import FeaturedCarousel from "@/components/home/recent-played-carousel";
 import { getSongsById } from "@/lib/fetch"; // Ensure this is imported
 
@@ -634,6 +635,9 @@ export default function Page() {
           />
         }
       </div>
+
+      {/* Personalized Recommendations based on listening history */}
+      <PersonalizedSections />
 
       {/* 2. Popular Artists - Circular Row */}
       <section>
