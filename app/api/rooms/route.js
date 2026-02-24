@@ -24,44 +24,81 @@ function getSupabase() {
   );
 }
 
-/** GET /api/rooms — list public rooms */
-export async function GET() {
+/** GET /api/rooms — list rooms with optional search & filters */
+export async function GET(request) {
   try {
     const supabase = getSupabase();
-    const { data: rooms, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const filter = searchParams.get("filter") || "all"; // all | joined | public | private
+
+    // Get current user (optional — not all filters need it)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let query = supabase
       .from("rooms")
       .select(
-        "id, name, admin_id, is_private, current_song_id, current_song_data, is_playing, created_at, profiles!rooms_admin_id_fkey(username, avatar_url)",
+        "id, name, admin_id, is_private, current_song_id, current_song_data, is_playing, created_at, last_sync_at, profiles!rooms_admin_id_fkey(username, avatar_url)",
       )
       .order("created_at", { ascending: false })
       .limit(50);
+
+    // Search by name
+    if (search.trim()) {
+      query = query.ilike("name", `%${search.trim()}%`);
+    }
+
+    // Filter by type
+    if (filter === "public") {
+      query = query.eq("is_private", false);
+    } else if (filter === "private") {
+      query = query.eq("is_private", true);
+    }
+
+    // Hide rooms inactive for 36+ hours
+    const cutoff = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString();
+    query = query.gte("last_sync_at", cutoff);
+
+    const { data: rooms, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Also get member counts
+    // Get member counts
     const roomIds = (rooms || []).map((r) => r.id);
     let memberCounts = {};
+    let joinedRoomIds = new Set();
 
     if (roomIds.length > 0) {
       const { data: members } = await supabase
         .from("room_members")
-        .select("room_id")
+        .select("room_id, user_id")
         .in("room_id", roomIds);
 
       if (members) {
         for (const m of members) {
           memberCounts[m.room_id] = (memberCounts[m.room_id] || 0) + 1;
+          if (user && m.user_id === user.id) {
+            joinedRoomIds.add(m.room_id);
+          }
         }
       }
     }
 
-    const enriched = (rooms || []).map((r) => ({
+    let enriched = (rooms || []).map((r) => ({
       ...r,
       member_count: memberCounts[r.id] || 0,
       admin: r.profiles,
+      is_joined: joinedRoomIds.has(r.id),
     }));
+
+    // Filter "joined" — only rooms the user has joined
+    if (filter === "joined" && user) {
+      enriched = enriched.filter((r) => joinedRoomIds.has(r.id));
+    }
 
     return NextResponse.json({ rooms: enriched });
   } catch (err) {

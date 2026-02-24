@@ -252,6 +252,9 @@ export default function RoomProvider({ children }) {
   const broadcastPlay = useCallback(
     (currentTime) => {
       if (channelRef.current && (isAdmin || hasControl)) {
+        // Update local state FIRST so SYNC_TICK broadcasts the correct value
+        setRoomIsPlaying(true);
+        setRoomCurrentTime(currentTime);
         channelRef.current.send({
           type: "broadcast",
           event: ROOM_EVENTS.PLAY,
@@ -276,6 +279,9 @@ export default function RoomProvider({ children }) {
   const broadcastPause = useCallback(
     (currentTime) => {
       if (channelRef.current && (isAdmin || hasControl)) {
+        // Update local state FIRST so SYNC_TICK broadcasts the correct value
+        setRoomIsPlaying(false);
+        setRoomCurrentTime(currentTime);
         channelRef.current.send({
           type: "broadcast",
           event: ROOM_EVENTS.PAUSE,
@@ -410,7 +416,9 @@ export default function RoomProvider({ children }) {
     }
 
     syncIntervalRef.current = setInterval(() => {
-      if (channelRef.current && roomIsPlaying && roomSongId) {
+      if (channelRef.current && roomSongId) {
+        // Always send SYNC_TICK even when paused — so all listeners
+        // stay in the correct play/pause state at all times
         channelRef.current.send({
           type: "broadcast",
           event: ROOM_EVENTS.SYNC_TICK,
@@ -647,7 +655,8 @@ export default function RoomProvider({ children }) {
         if (roomData.current_song_id) {
           setRoomSongId(roomData.current_song_id);
           setRoomSongData(roomData.current_song_data);
-          setRoomIsPlaying(roomData.is_playing || false);
+          // Always start playing for new joiners — they'll sync via REQUEST_SYNC
+          setRoomIsPlaying(true);
           setRoomCurrentTime(roomData.current_time_sec || 0);
           // Load suggestions for the current song
           loadSuggestions(roomData.current_song_id);
