@@ -76,7 +76,7 @@ export default function Page() {
   const artistSearchCacheRef = useRef(new Map());
   const artistSearchDebounceRef = useRef(null);
 
-  const { user, supabase } = useSupabase();
+  const { user, supabase, isLoading: authLoading } = useSupabase();
 
   const artists = useMemo(() => {
     // Popular Artists must be global (same for all users)
@@ -211,26 +211,34 @@ export default function Page() {
 
   const fetchRecommendations = async () => {
     if (!user) {
-      // Not logged in: Fetch generic recommendations (e.g. "Trending" or "Hindi" or "English" hits)
-      // Using "Trending" or a default query
-      const get = await getSongsByQuery("Global Hits");
-      const data = await get.json();
-      if (data.data && data.data.results) {
-        setRecommended(data.data.results);
+      // Not logged in: Fetch generic recommendations
+      try {
+        const get = await getSongsByQuery("Global Hits");
+        const data = await get.json();
+        if (data.data && data.data.results) {
+          setRecommended(data.data.results);
+        }
+      } catch (e) {
+        console.error("Failed to fetch recommendations:", e);
       }
       setHistorySongs([]);
       return;
     }
 
-    const { data: history } = await supabase
-      .from("user_history")
-      .select("*")
-      .order("listened_at", { ascending: false })
-      .limit(20);
+    try {
+      const { data: history, error: histError } = await supabase
+        .from("user_history")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("listened_at", { ascending: false })
+        .limit(30);
+
+      if (histError) {
+        console.error("Failed to fetch history:", histError);
+      }
 
       // Process History for "Recent Plays"
       if (history && history.length > 0) {
-        const uniqueHistory = [];
         const seenIds = new Set();
         const idsToFetch = [];
 
@@ -238,49 +246,51 @@ export default function Page() {
           if (!seenIds.has(h.song_id)) {
             seenIds.add(h.song_id);
             idsToFetch.push(h.song_id);
-            uniqueHistory.push({
-              id: h.song_id,
-              name: h.song_title,
-              artist: h.artist, // artist might be missing in history table, so we need fetch
-              image: h.thumbnail, // thumbnail is likely missing based on schema
-            });
           }
         });
 
-        // Fetch full details for images if possible
-        // Since getSongsById takes a single ID, we fetch sequentially to preserve order
-        // Optimization: Slice to top 10 to avoid too many requests.
+        // Fetch full details in parallel — top 10 unique songs
         const topIds = idsToFetch.slice(0, 10);
         try {
-          const enrichedHistory = [];
-          
-          for (const id of topIds) {
-            try {
-              const res = await getSongsById(id);
-              if (res?.ok) {
+          const results = await Promise.all(
+            topIds.map(async (id) => {
+              try {
+                const res = await getSongsById(id);
+                if (!res?.ok) return null;
                 const json = await res.json().catch(() => null);
-                const songData = json?.data?.[0];
-                if (songData) {
-                  enrichedHistory.push(songData);
-                }
+                return json?.data?.[0] ?? null;
+              } catch {
+                return null;
               }
-            } catch (e) {
-              console.error(`Error fetching song ${id}:`, e);
-            }
-          }
+            }),
+          );
+
+          const enrichedHistory = results.filter(Boolean);
 
           if (enrichedHistory.length > 0) {
             setHistorySongs(enrichedHistory);
           } else {
-            // Fallback if fetch fails (use stored data but missing image)
-            setHistorySongs(uniqueHistory);
+            // Fallback: use stored data from history rows
+            const fallback = [];
+            const fbSeen = new Set();
+            history.forEach((h) => {
+              if (!fbSeen.has(h.song_id)) {
+                fbSeen.add(h.song_id);
+                fallback.push({
+                  id: h.song_id,
+                  name: h.song_title,
+                  artist: h.artist || "Unknown",
+                  image: h.thumbnail || "",
+                });
+              }
+            });
+            setHistorySongs(fallback.slice(0, 10));
           }
         } catch (e) {
           console.error("Error fetching history details", e);
-          setHistorySongs(uniqueHistory);
         }
 
-        // Recommendations Logic
+        // Recommendations based on language
         const langCounts = {};
         history.forEach((h) => {
           if (h.language)
@@ -295,33 +305,48 @@ export default function Page() {
         }
 
         if (favoriteLang) {
-          const get = await getSongsByQuery(favoriteLang + " hit songs");
-          const data = await get.json();
-          if (data.data && data.data.results) setRecommended(data.data.results);
+          try {
+            const get = await getSongsByQuery(favoriteLang + " hit songs");
+            const data = await get.json();
+            if (data.data && data.data.results)
+              setRecommended(data.data.results);
+          } catch (e) {
+            console.error("Failed to fetch language recommendations:", e);
+          }
         }
       } else {
         // User logged in but no history
-        const get = await getSongsByQuery("Trending");
-        const data = await get.json();
-        if (data.data && data.data.results) setRecommended(data.data.results);
+        try {
+          const get = await getSongsByQuery("Trending");
+          const data = await get.json();
+          if (data.data && data.data.results) setRecommended(data.data.results);
+        } catch (e) {
+          console.error("Failed to fetch trending:", e);
+        }
+        setHistorySongs([]);
       }
-    };
+    } catch (e) {
+      console.error("fetchRecommendations error:", e);
+    }
+  };
 
   useEffect(() => {
-    if (user !== undefined) fetchRecommendations(); // Run even if user is null (for guest mode)
-  }, [user, supabase]);
+    // Wait for auth to finish loading before fetching history
+    if (authLoading) return;
+    fetchRecommendations();
+  }, [user, supabase, authLoading]);
 
   // Add window focus listener to refresh history when user comes back to the tab
   useEffect(() => {
     const handleFocus = () => {
-      if (user) {
+      if (user && !authLoading) {
         fetchRecommendations();
       }
     };
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [user, supabase]);
+  }, [user, supabase, authLoading]);
 
   const feedPageRef = useRef(1);
   const feedLoadingRef = useRef(false);
@@ -592,14 +617,20 @@ export default function Page() {
     <main className="flex flex-col gap-4 md:gap-8 w-full pb-10">
       {/* Carousel Section: History or Recommendations */}
       <div className="w-full">
-        {user && historySongs.length > 0 ?
+        {authLoading ?
+          <div className="w-full pt-2 pb-0 px-0 md:px-5 lg:px-10">
+            <div className="h-[180px] md:h-[420px] flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-white/15 border-t-primary rounded-full animate-spin" />
+            </div>
+          </div>
+        : user && historySongs.length > 0 ?
           <FeaturedCarousel
             songs={historySongs}
             title="Recent Played"
           />
         : <FeaturedCarousel
             songs={recommended}
-            title="Recent Played"
+            title={user ? "Recommended For You" : "Trending Now"}
           />
         }
       </div>

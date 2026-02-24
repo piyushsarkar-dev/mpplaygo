@@ -35,6 +35,8 @@ create table user_history (
   user_id uuid references profiles(id) not null,
   song_id text not null,
   song_title text not null,
+  artist text,
+  thumbnail text,
   language text,
   listened_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -108,19 +110,42 @@ create policy "Users can insert their own history." on user_history
 
 -- Function to handle new user signup
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
 begin
-  insert into public.profiles (id, username, full_name, email, avatar_url)
+  insert into public.profiles (
+    id,
+    email,
+    full_name,
+    avatar_url,
+    username,
+    gender,
+    created_at
+  )
   values (
     new.id,
-    null,
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
     new.email,
-    coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
-  );
+    coalesce(
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name',
+      ''
+    ),
+    coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture'),
+    null,   -- keep username NULL, user will pick later
+    null,   -- set later via onboarding
+    now()
+  )
+  on conflict (id) do update
+    set email = excluded.email,
+        full_name = excluded.full_name,
+        avatar_url = excluded.avatar_url;
+
   return new;
 end;
-$$ language plpgsql security definer;
+$$;
 
 -- Trigger the function every time a user is created
 create trigger on_auth_user_created
