@@ -1,5 +1,6 @@
 import { OnboardingModal } from "@/components/auth/onboarding-modal";
 import MusicProvider from "@/components/providers/music-provider";
+import RoomProvider from "@/components/providers/room-provider";
 import SupabaseProvider from "@/components/providers/supabase-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Outfit, Syne } from "next/font/google";
@@ -59,7 +60,9 @@ export default function RootLayout({ children }) {
 							zIndex={1600}
 							showAtBottom={false}
 						/>
-						<MusicProvider>{children}</MusicProvider>
+						<MusicProvider>
+							<RoomProvider>{children}</RoomProvider>
+						</MusicProvider>
 						<OnboardingModal />
 						{/* <MobileMenu/> */}
 						<Toaster

@@ -1,10 +1,11 @@
 "use client";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
+import { CreateRoomModal } from "@/components/room/create-room-modal";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Home, List } from "lucide-react";
+import { Home, List, Radio } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfileDropdown } from "../auth/user-profile-dropdown";
@@ -48,6 +49,16 @@ export default function Header() {
 								<List className="w-5 h-5" />
 							</Button>
 						</PlaylistDrawer>
+
+						<CreateRoomModal>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0"
+								title="Create Room">
+								<Radio className="w-5 h-5" />
+							</Button>
+						</CreateRoomModal>
 
 						<div className="min-w-0 flex-1">
 							<Search className="max-w-none mx-0 h-11" />
@@ -138,8 +149,19 @@ export default function Header() {
 					}
 				</div>
 
+				{/* Create Room (mobile) */}
+				{user && (
+					<div className="shrink-0">
+						<CreateRoomModal>
+							<button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all">
+								<Radio className="w-4 h-4" />
+							</button>
+						</CreateRoomModal>
+					</div>
+				)}
+
 				{/* Search Bar */}
-				<div className="min-w-0 w-[160px] ml-auto">
+				<div className="min-w-0 w-[140px] ml-auto">
 					<Search className="max-w-none h-[32px] text-xs" />
 				</div>
 			</div>
