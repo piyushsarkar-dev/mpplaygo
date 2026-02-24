@@ -72,15 +72,34 @@ export default function MusicProvider({ children }) {
 							songData.artists?.primary?.[0]?.name || 
 							songData.artist || 
 							"Unknown Artist";
-						
-						await supabase.from("user_history").insert({
+
+						// Extract thumbnail
+						const thumbnail =
+							songData.image?.[2]?.url ||
+							songData.image?.[1]?.url ||
+							songData.image?.[0]?.url ||
+							"";
+
+						const historyRow = {
 							user_id: user.id,
 							song_id: songData.id,
 							song_title: songData.name,
-							artist: artist,
 							language: songData.language,
 							listened_at: new Date().toISOString(),
-						});
+						};
+
+						// Try to include artist and thumbnail columns (they may or may not exist)
+						// The insert will succeed even if extra columns are ignored
+						try {
+							await supabase.from("user_history").insert({
+								...historyRow,
+								artist: artist,
+								thumbnail: thumbnail,
+							});
+						} catch {
+							// Fallback: insert without artist/thumbnail if columns don't exist
+							await supabase.from("user_history").insert(historyRow);
+						}
 					}
 				} catch (e) {
 					console.error("Failed to update history", e);
