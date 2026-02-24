@@ -1,5 +1,6 @@
 import { getSongsById } from "@/lib/fetch";
 import Recomandation from "../_components/Recomandation";
+import SongHero from "../_components/SongHero";
 
 export const generateMetadata = async ({ params }) => {
   const title = await getSongsById(params.id);
@@ -39,7 +40,8 @@ export const generateMetadata = async ({ params }) => {
 
 export default function Page({ params }) {
   return (
-    <div>
+    <div className="pt-4 md:pt-6">
+      <SongHero id={params.id} />
       <Recomandation id={params.id} />
     </div>
   );
