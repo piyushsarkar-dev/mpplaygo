@@ -15,9 +15,7 @@ export default function RootLayout({ children }) {
 
           <ScrollArea className="h-full w-full pt-[52px] md:pt-[64px]">
             <div className="px-4 md:px-6 lg:px-10 pb-6 md:pb-10 pt-0 max-w-[1920px] mx-auto animate-fade-in-up">
-              <NextProvider>
-                {children}
-              </NextProvider>
+              <NextProvider>{children}</NextProvider>
             </div>
             <Footer />
           </ScrollArea>
