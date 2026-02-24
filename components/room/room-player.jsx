@@ -9,6 +9,8 @@ import {
   Music,
   Pause,
   Play,
+  Repeat,
+  Repeat1,
   SkipBack,
   SkipForward,
   Volume2,
@@ -39,6 +41,8 @@ export function RoomPlayer() {
     setAdminAudioTime,
     roomQueue,
     roomHistory,
+    roomLoopMode,
+    broadcastLoopModeChange,
     isInRoom,
   } = useRoom();
 
@@ -151,9 +155,21 @@ export function RoomPlayer() {
 
     const onEnded = () => {
       if (canControl) {
-        if (roomQueue.length > 0) {
+        if (roomLoopMode === "loop-single") {
+          // Replay the same song
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
+            setLocalPlaying(true);
+            broadcastSeek(0);
+            broadcastPlay(0);
+          }
+        } else if (roomQueue.length > 0) {
           const nextSong = roomQueue[0];
           broadcastChangeSong(nextSong.id, nextSong);
+        } else if (roomLoopMode === "loop-queue") {
+          // Queue empty + loop-queue → broadcastSkipNext handles re-queue
+          broadcastSkipNext();
         } else {
           setLocalPlaying(false);
         }
@@ -228,6 +244,19 @@ export function RoomPlayer() {
       setMuted(true);
     }
   };
+
+  const handleLoopToggle = () => {
+    if (!canControl) return;
+    // Cycle: none → loop-queue → loop-single → none
+    const next =
+      roomLoopMode === "none" ? "loop-queue"
+      : roomLoopMode === "loop-queue" ? "loop-single"
+      : "none";
+    broadcastLoopModeChange(next);
+  };
+
+  const LoopIcon = roomLoopMode === "loop-single" ? Repeat1 : Repeat;
+  const loopActive = roomLoopMode !== "none";
 
   if (!isInRoom) return null;
 
@@ -309,14 +338,28 @@ export function RoomPlayer() {
               </div>
 
               {/* Controls */}
-              <div className="flex items-center justify-center gap-8 py-4">
+              <div className="flex items-center justify-center gap-6 py-4">
+                <button
+                  className={`p-2 transition-all duration-200 relative ${canControl ? (loopActive ? "text-primary" : "text-white/60 hover:text-white") + " active:scale-90" : "text-white/20 cursor-not-allowed"}`}
+                  disabled={!canControl}
+                  onClick={handleLoopToggle}
+                  title={
+                    roomLoopMode === "none" ? "Enable loop"
+                    : roomLoopMode === "loop-queue" ?
+                      "Loop single"
+                    : "Disable loop"
+                  }>
+                  <LoopIcon className="w-5 h-5" />
+                  {loopActive && (
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-primary" />
+                  )}
+                </button>
                 <button
                   className={`p-2 transition-all duration-200 ${canControl ? "text-white/60 hover:text-white active:scale-90" : "text-white/20 cursor-not-allowed"}`}
                   disabled={!canControl}
                   onClick={handleSkipPrev}>
                   <SkipBack className="w-6 h-6 fill-current" />
                 </button>
-
                 <button
                   className={`h-16 w-16 rounded-full flex items-center justify-center transition-all duration-200 ${
                     canControl ?
@@ -336,13 +379,13 @@ export function RoomPlayer() {
                     />
                   }
                 </button>
-
                 <button
                   className={`p-2 transition-all duration-200 ${canControl ? "text-white/60 hover:text-white active:scale-90" : "text-white/20 cursor-not-allowed"}`}
                   disabled={!canControl}
                   onClick={handleSkipNext}>
                   <SkipForward className="w-6 h-6 fill-current" />
                 </button>
+                <div className="w-9" /> {/* Spacer for symmetry */}
               </div>
 
               {/* Volume */}
@@ -408,6 +451,26 @@ export function RoomPlayer() {
 
                   {/* Play Controls */}
                   <div className="flex items-center gap-2.5 shrink-0 ml-4">
+                    <button
+                      className={`p-1 transition-all duration-200 relative ${
+                        canControl ?
+                          loopActive ? "text-primary"
+                          : "text-white/60 hover:text-white"
+                        : "text-white/20 cursor-not-allowed"
+                      }`}
+                      disabled={!canControl}
+                      onClick={handleLoopToggle}
+                      title={
+                        roomLoopMode === "none" ? "Enable loop"
+                        : roomLoopMode === "loop-queue" ?
+                          "Loop single"
+                        : "Disable loop"
+                      }>
+                      <LoopIcon className="w-[16px] h-[16px]" />
+                      {loopActive && (
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                    </button>
                     <button
                       className={`p-1 transition-all duration-200 ${canControl ? "text-white/60 hover:text-white" : "text-white/20 cursor-not-allowed"}`}
                       disabled={!canControl}
