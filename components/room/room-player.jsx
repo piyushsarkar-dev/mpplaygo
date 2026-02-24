@@ -66,7 +66,6 @@ export function RoomPlayer() {
 
     const fetchSong = async () => {
       try {
-        // Use cached data if available
         if (roomSongData && roomSongData.id === roomSongId) {
           setSongData(roomSongData);
           const url =
@@ -111,17 +110,15 @@ export function RoomPlayer() {
     isSyncRef.current = false;
   }, [roomIsPlaying, audioURL]);
 
-  // Sync seek from room state (tight threshold for listeners, loose for controller)
+  // Sync seek from room state
   useEffect(() => {
     if (!audioRef.current || seekBlockRef.current) return;
     if (!canControl) {
-      // Listeners: tight sync from admin's broadcast
       const diff = Math.abs(audioRef.current.currentTime - roomCurrentTime);
       if (diff > 0.8) {
         audioRef.current.currentTime = roomCurrentTime;
       }
     } else {
-      // Controller: only sync on large jumps (e.g., new joiner sync)
       const diff = Math.abs(audioRef.current.currentTime - roomCurrentTime);
       if (diff > 3) {
         audioRef.current.currentTime = roomCurrentTime;
@@ -147,7 +144,7 @@ export function RoomPlayer() {
     return () => audio.removeEventListener("timeupdate", onTimeUpdate);
   }, [canControl, setRoomCurrentTime, setAdminAudioTime]);
 
-  // Handle song ended — auto-play next from roomQueue
+  // Handle song ended
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -158,7 +155,6 @@ export function RoomPlayer() {
           const nextSong = roomQueue[0];
           broadcastChangeSong(nextSong.id, nextSong);
         } else {
-          // No queue items — stop
           setLocalPlaying(false);
         }
       }
@@ -187,12 +183,10 @@ export function RoomPlayer() {
     if (!canControl) return;
     const time = audioRef.current?.currentTime || 0;
     if (localPlaying) {
-      // Pause immediately on this device, then broadcast
       audioRef.current?.pause();
       setLocalPlaying(false);
       broadcastPause(time);
     } else {
-      // Play immediately on this device, then broadcast
       audioRef.current?.play().catch(() => {});
       setLocalPlaying(true);
       broadcastPlay(time);
@@ -218,7 +212,6 @@ export function RoomPlayer() {
 
   const handleSkipPrev = () => {
     if (!canControl) return;
-    // If more than 3 seconds into the song, restart instead
     if (audioRef.current && audioRef.current.currentTime > 3) {
       handleSeek([0]);
       return;
@@ -238,6 +231,8 @@ export function RoomPlayer() {
 
   if (!isInRoom) return null;
 
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
   return (
     <div className="w-full">
       <audio
@@ -248,12 +243,16 @@ export function RoomPlayer() {
 
       {/* No song selected */}
       {!roomSongId && (
-        <div className="flex flex-col items-center justify-center py-8 md:py-12 text-white/40">
-          <Music className="w-10 h-10 md:w-12 md:h-12 mb-3" />
-          <p className="text-sm md:text-base font-medium">No song playing</p>
+        <div className="flex flex-col items-center justify-center py-12 md:py-16 bg-white/[0.02] border border-white/[0.06] rounded-2xl">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/[0.04] flex items-center justify-center mb-4">
+            <Music className="w-7 h-7 md:w-8 md:h-8 text-white/20" />
+          </div>
+          <p className="text-sm md:text-base font-medium text-white/40">
+            No song playing
+          </p>
           {canControl && (
-            <p className="text-xs md:text-sm mt-1">
-              Search and select a song to start
+            <p className="text-xs md:text-sm mt-1.5 text-white/25">
+              Search and select a song to start listening
             </p>
           )}
         </div>
@@ -262,72 +261,84 @@ export function RoomPlayer() {
       {/* Song playing */}
       {roomSongId && (
         <>
-          {/* Mobile Room Player */}
+          {/* Mobile Room Player — Full-featured vertical layout */}
           <div className="md:hidden">
-            <div className="flex flex-col items-center gap-4 px-4 py-4">
-              {/* Album Art */}
-              <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-2xl overflow-hidden shadow-2xl ring-2 ring-white/10">
-                {songData?.image ?
-                  <img
-                    src={songData.image[2]?.url || songData.image[1]?.url}
-                    alt={songData?.name}
-                    className={`w-full h-full object-cover ${localPlaying ? "animate-pulse-slow" : ""}`}
-                  />
-                : <Skeleton className="w-full h-full" />}
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden">
+              {/* Album Art Section with gradient overlay */}
+              <div className="relative px-6 pt-6 pb-4">
+                <div className="flex justify-center">
+                  <div
+                    className={`w-52 h-52 sm:w-60 sm:h-60 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 transition-transform duration-500 ${localPlaying ? "scale-100" : "scale-95 opacity-90"}`}>
+                    {songData?.image ?
+                      <img
+                        src={songData.image[2]?.url || songData.image[1]?.url}
+                        alt={songData?.name}
+                        className="w-full h-full object-cover"
+                      />
+                    : <Skeleton className="w-full h-full" />}
+                  </div>
+                </div>
               </div>
 
               {/* Song Info */}
-              <div className="text-center w-full px-2">
-                <h3 className="text-white font-bold text-lg truncate">
+              <div className="text-center px-6 pb-3">
+                <h3 className="text-white font-bold text-lg truncate leading-tight">
                   {songData?.name || "Loading..."}
                 </h3>
-                <p className="text-white/60 text-sm truncate">
+                <p className="text-white/50 text-sm truncate mt-0.5">
                   {songData?.artists?.primary?.[0]?.name || "Artist"}
                 </p>
               </div>
 
               {/* Progress */}
-              <div className="w-full px-2 space-y-1">
+              <div className="px-6 pb-2 space-y-1">
                 <Slider
                   value={[currentTime]}
                   max={duration || 1}
                   onValueChange={canControl ? handleSeek : undefined}
                   disabled={!canControl}
-                  thumbClassName={`h-3 w-3 bg-white border-none ${!canControl ? "opacity-50" : ""}`}
-                  trackClassName="h-1 bg-white/20"
-                  rangeClassName="bg-primary"
+                  thumbClassName={`h-3 w-3 bg-white border-none shadow-lg ${!canControl ? "opacity-0" : ""}`}
+                  trackClassName="h-[5px] bg-white/10 rounded-full"
+                  rangeClassName="bg-primary rounded-full"
                   className="w-full"
                 />
-                <div className="flex justify-between text-[10px] text-white/50 font-mono">
+                <div className="flex justify-between text-[10px] text-white/35 font-mono px-0.5">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
               </div>
 
               {/* Controls */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center justify-center gap-8 py-4">
                 <button
-                  className={`p-2 transition-all ${canControl ? "text-white/70 hover:text-white active:scale-90" : "text-white/30 cursor-not-allowed"}`}
+                  className={`p-2 transition-all duration-200 ${canControl ? "text-white/60 hover:text-white active:scale-90" : "text-white/20 cursor-not-allowed"}`}
                   disabled={!canControl}
                   onClick={handleSkipPrev}>
                   <SkipBack className="w-6 h-6 fill-current" />
                 </button>
 
                 <button
-                  className={`h-14 w-14 rounded-full flex items-center justify-center transition-all ${
+                  className={`h-16 w-16 rounded-full flex items-center justify-center transition-all duration-200 ${
                     canControl ?
-                      "bg-white text-black hover:scale-110 active:scale-95 shadow-xl"
-                    : "bg-white/20 text-white/50 cursor-not-allowed"
+                      "bg-primary text-black hover:scale-105 active:scale-95 shadow-xl shadow-primary/25"
+                    : "bg-white/10 text-white/30 cursor-not-allowed"
                   }`}
                   onClick={handlePlayPause}
                   disabled={!canControl}>
                   {localPlaying ?
-                    <Pause className="w-6 h-6" />
-                  : <Play className="w-6 h-6 ml-0.5" />}
+                    <Pause
+                      className="w-7 h-7"
+                      fill="currentColor"
+                    />
+                  : <Play
+                      className="w-7 h-7 ml-1"
+                      fill="currentColor"
+                    />
+                  }
                 </button>
 
                 <button
-                  className={`p-2 transition-all ${canControl ? "text-white/70 hover:text-white active:scale-90" : "text-white/30 cursor-not-allowed"}`}
+                  className={`p-2 transition-all duration-200 ${canControl ? "text-white/60 hover:text-white active:scale-90" : "text-white/20 cursor-not-allowed"}`}
                   disabled={!canControl}
                   onClick={handleSkipNext}>
                   <SkipForward className="w-6 h-6 fill-current" />
@@ -335,31 +346,33 @@ export function RoomPlayer() {
               </div>
 
               {/* Volume */}
-              <div className="flex items-center gap-2 w-full max-w-[200px]">
+              <div className="flex items-center justify-center gap-3 px-6 pb-4">
                 <button
                   onClick={toggleMute}
-                  className="p-1 text-white/70 hover:text-white">
+                  className="p-1 text-white/50 hover:text-white transition-colors">
                   {effectiveMuted ?
                     <VolumeX className="w-4 h-4" />
                   : <Volume2 className="w-4 h-4" />}
                 </button>
-                <Slider
-                  value={[volume]}
-                  max={100}
-                  step={1}
-                  onValueChange={(v) => {
-                    setVolume(v[0]);
-                    if (muted && v[0] > 0) setMuted(false);
-                  }}
-                  thumbClassName="h-2.5 w-2.5 bg-white border-none"
-                  trackClassName="h-1 bg-white/20"
-                  rangeClassName="bg-white"
-                  className="flex-1"
-                />
+                <div className="w-full max-w-[180px]">
+                  <Slider
+                    value={[volume]}
+                    max={100}
+                    step={1}
+                    onValueChange={(v) => {
+                      setVolume(v[0]);
+                      if (muted && v[0] > 0) setMuted(false);
+                    }}
+                    thumbClassName="h-2.5 w-2.5 bg-white border-none"
+                    trackClassName="h-[3px] bg-white/10"
+                    rangeClassName="bg-white/70"
+                    className="flex-1"
+                  />
+                </div>
               </div>
 
               {!canControl && (
-                <p className="text-[10px] text-white/30">
+                <p className="text-[10px] text-white/25 text-center pb-4 px-4">
                   Listening mode — only admin/controllers can change playback
                 </p>
               )}
@@ -368,63 +381,70 @@ export function RoomPlayer() {
 
           {/* Desktop Room Player */}
           <div className="hidden md:block">
-            <div className="flex items-center gap-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+            <div className="flex items-center gap-5 p-5 bg-white/[0.03] rounded-2xl border border-white/[0.06] transition-all hover:bg-white/[0.04]">
               {/* Album Art */}
-              <div className="w-20 h-20 rounded-xl overflow-hidden shadow-xl shrink-0 ring-2 ring-white/10">
+              <div
+                className={`w-[88px] h-[88px] rounded-xl overflow-hidden shadow-xl shrink-0 ring-1 ring-white/10 transition-all duration-500 ${localPlaying ? "ring-primary/30" : ""}`}>
                 {songData?.image ?
                   <img
                     src={songData.image[2]?.url || songData.image[1]?.url}
                     alt={songData?.name}
-                    className={`w-full h-full object-cover ${localPlaying ? "animate-spin-slow" : ""}`}
-                    style={{ animationDuration: "10s" }}
+                    className={`w-full h-full object-cover transition-transform duration-700 ${localPlaying ? "scale-105" : "scale-100"}`}
                   />
                 : <Skeleton className="w-full h-full" />}
               </div>
 
               {/* Song Info + Controls */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="min-w-0">
-                    <h3 className="text-white font-bold truncate">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-white font-bold text-[15px] truncate leading-tight">
                       {songData?.name || "Loading..."}
                     </h3>
-                    <p className="text-white/60 text-sm truncate">
+                    <p className="text-white/50 text-sm truncate mt-0.5">
                       {songData?.artists?.primary?.[0]?.name || "Artist"}
                     </p>
                   </div>
 
                   {/* Play Controls */}
-                  <div className="flex items-center gap-3 shrink-0 ml-4">
+                  <div className="flex items-center gap-2.5 shrink-0 ml-4">
                     <button
-                      className={`transition-all ${canControl ? "text-white/70 hover:text-white" : "text-white/30 cursor-not-allowed"}`}
+                      className={`p-1 transition-all duration-200 ${canControl ? "text-white/60 hover:text-white" : "text-white/20 cursor-not-allowed"}`}
                       disabled={!canControl}
                       onClick={handleSkipPrev}>
-                      <SkipBack className="w-5 h-5 fill-current" />
+                      <SkipBack className="w-[18px] h-[18px] fill-current" />
                     </button>
                     <button
-                      className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
+                      className={`h-10 w-10 rounded-full flex items-center justify-center transition-all duration-200 ${
                         canControl ?
-                          "bg-white text-black hover:scale-110 active:scale-95"
-                        : "bg-white/20 text-white/50 cursor-not-allowed"
+                          "bg-primary text-black hover:scale-110 active:scale-95 shadow-lg shadow-primary/20"
+                        : "bg-white/10 text-white/30 cursor-not-allowed"
                       }`}
                       onClick={handlePlayPause}
                       disabled={!canControl}>
                       {localPlaying ?
-                        <Pause className="w-5 h-5" />
-                      : <Play className="w-5 h-5 ml-0.5" />}
+                        <Pause
+                          className="w-[18px] h-[18px]"
+                          fill="currentColor"
+                        />
+                      : <Play
+                          className="w-[18px] h-[18px] ml-0.5"
+                          fill="currentColor"
+                        />
+                      }
                     </button>
                     <button
-                      className={`transition-all ${canControl ? "text-white/70 hover:text-white" : "text-white/30 cursor-not-allowed"}`}
+                      className={`p-1 transition-all duration-200 ${canControl ? "text-white/60 hover:text-white" : "text-white/20 cursor-not-allowed"}`}
                       disabled={!canControl}
                       onClick={handleSkipNext}>
-                      <SkipForward className="w-5 h-5 fill-current" />
+                      <SkipForward className="w-[18px] h-[18px] fill-current" />
                     </button>
                   </div>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-white/50 font-mono w-10 text-right">
+                  <span className="text-[11px] text-white/35 font-mono w-10 text-right tabular-nums">
                     {formatTime(currentTime)}
                   </span>
                   <div className="flex-1">
@@ -433,13 +453,13 @@ export function RoomPlayer() {
                       max={duration || 1}
                       onValueChange={canControl ? handleSeek : undefined}
                       disabled={!canControl}
-                      thumbClassName={`h-3 w-3 bg-white border-none ${!canControl ? "hidden" : ""}`}
-                      trackClassName="h-1 bg-white/20"
-                      rangeClassName="bg-primary"
+                      thumbClassName={`h-3 w-3 bg-white border-none shadow-lg ${!canControl ? "hidden" : ""}`}
+                      trackClassName="h-[5px] bg-white/10 rounded-full"
+                      rangeClassName="bg-primary rounded-full"
                       className="w-full"
                     />
                   </div>
-                  <span className="text-xs text-white/50 font-mono w-10">
+                  <span className="text-[11px] text-white/35 font-mono w-10 tabular-nums">
                     {formatTime(duration)}
                   </span>
                 </div>
@@ -450,7 +470,7 @@ export function RoomPlayer() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 text-white/70 hover:text-white"
+                  className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/[0.06] rounded-lg"
                   onClick={toggleMute}>
                   {effectiveMuted ?
                     <VolumeX className="w-4 h-4" />
@@ -466,8 +486,8 @@ export function RoomPlayer() {
                       if (muted && v[0] > 0) setMuted(false);
                     }}
                     thumbClassName="h-2.5 w-2.5 bg-white border-none"
-                    trackClassName="h-1 bg-white/20"
-                    rangeClassName="bg-white"
+                    trackClassName="h-[3px] bg-white/10"
+                    rangeClassName="bg-white/70"
                     className="w-full"
                   />
                 </div>
@@ -475,7 +495,7 @@ export function RoomPlayer() {
             </div>
 
             {!canControl && (
-              <p className="text-xs text-white/30 mt-2 text-center">
+              <p className="text-[11px] text-white/25 mt-2 text-center">
                 Listening mode — only admin or controllers can change playback
               </p>
             )}

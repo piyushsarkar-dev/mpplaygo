@@ -11,7 +11,7 @@ import { RoomSongSearch } from "@/components/room/room-song-search";
 import { RoomUsersList } from "@/components/room/room-users-list";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Lock, Radio, Users } from "lucide-react";
+import { ListMusic, Lock, Radio, Users } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -24,6 +24,7 @@ export default function RoomPage() {
   const [roomInfo, setRoomInfo] = useState(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("player");
 
   // Fetch room info on mount
   useEffect(() => {
@@ -60,14 +61,12 @@ export default function RoomPage() {
       !loading &&
       user
     ) {
-      // Check if the room still exists
       const checkRoom = async () => {
         const data = await fetchRoom(roomId);
         if (!data) {
           router.push("/");
         }
       };
-      // Small delay to avoid racing
       const t = setTimeout(checkRoom, 1000);
       return () => clearTimeout(t);
     }
@@ -86,16 +85,35 @@ export default function RoomPage() {
   // Loading state
   if (authLoading || pageLoading) {
     return (
-      <div className="w-full max-w-5xl mx-auto px-4 pt-4 md:pt-8 space-y-4 md:space-y-6">
+      <div className="w-full max-w-6xl mx-auto px-3 md:px-4 pt-4 md:pt-8 space-y-4 md:space-y-6 animate-fade-in-up">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-12 w-12 rounded-xl" />
-          <div className="space-y-2">
+          <Skeleton className="h-12 w-12 rounded-2xl" />
+          <div className="space-y-2 flex-1">
             <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-56" />
+          </div>
+          <div className="hidden md:flex gap-2">
+            <Skeleton className="h-9 w-20 rounded-xl" />
+            <Skeleton className="h-9 w-20 rounded-xl" />
           </div>
         </div>
-        <Skeleton className="h-48 md:h-32 w-full rounded-2xl" />
-        <Skeleton className="h-64 w-full rounded-2xl" />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 space-y-4">
+            <Skeleton className="h-48 md:h-36 w-full rounded-2xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton
+                  key={i}
+                  className="h-14 w-full rounded-xl"
+                />
+              ))}
+            </div>
+          </div>
+          <div className="hidden lg:block w-[300px]">
+            <Skeleton className="h-[400px] w-full rounded-2xl" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -103,17 +121,19 @@ export default function RoomPage() {
   // Room not found
   if (!roomInfo && !loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] px-4 text-center">
-        <Radio className="w-12 h-12 md:w-16 md:h-16 text-white/20 mb-4" />
-        <h2 className="text-lg md:text-xl font-bold text-white mb-2">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center animate-fade-in-up">
+        <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
+          <Radio className="w-8 h-8 md:w-10 md:h-10 text-white/20" />
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
           Room Not Found
         </h2>
-        <p className="text-white/50 text-sm md:text-base mb-6">
-          This room doesn't exist or has been destroyed.
+        <p className="text-white/50 text-sm md:text-base mb-8 max-w-sm">
+          This room doesn&apos;t exist or has been destroyed by the admin.
         </p>
         <Button
           onClick={() => router.push("/")}
-          className="bg-primary text-black font-bold hover:bg-primary/90 rounded-xl">
+          className="bg-primary text-black font-bold hover:bg-primary/90 rounded-2xl h-12 px-8 text-sm">
           Go Home
         </Button>
       </div>
@@ -123,16 +143,18 @@ export default function RoomPage() {
   // Not logged in
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] px-4 text-center">
-        <Users className="w-12 h-12 md:w-16 md:h-16 text-white/20 mb-4" />
-        <h2 className="text-lg md:text-xl font-bold text-white mb-2">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center animate-fade-in-up">
+        <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
+          <Users className="w-8 h-8 md:w-10 md:h-10 text-white/20" />
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
           Login Required
         </h2>
-        <p className="text-white/50 text-sm md:text-base mb-6">
-          You need to be logged in to join a room.
+        <p className="text-white/50 text-sm md:text-base mb-8 max-w-sm">
+          You need to be logged in to join this room and listen together.
         </p>
         <AuthModal>
-          <Button className="bg-primary text-black font-bold hover:bg-primary/90 rounded-xl">
+          <Button className="bg-primary text-black font-bold hover:bg-primary/90 rounded-2xl h-12 px-8 text-sm">
             Login to Join
           </Button>
         </AuthModal>
@@ -144,17 +166,19 @@ export default function RoomPage() {
   if (roomInfo?.is_private && !isInRoom) {
     return (
       <>
-        <div className="flex flex-col items-center justify-center min-h-[50vh] px-4 text-center">
-          <Lock className="w-12 h-12 md:w-16 md:h-16 text-white/20 mb-4" />
-          <h2 className="text-lg md:text-xl font-bold text-white mb-2">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center animate-fade-in-up">
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <Lock className="w-8 h-8 md:w-10 md:h-10 text-primary/60" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
             {roomInfo.name}
           </h2>
-          <p className="text-white/50 text-sm md:text-base mb-6">
+          <p className="text-white/50 text-sm md:text-base mb-8 max-w-sm">
             This is a private room. Enter the password to join.
           </p>
           <Button
             onClick={() => setShowJoinModal(true)}
-            className="bg-primary text-black font-bold hover:bg-primary/90 rounded-xl">
+            className="bg-primary text-black font-bold hover:bg-primary/90 rounded-2xl h-12 px-8 text-sm">
             Enter Password
           </Button>
         </div>
@@ -173,37 +197,76 @@ export default function RoomPage() {
   // Loading join state
   if (!isInRoom && loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse flex flex-col items-center gap-3">
-          <Radio className="w-10 h-10 md:w-12 md:h-12 text-primary" />
-          <p className="text-white/50 text-sm">Joining room...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in-up">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+            <Radio className="w-7 h-7 text-primary animate-pulse" />
+          </div>
+          <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
         </div>
+        <p className="text-white/50 text-sm mt-6">Joining room...</p>
       </div>
     );
   }
 
   // In room — main UI
   return (
-    <div className="w-full max-w-5xl mx-auto pt-2 md:pt-6 space-y-4 md:space-y-6 pb-32 md:pb-24">
+    <div className="w-full max-w-6xl mx-auto pt-1 md:pt-4 space-y-3 md:space-y-5 pb-36 md:pb-24 animate-fade-in-up">
       <RoomHeader />
 
-      {/* Main Content: Player + Sidebar */}
-      <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
+      {/* Mobile Tab Navigation */}
+      <div className="md:hidden flex bg-white/[0.03] border border-white/[0.06] rounded-2xl p-1 gap-1">
+        {[
+          { key: "player", label: "Player", Icon: Radio },
+          { key: "queue", label: "Queue", Icon: ListMusic },
+          { key: "members", label: "Members", Icon: Users },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              activeTab === tab.key ?
+                "bg-primary text-black shadow-lg shadow-primary/20"
+              : "text-white/50 hover:text-white/70"
+            }`}>
+            <tab.Icon className="w-3.5 h-3.5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-5">
         {/* Left: Player + Song Search + Queue */}
         <div className="flex-1 space-y-4 min-w-0">
-          <RoomPlayer />
-          <RoomSongSearch />
-          <RoomQueue />
+          <div className={`${activeTab !== "player" ? "hidden md:block" : ""}`}>
+            <RoomPlayer />
+            <div className="mt-4">
+              <RoomSongSearch />
+            </div>
+          </div>
+
+          <div
+            className={`${
+              activeTab !== "queue" && activeTab !== "player" ?
+                "hidden md:block"
+              : activeTab === "queue" ? ""
+              : "hidden md:block"
+            }`}>
+            <RoomQueue />
+          </div>
         </div>
 
         {/* Right: Members */}
-        <div className="w-full lg:w-[280px] xl:w-[320px] shrink-0">
+        <div
+          className={`w-full lg:w-[300px] xl:w-[340px] shrink-0 ${activeTab !== "members" ? "hidden lg:block" : ""}`}>
           <RoomUsersList />
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-400 text-sm flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
           {error}
         </div>
       )}

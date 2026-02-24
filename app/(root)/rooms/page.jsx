@@ -26,7 +26,7 @@ export default function RoomsLobbyPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [joinModal, setJoinModal] = useState(null); // { roomId, roomName }
+  const [joinModal, setJoinModal] = useState(null);
   const debounceRef = useRef(null);
 
   const fetchRooms = useCallback(
@@ -84,22 +84,24 @@ export default function RoomsLobbyPage() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto pt-4 md:pt-8 pb-32 md:pb-24 space-y-6">
+    <div className="w-full max-w-6xl mx-auto pt-4 md:pt-8 pb-36 md:pb-24 space-y-5 animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
-            <Radio className="w-7 h-7 md:w-8 md:h-8 text-primary" />
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+              <Radio className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+            </div>
             Rooms
           </h1>
-          <p className="text-white/50 text-sm mt-1">
+          <p className="text-white/40 text-sm mt-1.5 ml-12 md:ml-[52px]">
             Join a room and listen together in real-time
           </p>
         </div>
 
         {user && (
           <CreateRoomModal>
-            <Button className="bg-primary text-black font-bold hover:bg-primary/90 rounded-xl gap-2">
+            <Button className="bg-primary text-black font-bold hover:bg-primary/90 rounded-xl gap-2 h-11 px-5 transition-all duration-200 hover:shadow-lg hover:shadow-primary/20">
               <Plus className="w-4 h-4" />
               Create Room
             </Button>
@@ -110,18 +112,18 @@ export default function RoomsLobbyPage() {
       {/* Search + Filters */}
       <div className="space-y-3">
         {/* Search Bar */}
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
-          <Search className="w-4 h-4 text-white/40 shrink-0" />
+        <div className="flex items-center gap-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl px-3.5 py-2.5 focus-within:border-primary/30 focus-within:bg-white/[0.05] transition-all duration-200">
+          <Search className="w-4 h-4 text-white/30 shrink-0" />
           <Input
             placeholder="Search rooms by name..."
             value={search}
             onChange={onSearchChange}
-            className="border-none bg-transparent text-white placeholder:text-white/30 h-8 px-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+            className="border-none bg-transparent text-white placeholder:text-white/25 h-8 px-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
           />
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
           {FILTERS.map((f) => {
             const Icon = f.icon;
             const isActive = filter === f.key;
@@ -129,10 +131,10 @@ export default function RoomsLobbyPage() {
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                   isActive ?
-                    "bg-primary text-black"
-                  : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                    "bg-primary text-black shadow-lg shadow-primary/15"
+                  : "bg-white/[0.03] text-white/40 hover:bg-white/[0.06] hover:text-white/60 border border-white/[0.06]"
                 }`}>
                 <Icon className="w-3.5 h-3.5" />
                 {f.label}
@@ -144,12 +146,19 @@ export default function RoomsLobbyPage() {
 
       {/* Not logged in banner */}
       {!user && (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
-          <p className="text-white/60 text-sm">Login to create & join rooms</p>
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4 text-primary/60" />
+            </div>
+            <p className="text-white/50 text-sm">
+              Login to create & join rooms
+            </p>
+          </div>
           <AuthModal>
             <Button
               size="sm"
-              className="bg-primary text-black font-bold hover:bg-primary/90 rounded-lg">
+              className="bg-primary text-black font-bold hover:bg-primary/90 rounded-xl h-9 px-4">
               Login
             </Button>
           </AuthModal>
@@ -162,10 +171,19 @@ export default function RoomsLobbyPage() {
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-8 w-full rounded-lg" />
+              className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-xl" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+              <Skeleton className="h-12 w-full rounded-lg" />
+              <div className="flex justify-between">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </div>
             </div>
           ))}
         </div>
@@ -173,19 +191,21 @@ export default function RoomsLobbyPage() {
 
       {/* Empty state */}
       {!loading && rooms.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Radio className="w-12 h-12 text-white/15 mb-4" />
-          <h3 className="text-lg font-semibold text-white/60 mb-1">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-20 h-20 rounded-full bg-white/[0.03] flex items-center justify-center mb-5">
+            <Radio className="w-8 h-8 text-white/10" />
+          </div>
+          <h3 className="text-lg font-semibold text-white/50 mb-1.5">
             {search ? "No rooms found" : "No active rooms"}
           </h3>
-          <p className="text-white/30 text-sm max-w-sm">
+          <p className="text-white/25 text-sm max-w-sm">
             {search ?
               `No rooms match "${search}". Try a different search.`
             : "Be the first to create a room and start listening together!"}
           </p>
           {user && !search && (
             <CreateRoomModal>
-              <Button className="mt-4 bg-primary text-black font-bold hover:bg-primary/90 rounded-xl gap-2">
+              <Button className="mt-5 bg-primary text-black font-bold hover:bg-primary/90 rounded-xl gap-2 h-11 transition-all duration-200 hover:shadow-lg hover:shadow-primary/20">
                 <Plus className="w-4 h-4" />
                 Create Room
               </Button>
@@ -201,29 +221,32 @@ export default function RoomsLobbyPage() {
             <button
               key={room.id}
               onClick={() => handleRoomClick(room)}
-              className="bg-white/5 border border-white/10 rounded-xl p-4 text-left hover:bg-white/10 hover:border-white/20 transition-all group relative overflow-hidden">
+              className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 text-left hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-200 group relative overflow-hidden">
               {/* Playing indicator */}
               {room.is_playing && (
-                <div className="absolute top-3 right-3 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-[10px] text-green-400 font-medium">
+                <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
+                  </span>
+                  <span className="text-[10px] text-green-400 font-semibold uppercase tracking-wider">
                     LIVE
                   </span>
                 </div>
               )}
 
               {/* Room Name + Type Badge */}
-              <div className="flex items-start gap-2 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
                   {room.is_private ?
-                    <Lock className="w-4 h-4 text-primary" />
-                  : <Radio className="w-4 h-4 text-primary" />}
+                    <Lock className="w-4 h-4 text-primary/80" />
+                  : <Radio className="w-4 h-4 text-primary/80" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-white font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                  <h3 className="text-white font-semibold text-sm truncate group-hover:text-primary transition-colors duration-200">
                     {room.name}
                   </h3>
-                  <p className="text-white/40 text-xs truncate">
+                  <p className="text-white/30 text-[11px] truncate mt-0.5">
                     by {room.admin?.username || "Unknown"} ·{" "}
                     {timeAgo(room.created_at)}
                   </p>
@@ -232,41 +255,41 @@ export default function RoomsLobbyPage() {
 
               {/* Currently playing song */}
               {room.current_song_data ?
-                <div className="flex items-center gap-2 bg-black/30 rounded-lg p-2 mb-2">
-                  <div className="w-8 h-8 rounded overflow-hidden shrink-0">
+                <div className="flex items-center gap-2.5 bg-black/20 rounded-xl p-2.5 mb-3 ring-1 ring-white/[0.04]">
+                  <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 ring-1 ring-white/[0.06]">
                     {room.current_song_data?.image?.[1]?.url ?
                       <img
                         src={room.current_song_data.image[1].url}
                         alt=""
                         className="w-full h-full object-cover"
                       />
-                    : <div className="w-full h-full bg-white/10 flex items-center justify-center">
-                        <Music className="w-3 h-3 text-white/30" />
+                    : <div className="w-full h-full bg-white/[0.06] flex items-center justify-center">
+                        <Music className="w-3 h-3 text-white/20" />
                       </div>
                     }
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-white/70 truncate">
+                    <p className="text-xs text-white/60 truncate leading-tight font-medium">
                       {room.current_song_data.name || "Unknown song"}
                     </p>
-                    <p className="text-[10px] text-white/30 truncate">
+                    <p className="text-[10px] text-white/25 truncate mt-0.5">
                       {room.current_song_data.artists?.primary?.[0]?.name ||
                         room.current_song_data.primaryArtists ||
                         ""}
                     </p>
                   </div>
                 </div>
-              : <div className="flex items-center gap-2 bg-black/20 rounded-lg p-2 mb-2">
-                  <Music className="w-4 h-4 text-white/20" />
-                  <p className="text-xs text-white/30">No song playing</p>
+              : <div className="flex items-center gap-2.5 bg-black/10 rounded-xl p-2.5 mb-3 ring-1 ring-white/[0.03]">
+                  <Music className="w-4 h-4 text-white/15" />
+                  <p className="text-xs text-white/20">No song playing</p>
                 </div>
               }
 
               {/* Footer: Members + Join badge */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-white/40">
+                <div className="flex items-center gap-1.5 text-white/30">
                   <Users className="w-3.5 h-3.5" />
-                  <span className="text-xs">
+                  <span className="text-[11px]">
                     {room.member_count} member
                     {room.member_count !== 1 ? "s" : ""}
                   </span>
@@ -274,12 +297,12 @@ export default function RoomsLobbyPage() {
 
                 <div className="flex items-center gap-1.5">
                   {room.is_private && !room.is_joined && (
-                    <span className="text-[10px] bg-yellow-500/10 text-yellow-400 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] bg-yellow-500/10 text-yellow-400/80 px-2 py-0.5 rounded-full font-medium">
                       Password
                     </span>
                   )}
                   {room.is_joined && (
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
                       Joined
                     </span>
                   )}

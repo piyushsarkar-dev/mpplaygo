@@ -12,6 +12,7 @@ import {
   Radio,
   Share2,
   Trash2,
+  Wifi,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -65,30 +66,38 @@ export function RoomHeader() {
   };
 
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-3">
       {/* Room Title Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3 md:p-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-            <Radio className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+          {/* Room Icon */}
+          <div className="relative shrink-0">
+            <div className="h-11 w-11 md:h-13 md:w-13 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+              <Radio className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+            </div>
+            {/* Live pulse indicator */}
+            <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-black room-live-pulse" />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-bold text-white truncate">
+
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base md:text-xl font-bold text-white truncate leading-tight">
               {room.name}
             </h1>
-            <div className="flex items-center gap-2 text-xs text-white/50">
+            <div className="flex items-center gap-2 text-[11px] md:text-xs text-white/40 mt-0.5 flex-wrap">
               {room.is_private ?
-                <span className="flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> Private
+                <span className="flex items-center gap-1 bg-white/[0.06] px-2 py-0.5 rounded-full">
+                  <Lock className="w-2.5 h-2.5" /> Private
                 </span>
-              : <span className="flex items-center gap-1">
-                  <Globe className="w-3 h-3" /> Public
+              : <span className="flex items-center gap-1 bg-white/[0.06] px-2 py-0.5 rounded-full">
+                  <Globe className="w-2.5 h-2.5" /> Public
                 </span>
               }
-              <span>•</span>
-              <span>{members.length} members</span>
-              <span>•</span>
-              <span className="text-green-400">
+              <span className="flex items-center gap-1">
+                <span className="text-white/30">•</span>
+                {members.length} members
+              </span>
+              <span className="flex items-center gap-1 text-green-400">
+                <Wifi className="w-2.5 h-2.5" />
                 {onlineUsers.length} online
               </span>
             </div>
@@ -96,23 +105,23 @@ export function RoomHeader() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleShare}
-            className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl h-9 px-3 text-xs md:text-sm">
-            <Share2 className="w-4 h-4 mr-1.5" />
-            <span className="hidden xs:inline">Share</span>
+            className="text-white/60 hover:text-white hover:bg-white/[0.08] rounded-xl h-9 px-2.5 md:px-3 text-xs">
+            <Share2 className="w-4 h-4 md:mr-1.5" />
+            <span className="hidden md:inline">Share</span>
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
             onClick={handleCopyLink}
-            className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl h-9 px-3 text-xs md:text-sm">
-            <Copy className="w-4 h-4 mr-1.5" />
-            <span className="hidden xs:inline">Copy Link</span>
+            className="text-white/60 hover:text-white hover:bg-white/[0.08] rounded-xl h-9 px-2.5 md:px-3 text-xs">
+            <Copy className="w-4 h-4 md:mr-1.5" />
+            <span className="hidden md:inline">Copy</span>
           </Button>
 
           {isAdmin ?
@@ -120,17 +129,17 @@ export function RoomHeader() {
               variant="ghost"
               size="sm"
               onClick={handleDestroy}
-              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl h-9 px-3 text-xs md:text-sm">
-              <Trash2 className="w-4 h-4 mr-1.5" />
-              <span className="hidden xs:inline">Destroy</span>
+              className="text-red-400/80 hover:text-red-400 hover:bg-red-500/10 rounded-xl h-9 px-2.5 md:px-3 text-xs">
+              <Trash2 className="w-4 h-4 md:mr-1.5" />
+              <span className="hidden md:inline">Destroy</span>
             </Button>
           : <Button
               variant="ghost"
               size="sm"
               onClick={handleLeave}
-              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl h-9 px-3 text-xs md:text-sm">
-              <DoorOpen className="w-4 h-4 mr-1.5" />
-              <span className="hidden xs:inline">Leave</span>
+              className="text-red-400/80 hover:text-red-400 hover:bg-red-500/10 rounded-xl h-9 px-2.5 md:px-3 text-xs">
+              <DoorOpen className="w-4 h-4 md:mr-1.5" />
+              <span className="hidden md:inline">Leave</span>
             </Button>
           }
         </div>
@@ -138,9 +147,9 @@ export function RoomHeader() {
 
       {/* Admin badge */}
       {isAdmin && (
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full text-yellow-500 text-xs font-medium">
-          <Crown className="w-3.5 h-3.5" />
-          You are the room admin
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/15 rounded-xl text-yellow-500 text-[11px] font-medium">
+          <Crown className="w-3 h-3" />
+          Room Admin
         </div>
       )}
     </div>
