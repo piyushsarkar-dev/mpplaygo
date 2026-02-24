@@ -76,3 +76,32 @@ create policy "Room admin can remove members." on room_members
 -- Enable Realtime for rooms table
 alter publication supabase_realtime add table rooms;
 alter publication supabase_realtime add table room_members;
+
+-- ============================================
+-- Auto-cleanup: delete rooms inactive for 34+ hours
+-- ============================================
+
+-- Function to purge stale rooms
+create or replace function public.cleanup_inactive_rooms()
+returns void as $$
+begin
+  -- Delete room_members first (cascade should handle it, but be explicit)
+  delete from room_members
+  where room_id in (
+    select id from rooms
+    where last_sync_at < now() - interval '34 hours'
+  );
+
+  -- Delete the stale rooms
+  delete from rooms
+  where last_sync_at < now() - interval '34 hours';
+end;
+$$ language plpgsql security definer;
+
+-- Schedule the cleanup to run every hour via pg_cron
+-- (pg_cron must be enabled in Supabase Dashboard → Database → Extensions)
+select cron.schedule(
+  'cleanup-inactive-rooms',   -- job name
+  '0 * * * *',                -- every hour at minute 0
+  $$select public.cleanup_inactive_rooms()$$
+);
