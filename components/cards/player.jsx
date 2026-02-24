@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoPause } from "react-icons/io5";
 import { Button } from "../ui/button";
@@ -40,6 +41,7 @@ export default function Player() {
     hasNext,
     hasPrevious,
   } = useMusicProvider();
+  const router = useRouter();
   const userInitiatedRef = useRef(false);
   const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
   const VOLUME_KEY = "mpplaygo_volume";
@@ -239,7 +241,9 @@ export default function Player() {
         ref={audioRef}></audio>
 
       {/* Mobile Player (Glassmorphism Capsule) - Hidden on md+ */}
-      <div className="md:hidden w-[328px] mx-auto h-[58px] glass-mobile-player rounded-full flex items-center pr-2 pl-2 relative overflow-hidden pointer-events-auto">
+      <div
+        className="md:hidden w-[328px] mx-auto h-[58px] glass-mobile-player rounded-full flex items-center pr-2 pl-2 relative overflow-hidden pointer-events-auto cursor-pointer"
+        onClick={() => music && router.push(`/${music}`)}>
         {/* Album Art */}
         <div className="h-[42px] w-[42px] rounded-full overflow-hidden relative shrink-0 border border-white/20">
           <img
@@ -251,8 +255,7 @@ export default function Player() {
         </div>
 
         {/* Song Info */}
-        <Link
-          href={`/${music}`}
+        <div
           className="flex flex-col justify-center flex-1 ml-3 overflow-hidden mr-2">
           <h3 className="text-white font-bold text-sm truncate leading-tight drop-shadow-md">
             {data?.name || "Loading..."}
@@ -260,10 +263,10 @@ export default function Player() {
           <p className="text-white/60 text-[11px] truncate leading-tight">
             {data?.artists?.primary[0]?.name || "Artist"}
           </p>
-        </Link>
+        </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             className="p-2 text-white/70 hover:text-white transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
             onClick={handlePrevious}
@@ -294,7 +297,9 @@ export default function Player() {
         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none" />
 
         {/* Left: Song Info */}
-        <div className="flex items-center gap-4 w-[25%] min-w-[200px]">
+        <div
+          className="flex items-center gap-4 w-[25%] min-w-[200px] cursor-pointer"
+          onClick={() => music && router.push(`/${music}`)}>
           <div className="h-16 w-16 rounded-full overflow-hidden relative shrink-0 shadow-2xl ring-2 ring-white/20 ring-offset-2 ring-offset-transparent">
             <img
               src={data.image ? data?.image[1]?.url : ""}

@@ -5,6 +5,7 @@ import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { MusicContext } from "@/hooks/use-context";
 import { cn } from "@/lib/utils";
 import { PlusCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useContext } from "react";
 import { IoPlay } from "react-icons/io5";
 import { Skeleton } from "../ui/skeleton";
@@ -19,6 +20,7 @@ export default function SongCard({
 	imageClassName,
 }) {
 	const ids = useContext(MusicContext);
+	const router = useRouter();
 	const USER_PLAY_KEY = "mpplaygo_user_initiated_play";
 	const setLastPlayed = () => {
 		// Don't clear the whole localStorage (theme/auth/etc). Only update player keys.
@@ -27,6 +29,11 @@ export default function SongCard({
 		try {
 			sessionStorage.setItem(USER_PLAY_KEY, "true");
 		} catch {}
+	};
+	const handlePlay = () => {
+		ids.setMusic(id);
+		setLastPlayed();
+		router.push(`/${id}`);
 	};
 	return (
 		<div
@@ -39,10 +46,7 @@ export default function SongCard({
 					{image ?
 						<div
 							className="relative"
-							onClick={() => {
-								ids.setMusic(id);
-								setLastPlayed();
-							}}>
+							onClick={handlePlay}>
 							<img
 								src={
 									typeof image === "string" ?
@@ -64,8 +68,7 @@ export default function SongCard({
 								aria-label="Play"
 								onClick={(e) => {
 									e.stopPropagation();
-									ids.setMusic(id);
-									setLastPlayed();
+									handlePlay();
 								}}
 								className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
 								<span className="h-[48px] w-[48px] md:h-14 md:w-14 rounded-full bg-[#1DB954] shadow-xl flex items-center justify-center scale-95 group-hover:scale-100 transition-transform duration-200">
@@ -103,10 +106,7 @@ export default function SongCard({
 					{title ?
 						<div
 							className="cursor-pointer"
-							onClick={() => {
-								ids.setMusic(id);
-								setLastPlayed();
-							}}>
+							onClick={handlePlay}>
 							<h1 className="text-[13px] md:text-base font-heading font-semibold text-white leading-snug line-clamp-2">
 								{title.slice(0, 28)}
 								{title.length > 28 && "..."}

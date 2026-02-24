@@ -5,6 +5,7 @@
 import { useMusicProvider } from "@/hooks/use-context";
 import { cn } from "@/lib/utils";
 import { ArrowRight, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function RecentPlayedCarousel({
@@ -13,6 +14,7 @@ export default function RecentPlayedCarousel({
 }) {
 	const [activeIndex, setActiveIndex] = useState(0);
 	const { setMusic } = useMusicProvider();
+	const router = useRouter();
 
 	if (!songs || songs.length === 0) return null;
 
@@ -131,11 +133,18 @@ export default function RecentPlayedCarousel({
 					return (
 						<div
 							key={`${song.id}-${index}`}
-							onClick={() =>
-								isCenter ? setMusic(song.id)
-								: diff > 0 ? handleNext()
-								: handlePrev()
-							}
+							onClick={() => {
+								if (isCenter) {
+									try { sessionStorage.setItem("mpplaygo_user_initiated_play", "true"); } catch {}
+									try { localStorage.setItem("p", "true"); } catch {}
+									setMusic(song.id);
+									router.push(`/${song.id}`);
+								} else if (diff > 0) {
+									handleNext();
+								} else {
+									handlePrev();
+								}
+							}}
 							className={cn(
 								"absolute transition-all duration-500 ease-out cursor-pointer rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-[#282828] border border-white/5",
 								isCenter ?
