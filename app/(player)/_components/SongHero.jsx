@@ -15,12 +15,11 @@ import {
   Music2,
   Play,
   PlusCircle,
-  Repeat,
   Share2,
   SkipBack,
   SkipForward,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { IoPause } from "react-icons/io5";
 import { toast } from "sonner";
 
@@ -129,14 +128,18 @@ export default function SongHero({ id }) {
   const handleNext = () => {
     const nextId = playNext();
     if (nextId) {
-      try { sessionStorage.setItem("mpplaygo_user_initiated_play", "true"); } catch {}
+      try {
+        sessionStorage.setItem("mpplaygo_user_initiated_play", "true");
+      } catch {}
     }
   };
 
   const handlePrevious = () => {
     const prevId = playPrevious();
     if (prevId) {
-      try { sessionStorage.setItem("mpplaygo_user_initiated_play", "true"); } catch {}
+      try {
+        sessionStorage.setItem("mpplaygo_user_initiated_play", "true");
+      } catch {}
     }
   };
 
@@ -301,7 +304,9 @@ export default function SongHero({ id }) {
           {albumName && (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/[0.06] text-white/50 text-[10px] font-medium border border-white/[0.04]">
               <Album className="w-2.5 h-2.5" />
-              {albumName.length > 25 ? albumName.slice(0, 25) + "..." : albumName}
+              {albumName.length > 25 ?
+                albumName.slice(0, 25) + "..."
+              : albumName}
             </span>
           )}
           {year && (
@@ -361,7 +366,9 @@ export default function SongHero({ id }) {
             {albumName && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm text-white/60 text-xs font-medium border border-white/[0.06]">
                 <Album className="w-3 h-3" />
-                {albumName.length > 30 ? albumName.slice(0, 30) + "..." : albumName}
+                {albumName.length > 30 ?
+                  albumName.slice(0, 30) + "..."
+                : albumName}
               </span>
             )}
             {songDuration && (
