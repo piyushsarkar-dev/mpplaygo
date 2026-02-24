@@ -22,11 +22,8 @@ import { Slider } from "../ui/slider";
 
 export default function Player() {
   const [data, setData] = useState({});
-  const [playing, setPlaying] = useState(false);
-  const audioRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [audioURL, setAudioURL] = useState("");
   const [isLooping, setIsLooping] = useState(false);
   const [volume, setVolume] = useState(100);
   const [muted, setMuted] = useState(false);
@@ -40,6 +37,13 @@ export default function Player() {
     playPrevious,
     hasNext,
     hasPrevious,
+    playing,
+    setPlaying,
+    songData,
+    setSongData,
+    audioURL,
+    setAudioURL,
+    audioRef,
   } = useMusicProvider();
   const router = useRouter();
   const userInitiatedRef = useRef(false);
@@ -87,14 +91,18 @@ export default function Player() {
   const getSong = async () => {
     const get = await getSongsById(music);
     const data = await get.json();
-    setData(data.data[0]);
-    if (data?.data[0]?.downloadUrl[2]?.url) {
-      setAudioURL(data?.data[0]?.downloadUrl[2]?.url);
-    } else if (data?.data[0]?.downloadUrl[1]?.url) {
-      setAudioURL(data?.data[0]?.downloadUrl[1]?.url);
+    const song = data.data[0];
+    setData(song);
+    setSongData(song); // Share with context
+    let url = "";
+    if (song?.downloadUrl[2]?.url) {
+      url = song.downloadUrl[2].url;
+    } else if (song?.downloadUrl[1]?.url) {
+      url = song.downloadUrl[1].url;
     } else {
-      setAudioURL(data?.data[0]?.downloadUrl[0]?.url);
+      url = song.downloadUrl[0].url;
     }
+    setAudioURL(url);
   };
 
   const formatTime = (time) => {

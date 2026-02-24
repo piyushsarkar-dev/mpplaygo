@@ -14,6 +14,10 @@ export default function MusicProvider({ children }) {
   const [queue, setQueue] = useState([]);
   const [history, setHistory] = useState([]); // Previous songs history
   const [queueLoaded, setQueueLoaded] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [songData, setSongData] = useState(null); // Current song metadata
+  const [audioURL, setAudioURL] = useState(""); // Current audio URL
+  const audioRef = useRef(null); // Single shared audio ref
   const isNavigatingRef = useRef(false); // Track if we're navigating with prev/next
   const { supabase, user } = useSupabase();
 
@@ -221,6 +225,13 @@ export default function MusicProvider({ children }) {
         playPrevious,
         hasNext,
         hasPrevious,
+        playing,
+        setPlaying,
+        songData,
+        setSongData,
+        audioURL,
+        setAudioURL,
+        audioRef,
       }}>
       {children}
     </MusicContext.Provider>
