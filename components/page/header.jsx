@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Home, List, Radio } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProfileDropdown } from "../auth/user-profile-dropdown";
 import FriendSearch from "./friend-search";
 import Search from "./search";
@@ -68,6 +69,7 @@ export default function Header() {
 
         {/* Right Section: Friends & Profile */}
         <div className="flex items-center gap-4 shrink-0 justify-self-end">
+          <ThemeToggle />
           <FriendSearch />
 
           {user ?
@@ -161,6 +163,9 @@ export default function Header() {
             </Link>
           </div>
         )}
+
+        {/* Theme Toggle (mobile) */}
+        <ThemeToggle />
 
         {/* Search Bar */}
         <div className="min-w-0 w-[140px] ml-auto">
