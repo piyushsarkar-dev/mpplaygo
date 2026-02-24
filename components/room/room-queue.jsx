@@ -2,7 +2,7 @@
 
 import { useRoom } from "@/components/providers/room-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListMusic, Music, Play, Trash2 } from "lucide-react";
+import { ListMusic, Music, Play, Repeat, Repeat1, Trash2 } from "lucide-react";
 
 /**
  * "Up Next" queue display for room.
@@ -18,6 +18,7 @@ export function RoomQueue() {
     loadingQueue,
     removeFromRoomQueue,
     broadcastChangeSong,
+    roomLoopMode,
     isInRoom,
   } = useRoom();
 
@@ -31,6 +32,14 @@ export function RoomQueue() {
       <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.06]">
         <ListMusic className="w-4 h-4 text-primary/70" />
         <h3 className="text-sm font-semibold text-white/80">Up Next</h3>
+        {roomLoopMode !== "none" && (
+          <span className="flex items-center gap-1 text-[10px] text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/15">
+            {roomLoopMode === "loop-single" ?
+              <Repeat1 className="w-2.5 h-2.5" />
+            : <Repeat className="w-2.5 h-2.5" />}
+            {roomLoopMode === "loop-single" ? "Loop 1" : "Loop"}
+          </span>
+        )}
         {roomQueue.length > 0 && (
           <span className="ml-auto text-[11px] text-white/30 bg-white/[0.06] px-2 py-0.5 rounded-full">
             {roomQueue.length} song{roomQueue.length !== 1 ? "s" : ""}

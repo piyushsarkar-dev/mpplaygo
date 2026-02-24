@@ -6,6 +6,7 @@ import { useSupabase } from "@/components/providers/supabase-provider";
 import { JoinRoomModal } from "@/components/room/join-room-modal";
 import { RoomHeader } from "@/components/room/room-header";
 import { RoomPlayer } from "@/components/room/room-player";
+import { RoomPlaylistLoader } from "@/components/room/room-playlist-loader";
 import { RoomQueue } from "@/components/room/room-queue";
 import { RoomSongSearch } from "@/components/room/room-song-search";
 import { RoomUsersList } from "@/components/room/room-users-list";
@@ -241,8 +242,9 @@ export default function RoomPage() {
         <div className="flex-1 space-y-4 min-w-0">
           <div className={`${activeTab !== "player" ? "hidden md:block" : ""}`}>
             <RoomPlayer />
-            <div className="mt-4">
+            <div className="mt-4 space-y-3">
               <RoomSongSearch />
+              <RoomPlaylistLoader />
             </div>
           </div>
 

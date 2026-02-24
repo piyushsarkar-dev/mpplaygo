@@ -37,6 +37,11 @@ export default function RoomProvider({ children }) {
   const [roomHistory, setRoomHistory] = useState([]);
   const [loadingQueue, setLoadingQueue] = useState(false);
 
+  // Loop mode: "none" | "loop-queue" | "loop-single"
+  const [roomLoopMode, setRoomLoopMode] = useState("none");
+  // Original playlist songs for loop-queue replay
+  const playlistSongsRef = useRef([]);
+
   // Online presence
   const [onlineUsers, setOnlineUsers] = useState([]);
 
@@ -369,6 +374,60 @@ export default function RoomProvider({ children }) {
     [isAdmin, hasControl, room, loadSuggestions],
   );
 
+  // Broadcast loop mode change
+  const broadcastLoopModeChange = useCallback(
+    (mode) => {
+      if (!(isAdmin || hasControl)) return;
+      setRoomLoopMode(mode);
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: "broadcast",
+          event: ROOM_EVENTS.LOOP_MODE_CHANGE,
+          payload: { mode },
+        });
+      }
+    },
+    [isAdmin, hasControl],
+  );
+
+  // Play a playlist: load all songs into queue and play the first (or a specific one)
+  const broadcastPlayPlaylist = useCallback(
+    (songs, startIndex = 0, loopMode = "loop-queue") => {
+      if (!(isAdmin || hasControl) || songs.length === 0) return;
+
+      // Store the original playlist for loop-queue
+      playlistSongsRef.current = songs;
+
+      // Set loop mode
+      setRoomLoopMode(loopMode);
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: "broadcast",
+          event: ROOM_EVENTS.LOOP_MODE_CHANGE,
+          payload: { mode: loopMode },
+        });
+      }
+
+      // Play the selected song
+      const songToPlay = songs[startIndex];
+      broadcastChangeSong(songToPlay.id, songToPlay);
+
+      // Queue the rest (after the start index)
+      const remaining = songs.filter((_, i) => i !== startIndex);
+      setRoomQueue(remaining);
+
+      // Broadcast queue update
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: "broadcast",
+          event: ROOM_EVENTS.PLAYLIST_QUEUE,
+          payload: { songs: remaining, originalPlaylist: songs, loopMode },
+        });
+      }
+    },
+    [isAdmin, hasControl, broadcastChangeSong],
+  );
+
   const broadcastSyncState = useCallback(() => {
     if (channelRef.current && isAdmin) {
       channelRef.current.send({
@@ -380,20 +439,45 @@ export default function RoomProvider({ children }) {
           isPlaying: roomIsPlaying,
           currentTime: audioTimeRef.current,
           queue: roomQueue,
+          loopMode: roomLoopMode,
           timestamp: Date.now(),
         },
       });
     }
-  }, [isAdmin, roomSongId, roomSongData, roomIsPlaying, roomQueue]);
+  }, [
+    isAdmin,
+    roomSongId,
+    roomSongData,
+    roomIsPlaying,
+    roomQueue,
+    roomLoopMode,
+  ]);
 
-  // Skip to next song in roomQueue
+  // Skip to next song in roomQueue (with loop support)
   const broadcastSkipNext = useCallback(() => {
     if (!(isAdmin || hasControl)) return;
     if (roomQueue.length > 0) {
       const nextSong = roomQueue[0];
       broadcastChangeSong(nextSong.id, nextSong);
+    } else if (
+      roomLoopMode === "loop-queue" &&
+      playlistSongsRef.current.length > 0
+    ) {
+      // Re-queue the entire original playlist and play from the start
+      const songs = playlistSongsRef.current;
+      const first = songs[0];
+      broadcastChangeSong(first.id, first);
+      const rest = songs.slice(1);
+      setRoomQueue(rest);
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: "broadcast",
+          event: ROOM_EVENTS.QUEUE_UPDATE,
+          payload: { queue: rest },
+        });
+      }
     }
-  }, [isAdmin, hasControl, roomQueue, broadcastChangeSong]);
+  }, [isAdmin, hasControl, roomQueue, roomLoopMode, broadcastChangeSong]);
 
   // Skip to previous song in roomHistory
   const broadcastSkipPrev = useCallback(() => {
@@ -504,6 +588,7 @@ export default function RoomProvider({ children }) {
           if (payload.currentTime !== undefined)
             setRoomCurrentTime(payload.currentTime);
           if (payload.queue) setRoomQueue(payload.queue);
+          if (payload.loopMode) setRoomLoopMode(payload.loopMode);
         },
       );
 
@@ -569,6 +654,28 @@ export default function RoomProvider({ children }) {
           setMembers((prev) =>
             prev.filter((m) => m.user_id !== payload.user_id),
           );
+        },
+      );
+
+      // Playlist queue broadcast from admin
+      channel.on(
+        "broadcast",
+        { event: ROOM_EVENTS.PLAYLIST_QUEUE },
+        ({ payload }) => {
+          if (payload.songs) setRoomQueue(payload.songs);
+          if (payload.loopMode) setRoomLoopMode(payload.loopMode);
+          if (payload.originalPlaylist) {
+            playlistSongsRef.current = payload.originalPlaylist;
+          }
+        },
+      );
+
+      // Loop mode change from admin/controller
+      channel.on(
+        "broadcast",
+        { event: ROOM_EVENTS.LOOP_MODE_CHANGE },
+        ({ payload }) => {
+          if (payload.mode) setRoomLoopMode(payload.mode);
         },
       );
 
@@ -738,6 +845,8 @@ export default function RoomProvider({ children }) {
     setRoomCurrentTime(0);
     setRoomQueue([]);
     setRoomHistory([]);
+    setRoomLoopMode("none");
+    playlistSongsRef.current = [];
     setOnlineUsers([]);
     setError(null);
   }, [supabase]);
@@ -790,6 +899,11 @@ export default function RoomProvider({ children }) {
     loadingQueue,
     addToRoomQueue,
     removeFromRoomQueue,
+
+    // Loop & Playlist
+    roomLoopMode,
+    broadcastLoopModeChange,
+    broadcastPlayPlaylist,
 
     // Admin audio time ref updater
     setAdminAudioTime,
