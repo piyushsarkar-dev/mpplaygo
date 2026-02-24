@@ -185,14 +185,17 @@ export function RoomPlayer() {
 
   const handlePlayPause = () => {
     if (!canControl) return;
+    const time = audioRef.current?.currentTime || 0;
     if (localPlaying) {
-      broadcastPause(audioRef.current?.currentTime || 0);
+      // Pause immediately on this device, then broadcast
       audioRef.current?.pause();
       setLocalPlaying(false);
+      broadcastPause(time);
     } else {
-      broadcastPlay(audioRef.current?.currentTime || 0);
+      // Play immediately on this device, then broadcast
       audioRef.current?.play().catch(() => {});
       setLocalPlaying(true);
+      broadcastPlay(time);
     }
   };
 

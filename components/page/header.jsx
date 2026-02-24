@@ -2,7 +2,6 @@
 import { AuthModal } from "@/components/auth/auth-modal";
 import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
 import { useSupabase } from "@/components/providers/supabase-provider";
-import { CreateRoomModal } from "@/components/room/create-room-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Home, List, Radio } from "lucide-react";
@@ -50,15 +49,16 @@ export default function Header() {
               </Button>
             </PlaylistDrawer>
 
-            <CreateRoomModal>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0"
-                title="Create Room">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0"
+              title="Rooms">
+              <Link href="/rooms">
                 <Radio className="w-5 h-5" />
-              </Button>
-            </CreateRoomModal>
+              </Link>
+            </Button>
 
             <div className="min-w-0 flex-1">
               <Search className="max-w-none mx-0 h-11" />
@@ -151,14 +151,14 @@ export default function Header() {
           }
         </div>
 
-        {/* Create Room (mobile) */}
+        {/* Rooms (mobile) */}
         {user && (
           <div className="shrink-0">
-            <CreateRoomModal>
-              <button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all">
-                <Radio className="w-4 h-4" />
-              </button>
-            </CreateRoomModal>
+            <Link
+              href="/rooms"
+              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all">
+              <Radio className="w-4 h-4" />
+            </Link>
           </div>
         )}
 
