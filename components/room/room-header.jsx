@@ -14,9 +14,11 @@ import {
   Trash2,
   Wifi,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export function RoomHeader() {
+  const router = useRouter();
   const {
     room,
     isAdmin,
@@ -53,6 +55,8 @@ export function RoomHeader() {
 
   const handleLeave = async () => {
     await exitRoom();
+    router.push("/rooms");
+    toast.success("Left room");
   };
 
   const handleDestroy = async () => {
@@ -62,6 +66,8 @@ export function RoomHeader() {
       )
     ) {
       await destroyRoom(room.id);
+      router.push("/rooms");
+      toast.success("Room destroyed");
     }
   };
 
@@ -124,7 +130,16 @@ export function RoomHeader() {
             <span className="hidden md:inline">Copy</span>
           </Button>
 
-          {isAdmin ?
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLeave}
+            className="text-red-400/80 hover:text-red-400 hover:bg-red-500/10 rounded-xl h-9 px-2.5 md:px-3 text-xs">
+            <DoorOpen className="w-4 h-4 md:mr-1.5" />
+            <span className="hidden md:inline">Leave</span>
+          </Button>
+
+          {isAdmin && (
             <Button
               variant="ghost"
               size="sm"
@@ -133,15 +148,7 @@ export function RoomHeader() {
               <Trash2 className="w-4 h-4 md:mr-1.5" />
               <span className="hidden md:inline">Destroy</span>
             </Button>
-          : <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLeave}
-              className="text-red-400/80 hover:text-red-400 hover:bg-red-500/10 rounded-xl h-9 px-2.5 md:px-3 text-xs">
-              <DoorOpen className="w-4 h-4 md:mr-1.5" />
-              <span className="hidden md:inline">Leave</span>
-            </Button>
-          }
+          )}
         </div>
       </div>
 

@@ -149,6 +149,7 @@ export async function POST(request) {
         id: roomId,
         name: name.trim(),
         admin_id: user.id,
+        created_by: user.id, // Track original creator for admin reclaim
         is_private: Boolean(isPrivate),
         password: isPrivate ? password.trim() : null,
         is_playing: false,

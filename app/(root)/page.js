@@ -650,7 +650,7 @@ export default function Page() {
         <div
           ref={artistRowRef}
           className="w-full px-1 md:px-2 pb-0 md:pb-6">
-          <div className="flex flex-nowrap gap-4 overflow-x-auto md:hidden scrollbar-hide px-2">
+          <div className="flex flex-nowrap gap-4 overflow-x-auto md:hidden mobile-scrollbar px-2 pb-3">
             {randomArtists.slice(0, 3).map((a) => (
               <Link
                 key={a.id}

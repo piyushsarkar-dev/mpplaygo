@@ -39,10 +39,10 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Get room
+    // Get room with created_by to check original creator
     const { data: room, error: roomError } = await supabase
       .from("rooms")
-      .select("*")
+      .select("*, created_by")
       .eq("id", roomId)
       .single();
 
@@ -70,18 +70,52 @@ export async function POST(request, { params }) {
       .single();
 
     if (existing) {
+      // If original creator is rejoining and they're not admin, reclaim admin
+      if (room.created_by === user.id && room.admin_id !== user.id) {
+        await supabase
+          .from("rooms")
+          .update({ admin_id: user.id })
+          .eq("id", roomId);
+        await supabase
+          .from("room_members")
+          .update({ has_control: true })
+          .eq("room_id", roomId)
+          .eq("user_id", user.id);
+        // Remove control from previous admin
+        await supabase
+          .from("room_members")
+          .update({ has_control: false })
+          .eq("room_id", roomId)
+          .eq("user_id", room.admin_id);
+        return NextResponse.json({ success: true, message: "Admin reclaimed" });
+      }
       return NextResponse.json({ success: true, message: "Already a member" });
     }
 
     // Join room
+    const isOriginalCreator = room.created_by === user.id;
     const { error: joinError } = await supabase.from("room_members").insert({
       room_id: roomId,
       user_id: user.id,
-      has_control: false,
+      has_control: isOriginalCreator, // Original creator gets control on rejoin
     });
 
     if (joinError) {
       return NextResponse.json({ error: joinError.message }, { status: 500 });
+    }
+
+    // If original creator is rejoining, transfer admin back to them
+    if (isOriginalCreator && room.admin_id !== user.id) {
+      await supabase
+        .from("rooms")
+        .update({ admin_id: user.id })
+        .eq("id", roomId);
+      // Remove control from previous admin
+      await supabase
+        .from("room_members")
+        .update({ has_control: false })
+        .eq("room_id", roomId)
+        .eq("user_id", room.admin_id);
     }
 
     return NextResponse.json({ success: true });

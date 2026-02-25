@@ -8,6 +8,7 @@ create table rooms (
   id text primary key,
   name text not null,
   admin_id uuid references profiles(id) not null,
+  created_by uuid references profiles(id) not null, -- original creator, can reclaim admin
   is_private boolean default false,
   password text, -- plain text for simplicity; hash in production
   current_song_id text,
@@ -17,6 +18,9 @@ create table rooms (
   last_sync_at timestamp with time zone default timezone('utc'::text, now()),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Migration for existing tables: ALTER TABLE rooms ADD COLUMN created_by uuid references profiles(id);
+-- Then: UPDATE rooms SET created_by = admin_id WHERE created_by IS NULL;
 
 -- Create room members table
 create table room_members (
