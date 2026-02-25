@@ -135,21 +135,13 @@ export default function Header() {
           }
         </div>
 
-        {/* Login / All Pill */}
+        {/* Home Button */}
         <div className="shrink-0">
-          {user ?
-            <div className="bg-[#1DB954] hover:bg-[#1ed760] transition-colors duration-300 rounded-full px-3.5 py-1 text-black font-bold text-[11px] h-7 flex items-center shadow-[0_0_12px_rgba(29,185,84,0.25)]">
-              All
-            </div>
-          : <AuthModal>
-              <Button
-                variant="default"
-                size="sm"
-                className="rounded-full bg-white text-black hover:bg-white/90 font-semibold px-4 h-7 text-[11px] transition-all duration-300">
-                Login
-              </Button>
-            </AuthModal>
-          }
+          <Link
+            href="/"
+            className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] transition-all duration-300 active:scale-95">
+            <Home className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* Rooms (mobile) */}
@@ -157,15 +149,29 @@ export default function Header() {
           <div className="shrink-0">
             <Link
               href="/rooms"
-              className="w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.15] transition-all duration-300">
-              <Radio className="w-3.5 h-3.5" />
+              className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] transition-all duration-300 active:scale-95">
+              <Radio className="w-4 h-4" />
             </Link>
           </div>
         )}
 
+        {/* Login Button (when not logged in) */}
+        {!user && (
+          <div className="shrink-0">
+            <AuthModal>
+              <Button
+                variant="default"
+                size="sm"
+                className="rounded-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold px-4 h-8 text-[11px] transition-all duration-300 shadow-[0_0_12px_rgba(29,185,84,0.2)]">
+                Login
+              </Button>
+            </AuthModal>
+          </div>
+        )}
+
         {/* Search Bar */}
-        <div className="min-w-0 w-[140px] ml-auto">
-          <Search className="max-w-none h-[30px] text-xs" />
+        <div className="min-w-0 flex-1 ml-2">
+          <Search className="max-w-none h-[32px] text-xs" />
         </div>
       </div>
     </header>

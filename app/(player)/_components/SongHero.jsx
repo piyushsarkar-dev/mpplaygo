@@ -208,7 +208,9 @@ export default function SongHero({ id }) {
           <h1 className="text-base sm:text-lg font-semibold text-white leading-tight truncate px-4">
             {data?.name}
           </h1>
-          <p className="text-xs text-white/50 mt-0.5 truncate px-4">{artistName}</p>
+          <p className="text-xs text-white/50 mt-0.5 truncate px-4">
+            {artistName}
+          </p>
         </div>
 
         {/* Seek Bar */}
@@ -359,7 +361,9 @@ export default function SongHero({ id }) {
           </h1>
 
           {/* Artist */}
-          <p className="text-base text-white/50 font-medium mb-2">{artistName}</p>
+          <p className="text-base text-white/50 font-medium mb-2">
+            {artistName}
+          </p>
 
           {/* Meta pills */}
           <div className="flex flex-wrap items-center gap-1.5 mb-4">
