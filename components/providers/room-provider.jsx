@@ -51,6 +51,37 @@ export default function RoomProvider({ children }) {
   const syncIntervalRef = useRef(null);
   const audioTimeRef = useRef(0); // admin's real audio currentTime for sync ticks
 
+  // Cleanup function - defined early so it can be used by other callbacks
+  const cleanup = useCallback(() => {
+    if (channelRef.current) {
+      supabase?.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+    if (presenceChannelRef.current) {
+      supabase?.removeChannel(presenceChannelRef.current);
+      presenceChannelRef.current = null;
+    }
+    if (syncIntervalRef.current) {
+      clearInterval(syncIntervalRef.current);
+      syncIntervalRef.current = null;
+    }
+    setRoom(null);
+    setMembers([]);
+    setIsInRoom(false);
+    setIsAdmin(false);
+    setHasControl(false);
+    setRoomSongId(null);
+    setRoomSongData(null);
+    setRoomIsPlaying(false);
+    setRoomCurrentTime(0);
+    setRoomQueue([]);
+    setRoomHistory([]);
+    setRoomLoopMode("none");
+    playlistSongsRef.current = [];
+    setOnlineUsers([]);
+    setError(null);
+  }, [supabase]);
+
   // ---------- API helpers ----------
 
   const createRoom = useCallback(async ({ name, isPrivate, password }) => {
@@ -106,22 +137,25 @@ export default function RoomProvider({ children }) {
     }
   }, []);
 
-  const leaveRoom = useCallback(async (roomId) => {
-    try {
-      const res = await fetch(`/api/rooms/${roomId}/leave`, {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+  const leaveRoom = useCallback(
+    async (roomId) => {
+      try {
+        const res = await fetch(`/api/rooms/${roomId}/leave`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
 
-      // Cleanup
-      cleanup();
-      return data;
-    } catch (err) {
-      setError(err.message);
-      return null;
-    }
-  }, []);
+        // Cleanup
+        cleanup();
+        return data;
+      } catch (err) {
+        setError(err.message);
+        return null;
+      }
+    },
+    [cleanup],
+  );
 
   const destroyRoom = useCallback(async (roomId) => {
     try {
@@ -816,6 +850,20 @@ export default function RoomProvider({ children }) {
         return false;
       }
 
+      // If already in a different room, leave it first
+      if (room && room.id !== roomId) {
+        // Broadcast leave to old room
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: "broadcast",
+            event: ROOM_EVENTS.USER_LEFT,
+            payload: { user_id: user.id },
+          });
+        }
+        // Leave old room via API and cleanup
+        await leaveRoom(room.id);
+      }
+
       setLoading(true);
       setError(null);
 
@@ -890,7 +938,7 @@ export default function RoomProvider({ children }) {
         return false;
       }
     },
-    [user, joinRoom, fetchRoom, subscribeToRoom],
+    [user, room, joinRoom, leaveRoom, fetchRoom, subscribeToRoom],
   );
 
   const exitRoom = useCallback(async () => {
@@ -907,36 +955,6 @@ export default function RoomProvider({ children }) {
 
     await leaveRoom(room.id);
   }, [room, user, leaveRoom]);
-
-  const cleanup = useCallback(() => {
-    if (channelRef.current) {
-      supabase?.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
-    if (presenceChannelRef.current) {
-      supabase?.removeChannel(presenceChannelRef.current);
-      presenceChannelRef.current = null;
-    }
-    if (syncIntervalRef.current) {
-      clearInterval(syncIntervalRef.current);
-      syncIntervalRef.current = null;
-    }
-    setRoom(null);
-    setMembers([]);
-    setIsInRoom(false);
-    setIsAdmin(false);
-    setHasControl(false);
-    setRoomSongId(null);
-    setRoomSongData(null);
-    setRoomIsPlaying(false);
-    setRoomCurrentTime(0);
-    setRoomQueue([]);
-    setRoomHistory([]);
-    setRoomLoopMode("none");
-    playlistSongsRef.current = [];
-    setOnlineUsers([]);
-    setError(null);
-  }, [supabase]);
 
   // Cleanup on unmount
   useEffect(() => {
