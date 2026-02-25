@@ -265,6 +265,24 @@ export default function RoomProvider({ children }) {
           event: ROOM_EVENTS.PLAY,
           payload: { currentTime, timestamp: Date.now() },
         });
+        // Sync burst: send multiple sync ticks to ensure all listeners catch the state change
+        const burstSync = () => {
+          if (channelRef.current) {
+            channelRef.current.send({
+              type: "broadcast",
+              event: ROOM_EVENTS.SYNC_TICK,
+              payload: {
+                songId: roomSongId,
+                currentTime: audioTimeRef.current,
+                isPlaying: true,
+                timestamp: Date.now(),
+              },
+            });
+          }
+        };
+        setTimeout(burstSync, 100);
+        setTimeout(burstSync, 500);
+        setTimeout(burstSync, 1000);
         // Also update server
         if (room?.id) {
           fetch(`/api/rooms/${room.id}`, {
@@ -278,7 +296,7 @@ export default function RoomProvider({ children }) {
         }
       }
     },
-    [isAdmin, hasControl, room],
+    [isAdmin, hasControl, room, roomSongId],
   );
 
   const broadcastPause = useCallback(
@@ -292,6 +310,24 @@ export default function RoomProvider({ children }) {
           event: ROOM_EVENTS.PAUSE,
           payload: { currentTime, timestamp: Date.now() },
         });
+        // Sync burst: send multiple sync ticks to ensure all listeners catch the state change
+        const burstSync = () => {
+          if (channelRef.current) {
+            channelRef.current.send({
+              type: "broadcast",
+              event: ROOM_EVENTS.SYNC_TICK,
+              payload: {
+                songId: roomSongId,
+                currentTime: audioTimeRef.current,
+                isPlaying: false,
+                timestamp: Date.now(),
+              },
+            });
+          }
+        };
+        setTimeout(burstSync, 100);
+        setTimeout(burstSync, 500);
+        setTimeout(burstSync, 1000);
         if (room?.id) {
           fetch(`/api/rooms/${room.id}`, {
             method: "PATCH",
@@ -304,7 +340,7 @@ export default function RoomProvider({ children }) {
         }
       }
     },
-    [isAdmin, hasControl, room],
+    [isAdmin, hasControl, room, roomSongId],
   );
 
   const broadcastSeek = useCallback(
@@ -453,6 +489,35 @@ export default function RoomProvider({ children }) {
     roomLoopMode,
   ]);
 
+  // Request sync from admin (for listeners to call when they need to resync)
+  const requestSync = useCallback(() => {
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: "broadcast",
+        event: ROOM_EVENTS.REQUEST_SYNC,
+        payload: {},
+      });
+    }
+  }, []);
+
+  // Visibility change handler — when user comes back to the app (e.g., screen unlocks),
+  // automatically request sync to get the latest state
+  useEffect(() => {
+    if (!isInRoom || isAdmin) return; // Only for listeners
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // User came back — request sync
+        requestSync();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isInRoom, isAdmin, requestSync]);
+
   // Skip to next song in roomQueue (with loop support)
   const broadcastSkipNext = useCallback(() => {
     if (!(isAdmin || hasControl)) return;
@@ -490,7 +555,8 @@ export default function RoomProvider({ children }) {
     }
   }, [isAdmin, hasControl, roomHistory, broadcastChangeSong]);
 
-  // Periodic admin sync tick — every 3 seconds, admin broadcasts current real audio time
+  // Periodic admin sync tick — every 2 seconds, admin broadcasts current real audio time
+  // Includes songId so listeners can detect song changes even when screen was off
   useEffect(() => {
     if (!isInRoom || !isAdmin) return;
 
@@ -500,20 +566,21 @@ export default function RoomProvider({ children }) {
     }
 
     syncIntervalRef.current = setInterval(() => {
-      if (channelRef.current && roomSongId) {
-        // Always send SYNC_TICK even when paused — so all listeners
+      if (channelRef.current) {
+        // Always send SYNC_TICK even when paused or no song — so all listeners
         // stay in the correct play/pause state at all times
         channelRef.current.send({
           type: "broadcast",
           event: ROOM_EVENTS.SYNC_TICK,
           payload: {
+            songId: roomSongId,
             currentTime: audioTimeRef.current,
             isPlaying: roomIsPlaying,
             timestamp: Date.now(),
           },
         });
       }
-    }, 3000);
+    }, 2000); // 2 seconds for tighter sync
 
     return () => {
       if (syncIntervalRef.current) {
@@ -593,10 +660,30 @@ export default function RoomProvider({ children }) {
       );
 
       // Periodic sync tick from admin — keep everyone's audio in sync
+      // Also includes songId so listeners can detect song changes they might have missed
       channel.on(
         "broadcast",
         { event: ROOM_EVENTS.SYNC_TICK },
         ({ payload }) => {
+          // If songId changed (listener missed the CHANGE_SONG event), update it
+          if (payload.songId !== undefined) {
+            setRoomSongId((currentSongId) => {
+              if (payload.songId !== currentSongId) {
+                // Song changed — reset time and request full sync for song data
+                setRoomCurrentTime(payload.currentTime || 0);
+                // Request full sync to get song data
+                if (channelRef.current) {
+                  channelRef.current.send({
+                    type: "broadcast",
+                    event: ROOM_EVENTS.REQUEST_SYNC,
+                    payload: {},
+                  });
+                }
+                return payload.songId;
+              }
+              return currentSongId;
+            });
+          }
           if (payload.currentTime !== undefined) {
             setRoomCurrentTime(payload.currentTime);
           }
@@ -925,6 +1012,7 @@ export default function RoomProvider({ children }) {
     broadcastSyncState,
     broadcastSkipNext,
     broadcastSkipPrev,
+    requestSync,
   };
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;

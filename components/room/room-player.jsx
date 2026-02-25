@@ -173,12 +173,25 @@ export function RoomPlayer() {
         } else {
           setLocalPlaying(false);
         }
+      } else {
+        // Non-admin listener: their song ended but they might have missed the CHANGE_SONG broadcast
+        // (e.g., screen was off). Wait briefly, then if still no new song, the roomSongId
+        // should update from the next SYNC_TICK. For now, just stop playing locally.
+        setLocalPlaying(false);
       }
     };
 
     audio.addEventListener("ended", onEnded);
     return () => audio.removeEventListener("ended", onEnded);
-  }, [canControl, roomQueue, broadcastChangeSong]);
+  }, [
+    canControl,
+    roomQueue,
+    roomLoopMode,
+    broadcastChangeSong,
+    broadcastSkipNext,
+    broadcastSeek,
+    broadcastPlay,
+  ]);
 
   // Volume control
   useEffect(() => {
