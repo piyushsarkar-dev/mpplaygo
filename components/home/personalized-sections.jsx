@@ -71,7 +71,7 @@ function HorizontalRow({ children, className = "" }) {
 
       <div
         ref={scrollRef}
-        className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-1 pb-2">
+        className="flex gap-3 md:gap-4 overflow-x-auto md:scrollbar-hide scroll-smooth px-1 pb-3 mobile-scrollbar">
         {children}
       </div>
     </div>
