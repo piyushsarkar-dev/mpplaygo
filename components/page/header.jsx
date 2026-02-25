@@ -2,7 +2,6 @@
 import { AuthModal } from "@/components/auth/auth-modal";
 import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
 import { useSupabase } from "@/components/providers/supabase-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Home, List, Radio } from "lucide-react";
@@ -18,26 +17,27 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
-      <div className="hidden md:grid w-full h-[72px] bg-background/80 supports-[backdrop-filter]:bg-background/40 backdrop-blur-xl grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
-        {/* Left Section: Logo & Nav */}
+      {/* ── Desktop Navbar ── */}
+      <div className="hidden md:grid w-full h-[64px] bg-[#0a0a0a]/95 supports-[backdrop-filter]:bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/[0.06] grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
+        {/* Left Section: Logo */}
         <div className="flex items-center gap-6 shrink-0 justify-self-start">
           <Link
             href="/"
-            className="text-xl font-bold text-white tracking-tight">
+            className="text-lg font-bold text-white tracking-tight hover:text-[#1DB954] transition-colors duration-300">
             Mp Play go
           </Link>
         </div>
 
-        {/* Center Section: Main Search */}
+        {/* Center Section: Nav + Search */}
         <div className="min-w-0 w-full justify-self-center">
-          <div className="flex w-full items-center gap-3">
+          <div className="flex w-full items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               asChild
-              className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0">
+              className="text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-full w-10 h-10 transition-all duration-300 shrink-0">
               <Link href="/">
-                <Home className="w-5 h-5" />
+                <Home className="w-[18px] h-[18px]" />
               </Link>
             </Button>
 
@@ -45,8 +45,8 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0">
-                <List className="w-5 h-5" />
+                className="text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-full w-10 h-10 transition-all duration-300 shrink-0">
+                <List className="w-[18px] h-[18px]" />
               </Button>
             </PlaylistDrawer>
 
@@ -54,40 +54,39 @@ export default function Header() {
               variant="ghost"
               size="icon"
               asChild
-              className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-all duration-300 shrink-0"
+              className="text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-full w-10 h-10 transition-all duration-300 shrink-0"
               title="Rooms">
               <Link href="/rooms">
-                <Radio className="w-5 h-5" />
+                <Radio className="w-[18px] h-[18px]" />
               </Link>
             </Button>
 
             <div className="min-w-0 flex-1">
-              <Search className="max-w-none mx-0 h-11" />
+              <Search className="max-w-none mx-0 h-10" />
             </div>
           </div>
         </div>
 
         {/* Right Section: Friends & Profile */}
-        <div className="flex items-center gap-4 shrink-0 justify-self-end">
-          <ThemeToggle className="shrink-0" />
+        <div className="flex items-center gap-3 shrink-0 justify-self-end">
           <FriendSearch />
 
           {user ?
             <UserProfileDropdown>
-              <div className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-9 h-9 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-[#1DB954]/50 transition-all duration-300">
                 <Avatar className="w-full h-full rounded-full">
                   <AvatarImage
                     src={user?.user_metadata?.avatar_url}
                     style={{ objectFit: "cover" }}
                   />
-                  <AvatarFallback className="bg-neutral-800 text-white font-bold">
+                  <AvatarFallback className="bg-zinc-800 text-white font-bold text-sm">
                     {user?.user_metadata?.full_name?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
               </div>
             </UserProfileDropdown>
           : <AuthModal>
-              <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6 h-10">
+              <Button className="rounded-full bg-white text-black hover:bg-white/90 font-semibold px-5 h-9 text-sm transition-all duration-300">
                 Login
               </Button>
             </AuthModal>
@@ -95,26 +94,26 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Header */}
-      <div className="flex md:hidden w-full h-[52px] bg-background/80 supports-[backdrop-filter]:bg-background/40 backdrop-blur-xl items-center px-3 py-2 gap-2.5">
+      {/* ── Mobile Navbar ── */}
+      <div className="flex md:hidden w-full h-[52px] bg-[#0a0a0a]/95 supports-[backdrop-filter]:bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/[0.06] items-center px-3 py-2 gap-2">
         {/* Profile Icon */}
         <div className="shrink-0">
           {user ?
             <UserProfileDropdown>
-              <div className="w-9 h-9 rounded-full cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-[#1DB954]/50 transition-all duration-300">
                 <Avatar className="w-full h-full rounded-full">
                   <AvatarImage
                     src={user?.user_metadata?.avatar_url}
                     style={{ objectFit: "cover" }}
                   />
-                  <AvatarFallback className="bg-neutral-800 text-white font-bold text-xs">
+                  <AvatarFallback className="bg-zinc-800 text-white font-bold text-[10px]">
                     {user?.user_metadata?.full_name?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
               </div>
             </UserProfileDropdown>
-          : <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-neutral-800/50 flex items-center justify-center text-white/50">
+          : <div className="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center">
+              <div className="w-full h-full rounded-full bg-zinc-800/80 flex items-center justify-center text-zinc-500">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -123,7 +122,7 @@ export default function Header() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="w-5 h-5">
+                  className="w-4 h-4">
                   <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                   <circle
                     cx="12"
@@ -139,14 +138,14 @@ export default function Header() {
         {/* Login / All Pill */}
         <div className="shrink-0">
           {user ?
-            <div className="bg-[#1DB954] hover:bg-[#1ed760] transition-colors rounded-full px-4 py-1.5 text-black font-bold text-xs h-8 flex items-center">
+            <div className="bg-[#1DB954] hover:bg-[#1ed760] transition-colors duration-300 rounded-full px-3.5 py-1 text-black font-bold text-[11px] h-7 flex items-center shadow-[0_0_12px_rgba(29,185,84,0.25)]">
               All
             </div>
           : <AuthModal>
               <Button
                 variant="default"
                 size="sm"
-                className="rounded-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-bold px-4 h-8 text-xs">
+                className="rounded-full bg-white text-black hover:bg-white/90 font-semibold px-4 h-7 text-[11px] transition-all duration-300">
                 Login
               </Button>
             </AuthModal>
@@ -158,20 +157,15 @@ export default function Header() {
           <div className="shrink-0">
             <Link
               href="/rooms"
-              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all">
-              <Radio className="w-4 h-4" />
+              className="w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.15] transition-all duration-300">
+              <Radio className="w-3.5 h-3.5" />
             </Link>
           </div>
         )}
 
-        {/* Theme Toggle (mobile) */}
-        <div className="shrink-0">
-          <ThemeToggle />
-        </div>
-
         {/* Search Bar */}
         <div className="min-w-0 w-[140px] ml-auto">
-          <Search className="max-w-none h-[32px] text-xs" />
+          <Search className="max-w-none h-[30px] text-xs" />
         </div>
       </div>
     </header>
