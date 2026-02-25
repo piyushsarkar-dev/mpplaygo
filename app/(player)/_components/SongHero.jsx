@@ -158,14 +158,14 @@ export default function SongHero({ id }) {
   // --------------- LOADING SKELETON ---------------
   if (loading) {
     return (
-      <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden mb-4 md:mb-8 bg-white/[0.03]">
-        <div className="flex flex-col items-center gap-5 p-5 md:p-10 md:flex-row md:items-end md:gap-10">
-          <Skeleton className="w-[200px] h-[200px] md:w-[260px] md:h-[260px] rounded-2xl shrink-0" />
-          <div className="flex flex-col items-center md:items-start gap-3 flex-1 w-full">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-8 w-56 md:h-10 md:w-80" />
-            <Skeleton className="h-5 w-36" />
-            <Skeleton className="h-10 w-full max-w-xs mt-4" />
+      <div className="relative w-full rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-6 bg-[#0c0c0c]">
+        <div className="flex flex-col items-center gap-3 p-3 pt-4 md:p-6 md:flex-row md:items-end md:gap-8">
+          <Skeleton className="w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] md:w-[200px] md:h-[200px] rounded-xl shrink-0 bg-white/[0.06]" />
+          <div className="flex flex-col items-center md:items-start gap-2 flex-1 w-full">
+            <Skeleton className="h-3 w-14 bg-white/[0.06]" />
+            <Skeleton className="h-5 w-40 md:h-6 md:w-56 bg-white/[0.06]" />
+            <Skeleton className="h-3 w-28 bg-white/[0.06]" />
+            <Skeleton className="h-8 w-full max-w-[200px] mt-2 bg-white/[0.06]" />
           </div>
         </div>
       </div>
@@ -176,22 +176,22 @@ export default function SongHero({ id }) {
 
   // --------------- MAIN RENDER ---------------
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl md:rounded-3xl mb-4 md:mb-8">
+    <div className="relative w-full overflow-hidden rounded-xl md:rounded-2xl mb-3 md:mb-6 bg-[#0c0c0c]">
       {/* Blurred BG */}
       <div className="absolute inset-0 z-0">
         <img
           src={safeImage}
           alt=""
-          className="w-full h-full object-cover scale-125 blur-[80px] opacity-50"
+          className="w-full h-full object-cover scale-125 blur-[60px] opacity-25"
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0c0c0c]/80 via-[#0c0c0c]/90 to-[#0c0c0c]" />
       </div>
 
       {/* ===== MOBILE LAYOUT ===== */}
-      <div className="relative z-10 flex flex-col items-center p-4 pt-6 pb-5 md:hidden">
+      <div className="relative z-10 flex flex-col items-center p-3 pt-4 pb-4 md:hidden">
         {/* Art */}
-        <div className="w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] rounded-2xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10 mb-5">
+        <div className="w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] rounded-xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/[0.08] mb-3">
           <img
             src={safeImage}
             alt={data?.name}
@@ -204,58 +204,58 @@ export default function SongHero({ id }) {
         </div>
 
         {/* Song Info */}
-        <div className="w-full text-center mb-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight truncate px-2">
+        <div className="w-full text-center mb-2">
+          <h1 className="text-base sm:text-lg font-semibold text-white leading-tight truncate px-4">
             {data?.name}
           </h1>
-          <p className="text-sm text-white/60 mt-1 truncate">{artistName}</p>
+          <p className="text-xs text-white/50 mt-0.5 truncate px-4">{artistName}</p>
         </div>
 
         {/* Seek Bar */}
-        <div className="w-full px-2 mb-3">
+        <div className="w-full px-4 mb-2">
           <Slider
             value={[currentTime]}
             max={duration || 1}
             step={0.1}
             onValueChange={handleSeek}
-            thumbClassName="h-3 w-3 bg-[#1DB954] border-none shadow-lg"
-            trackClassName="h-[3px] bg-white/20"
+            thumbClassName="h-2.5 w-2.5 bg-[#1DB954] border-none shadow-md"
+            trackClassName="h-[2px] bg-white/[0.12]"
             rangeClassName="bg-[#1DB954]"
             className="w-full"
           />
-          <div className="flex justify-between text-[10px] text-white/40 mt-1 font-mono">
+          <div className="flex justify-between text-[9px] text-white/30 mt-0.5 font-mono">
             <span>{fmt(currentTime)}</span>
             <span>{fmt(duration)}</span>
           </div>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-center gap-5 mb-4">
+        <div className="flex items-center justify-center gap-6 mb-3">
           <button
             onClick={handlePrevious}
             disabled={!hasPrevious}
-            className="p-2 text-white/60 hover:text-white disabled:opacity-30 transition active:scale-90">
-            <SkipBack className="w-6 h-6 fill-current" />
+            className="p-1.5 text-white/50 hover:text-white disabled:opacity-25 transition active:scale-90">
+            <SkipBack className="w-5 h-5 fill-current" />
           </button>
 
           <button
             onClick={togglePlayPause}
-            className="w-14 h-14 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl shadow-[#1DB954]/30 hover:scale-105 active:scale-95 transition-transform">
+            className="w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-lg shadow-[#1DB954]/20 hover:scale-105 active:scale-95 transition-transform">
             {playing ?
-              <IoPause className="w-6 h-6" />
-            : <Play className="w-6 h-6 ml-0.5 fill-black" />}
+              <IoPause className="w-5 h-5" />
+            : <Play className="w-5 h-5 ml-0.5 fill-black" />}
           </button>
 
           <button
             onClick={handleNext}
             disabled={!hasNext}
-            className="p-2 text-white/60 hover:text-white disabled:opacity-30 transition active:scale-90">
-            <SkipForward className="w-6 h-6 fill-current" />
+            className="p-1.5 text-white/50 hover:text-white disabled:opacity-25 transition active:scale-90">
+            <SkipForward className="w-5 h-5 fill-current" />
           </button>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-2">
           <AddToPlaylist
             song={{
               id: data.id,
@@ -263,8 +263,8 @@ export default function SongHero({ id }) {
               artist: artistName,
               image: data.image,
             }}>
-            <button className="w-10 h-10 rounded-full bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.15] transition">
-              <Heart className="w-[18px] h-[18px]" />
+            <button className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.05] flex items-center justify-center text-white/45 hover:text-white hover:bg-white/[0.12] transition">
+              <Heart className="w-3.5 h-3.5" />
             </button>
           </AddToPlaylist>
 
@@ -275,8 +275,8 @@ export default function SongHero({ id }) {
               artist: artistName,
               image: data.image,
             }}>
-            <button className="w-10 h-10 rounded-full bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.15] transition">
-              <PlusCircle className="w-[18px] h-[18px]" />
+            <button className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.05] flex items-center justify-center text-white/45 hover:text-white hover:bg-white/[0.12] transition">
+              <PlusCircle className="w-3.5 h-3.5" />
             </button>
           </AddToPlaylist>
 
@@ -286,37 +286,37 @@ export default function SongHero({ id }) {
               download={`${data?.name || "song"}.m4a`}
               target="_blank"
               rel="noreferrer">
-              <button className="w-10 h-10 rounded-full bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.15] transition">
-                <Download className="w-[18px] h-[18px]" />
+              <button className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.05] flex items-center justify-center text-white/45 hover:text-white hover:bg-white/[0.12] transition">
+                <Download className="w-3.5 h-3.5" />
               </button>
             </a>
           )}
 
           <button
             onClick={handleShare}
-            className="w-10 h-10 rounded-full bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.15] transition">
-            <Share2 className="w-[18px] h-[18px]" />
+            className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.05] flex items-center justify-center text-white/45 hover:text-white hover:bg-white/[0.12] transition">
+            <Share2 className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Meta pills */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4">
+        <div className="flex flex-wrap items-center justify-center gap-1 mt-2.5">
           {albumName && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/[0.06] text-white/50 text-[10px] font-medium border border-white/[0.04]">
-              <Album className="w-2.5 h-2.5" />
-              {albumName.length > 25 ?
-                albumName.slice(0, 25) + "..."
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-white/[0.04] text-white/40 text-[9px] font-medium border border-white/[0.03]">
+              <Album className="w-2 h-2" />
+              {albumName.length > 18 ?
+                albumName.slice(0, 18) + "..."
               : albumName}
             </span>
           )}
           {year && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/[0.06] text-white/50 text-[10px] font-medium border border-white/[0.04]">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/[0.04] text-white/40 text-[9px] font-medium border border-white/[0.03]">
               {year}
             </span>
           )}
           {language && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/[0.06] text-white/50 text-[10px] font-medium border border-white/[0.04] capitalize">
-              <Music2 className="w-2.5 h-2.5" />
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-white/[0.04] text-white/40 text-[9px] font-medium border border-white/[0.03] capitalize">
+              <Music2 className="w-2 h-2" />
               {language}
             </span>
           )}
@@ -324,10 +324,10 @@ export default function SongHero({ id }) {
       </div>
 
       {/* ===== DESKTOP LAYOUT ===== */}
-      <div className="relative z-10 hidden md:flex items-end gap-10 p-8 lg:p-10">
+      <div className="relative z-10 hidden md:flex items-end gap-8 p-6 lg:p-8">
         {/* Art */}
         <div className="shrink-0 group">
-          <div className="relative w-[240px] h-[240px] lg:w-[280px] lg:h-[280px] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 ring-1 ring-white/10 transition-transform duration-500 group-hover:scale-[1.02]">
+          <div className="relative w-[200px] h-[200px] lg:w-[240px] lg:h-[240px] rounded-xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/[0.08] transition-transform duration-500 group-hover:scale-[1.02]">
             <img
               src={safeImage}
               alt={data?.name}
@@ -343,97 +343,97 @@ export default function SongHero({ id }) {
         {/* Info + Controls */}
         <div className="flex-1 min-w-0 pb-1">
           {/* Label */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1.5">
             <Disc3
-              className="w-3.5 h-3.5 text-[#1DB954] animate-spin"
+              className="w-3 h-3 text-[#1DB954] animate-spin"
               style={{ animationDuration: "3s" }}
             />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#1DB954]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#1DB954]">
               Now Playing
             </span>
           </div>
 
           {/* Name */}
-          <h1 className="text-3xl lg:text-5xl font-bold text-white leading-tight tracking-tight mb-1 truncate">
+          <h1 className="text-2xl lg:text-3xl font-bold text-white leading-tight tracking-tight mb-1 truncate">
             {data?.name}
           </h1>
 
           {/* Artist */}
-          <p className="text-lg text-white/60 font-medium mb-3">{artistName}</p>
+          <p className="text-base text-white/50 font-medium mb-2">{artistName}</p>
 
           {/* Meta pills */}
-          <div className="flex flex-wrap items-center gap-2 mb-5">
+          <div className="flex flex-wrap items-center gap-1.5 mb-4">
             {albumName && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm text-white/60 text-xs font-medium border border-white/[0.06]">
-                <Album className="w-3 h-3" />
-                {albumName.length > 30 ?
-                  albumName.slice(0, 30) + "..."
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.05] text-white/50 text-[10px] font-medium border border-white/[0.04]">
+                <Album className="w-2.5 h-2.5" />
+                {albumName.length > 25 ?
+                  albumName.slice(0, 25) + "..."
                 : albumName}
               </span>
             )}
             {songDuration && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm text-white/60 text-xs font-medium border border-white/[0.06]">
-                <Clock className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.05] text-white/50 text-[10px] font-medium border border-white/[0.04]">
+                <Clock className="w-2.5 h-2.5" />
                 {fmt(songDuration)}
               </span>
             )}
             {year && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm text-white/60 text-xs font-medium border border-white/[0.06]">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/[0.05] text-white/50 text-[10px] font-medium border border-white/[0.04]">
                 {year}
               </span>
             )}
             {language && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm text-white/60 text-xs font-medium border border-white/[0.06] capitalize">
-                <Music2 className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.05] text-white/50 text-[10px] font-medium border border-white/[0.04] capitalize">
+                <Music2 className="w-2.5 h-2.5" />
                 {language}
               </span>
             )}
           </div>
 
           {/* Seek Bar */}
-          <div className="max-w-xl mb-4">
+          <div className="max-w-md mb-3">
             <Slider
               value={[currentTime]}
               max={duration || 1}
               step={0.1}
               onValueChange={handleSeek}
-              thumbClassName="h-3.5 w-3.5 bg-[#1DB954] border-none shadow-lg opacity-0 group-hover:opacity-100 transition"
-              trackClassName="h-1 bg-white/15 group"
+              thumbClassName="h-3 w-3 bg-[#1DB954] border-none shadow-lg opacity-0 group-hover:opacity-100 transition"
+              trackClassName="h-[3px] bg-white/[0.1] group"
               rangeClassName="bg-[#1DB954]"
               className="w-full group"
             />
-            <div className="flex justify-between text-[11px] text-white/40 mt-1 font-mono">
+            <div className="flex justify-between text-[10px] text-white/35 mt-0.5 font-mono">
               <span>{fmt(currentTime)}</span>
               <span>{fmt(duration)}</span>
             </div>
           </div>
 
           {/* Controls Row */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={handlePrevious}
               disabled={!hasPrevious}
-              className="p-2 text-white/60 hover:text-white disabled:opacity-30 transition-all hover:scale-110 active:scale-90">
-              <SkipBack className="w-6 h-6 fill-current" />
+              className="p-1.5 text-white/50 hover:text-white disabled:opacity-25 transition-all hover:scale-110 active:scale-90">
+              <SkipBack className="w-5 h-5 fill-current" />
             </button>
 
             <button
               onClick={togglePlayPause}
-              className="w-12 h-12 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl shadow-[#1DB954]/30 hover:scale-110 active:scale-95 transition-transform">
+              className="w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-lg shadow-[#1DB954]/20 hover:scale-110 active:scale-95 transition-transform">
               {playing ?
-                <IoPause className="w-5 h-5" />
-              : <Play className="w-5 h-5 ml-0.5 fill-black" />}
+                <IoPause className="w-4 h-4" />
+              : <Play className="w-4 h-4 ml-0.5 fill-black" />}
             </button>
 
             <button
               onClick={handleNext}
               disabled={!hasNext}
-              className="p-2 text-white/60 hover:text-white disabled:opacity-30 transition-all hover:scale-110 active:scale-90">
-              <SkipForward className="w-6 h-6 fill-current" />
+              className="p-1.5 text-white/50 hover:text-white disabled:opacity-25 transition-all hover:scale-110 active:scale-90">
+              <SkipForward className="w-5 h-5 fill-current" />
             </button>
 
             {/* Divider */}
-            <div className="w-px h-8 bg-white/10 mx-1" />
+            <div className="w-px h-6 bg-white/[0.08] mx-1" />
 
             <AddToPlaylist
               song={{
