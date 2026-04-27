@@ -218,33 +218,39 @@ export default function RoomProvider({ children }) {
   // ---------- Realtime sync ----------
 
   // Load auto-suggestions for the current song into roomQueue
-  const loadSuggestions = useCallback(async (songId) => {
-    if (!songId) return;
+  const loadSuggestions = useCallback(
+    async (songId) => {
+      if (!songId) return;
 
-    suggestionsRequestRef.current += 1;
-    const requestId = suggestionsRequestRef.current;
+      suggestionsRequestRef.current += 1;
+      const requestId = suggestionsRequestRef.current;
 
-    if (playlistSongsRef.current.length > 0 && roomLoopMode === "loop-queue") {
-      return;
-    }
-
-    setLoadingQueue(true);
-    try {
-      const res = await getSongsSuggestions(songId);
-      if (res) {
-        const data = await res.json();
-        const suggestions = data?.data || [];
-        if (suggestionsRequestRef.current !== requestId) return;
-        setRoomQueue(suggestions);
+      if (
+        playlistSongsRef.current.length > 0 &&
+        roomLoopMode === "loop-queue"
+      ) {
+        return;
       }
-    } catch (err) {
-      console.error("Failed to load room suggestions:", err);
-    } finally {
-      if (suggestionsRequestRef.current === requestId) {
-        setLoadingQueue(false);
+
+      setLoadingQueue(true);
+      try {
+        const res = await getSongsSuggestions(songId);
+        if (res) {
+          const data = await res.json();
+          const suggestions = data?.data || [];
+          if (suggestionsRequestRef.current !== requestId) return;
+          setRoomQueue(suggestions);
+        }
+      } catch (err) {
+        console.error("Failed to load room suggestions:", err);
+      } finally {
+        if (suggestionsRequestRef.current === requestId) {
+          setLoadingQueue(false);
+        }
       }
-    }
-  }, [roomLoopMode]);
+    },
+    [roomLoopMode],
+  );
 
   // Add song to queue
   const addToRoomQueue = useCallback(

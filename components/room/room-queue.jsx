@@ -74,21 +74,21 @@ export function RoomQueue() {
             {roomQueue.map((song, idx) => (
               <div
                 key={song.id}
-                  role="button"
-                  tabIndex={canControl ? 0 : -1}
-                  onClick={() => {
-                    if (canControl) {
-                      broadcastChangeSong(song.id, song);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (!canControl) return;
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      broadcastChangeSong(song.id, song);
-                    }
-                  }}
-                  className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-white/[0.04] transition-all duration-200 group cursor-pointer">
+                role="button"
+                tabIndex={canControl ? 0 : -1}
+                onClick={() => {
+                  if (canControl) {
+                    broadcastChangeSong(song.id, song);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (!canControl) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    broadcastChangeSong(song.id, song);
+                  }
+                }}
+                className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-white/[0.04] transition-all duration-200 group cursor-pointer">
                 {/* Index */}
                 <span className="text-[11px] text-white/15 w-5 text-center font-mono shrink-0 tabular-nums">
                   {idx + 1}
