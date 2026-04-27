@@ -58,7 +58,7 @@ function sortFriendEntries(a, b) {
 }
 
 function uniqIds(values) {
-  return [...new Set(values.filter(Boolean))];
+  return [...new Set((values || []).filter(Boolean))];
 }
 
 export default function FriendsProvider({ children }) {
@@ -73,6 +73,7 @@ export default function FriendsProvider({ children }) {
   const [people, setPeople] = useState([]);
   const [presenceRows, setPresenceRows] = useState([]);
   const [roomInvites, setRoomInvites] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [myStatus, setMyStatus] = useState("online");
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
@@ -84,18 +85,13 @@ export default function FriendsProvider({ children }) {
 
   const presenceMap = useMemo(() => {
     return new Map(
-      presenceRows.map((row) => [
-        row.user_id,
-        normalizeFriendStatus(row.status),
-      ]),
+      presenceRows.map((row) => [row.user_id, normalizeFriendStatus(row.status)]),
     );
   }, [presenceRows]);
 
   const requestPairSet = useMemo(() => {
     return new Set(
-      requests.map((request) =>
-        makePairKey(request.sender_id, request.receiver_id),
-      ),
+      requests.map((request) => makePairKey(request.sender_id, request.receiver_id)),
     );
   }, [requests]);
 
@@ -176,6 +172,7 @@ export default function FriendsProvider({ children }) {
       setPeople([]);
       setPresenceRows([]);
       setRoomInvites([]);
+      setOnlineUsers([]);
       setMyStatus("online");
       setLoading(false);
       return;
@@ -230,9 +227,7 @@ export default function FriendsProvider({ children }) {
 
       const relatedIds = uniqIds([
         ...nextRequests.map((request) =>
-          request.sender_id === user.id ?
-            request.receiver_id
-          : request.sender_id,
+          request.sender_id === user.id ? request.receiver_id : request.sender_id,
         ),
         ...nextFriendships.map((row) =>
           row.user_low_id === user.id ? row.user_high_id : row.user_low_id,
@@ -240,21 +235,46 @@ export default function FriendsProvider({ children }) {
         ...nextInvites.map((invite) => invite.sender_id),
       ]);
 
-      const profilesRes =
-        relatedIds.length ?
-          await supabase
+      const profilesRes = relatedIds.length
+        ? await supabase
             .from("profiles")
             .select("id,username,full_name,avatar_url,created_at")
             .in("id", relatedIds)
         : { data: [] };
 
-      const presenceRes =
-        relatedIds.length ?
-          await supabase
+      const presenceRes = relatedIds.length
+        ? await supabase
             .from("user_presence")
             .select("user_id,status,updated_at")
             .in("user_id", relatedIds)
         : { data: [] };
+
+      const onlinePresenceRes = await supabase
+        .from("user_presence")
+        .select("user_id,status,updated_at")
+        .eq("status", "online")
+        .order("updated_at", { ascending: false })
+        .limit(10);
+
+      const onlinePresenceRows = (onlinePresenceRes?.data || []).filter(
+        (row) => row?.user_id && row.user_id !== user.id,
+      );
+      const onlineUserIds = uniqIds(
+        onlinePresenceRows.map((row) => row.user_id),
+      );
+      const onlineProfilesRes = onlineUserIds.length
+        ? await supabase
+            .from("profiles")
+            .select("id,username,full_name,avatar_url,created_at")
+            .in("id", onlineUserIds)
+        : { data: [] };
+
+      const onlineProfileMap = new Map(
+        (onlineProfilesRes?.data || []).map((person) => [person.id, person]),
+      );
+      const onlinePresenceMap = new Map(
+        onlinePresenceRows.map((row) => [row.user_id, row]),
+      );
 
       setRequests(nextRequests);
       setFriendships(nextFriendships);
@@ -268,6 +288,23 @@ export default function FriendsProvider({ children }) {
         },
       ]);
       setRoomInvites(nextInvites);
+      setOnlineUsers(
+        onlineUserIds
+          .map((id) => {
+            const person = onlineProfileMap.get(id);
+            if (!person) return null;
+            const row = onlinePresenceMap.get(id);
+            return {
+              id: person.id,
+              username: person.username || person.id,
+              full_name: person.full_name || "",
+              avatar_url: person.avatar_url || "",
+              status: normalizeFriendStatus(row?.status || "online"),
+              updatedAt: row?.updated_at || person.created_at,
+            };
+          })
+          .filter(Boolean),
+      );
       setMyStatus(currentStatus);
     } catch (error) {
       console.error("Failed to load friends data:", error);
@@ -289,6 +326,7 @@ export default function FriendsProvider({ children }) {
       setPeople([]);
       setPresenceRows([]);
       setRoomInvites([]);
+      setOnlineUsers([]);
       setMyStatus("online");
       return;
     }
@@ -300,30 +338,22 @@ export default function FriendsProvider({ children }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friend_requests" },
-        () => {
-          refreshFriendsData();
-        },
+        () => refreshFriendsData(),
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friendships" },
-        () => {
-          refreshFriendsData();
-        },
+        () => refreshFriendsData(),
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_presence" },
-        () => {
-          refreshFriendsData();
-        },
+        () => refreshFriendsData(),
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "room_invites" },
-        () => {
-          refreshFriendsData();
-        },
+        () => refreshFriendsData(),
       )
       .subscribe();
 
@@ -333,15 +363,14 @@ export default function FriendsProvider({ children }) {
   }, [refreshFriendsData, supabase, user?.id]);
 
   useEffect(() => {
-    if (activeTab !== FRIEND_TABS.SEARCH || !open || !user?.id) {
-      if (!open) {
-        setSearchResults([]);
-        setSearchLoading(false);
-      }
+    const trimmed = searchQuery.trim();
+
+    if (activeTab !== FRIEND_TABS.SEARCH) {
+      setSearchResults([]);
+      setSearchLoading(false);
       return;
     }
 
-    const trimmed = searchQuery.trim();
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
       searchTimeoutRef.current = null;
@@ -366,11 +395,7 @@ export default function FriendsProvider({ children }) {
           .limit(12);
 
         if (searchTokenRef.current !== token) return;
-        setSearchResults(
-          (Array.isArray(data) ? data : []).filter(
-            (person) => person.id !== user.id,
-          ),
-        );
+        setSearchResults(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Friend search failed:", error);
         if (searchTokenRef.current === token) {
@@ -389,7 +414,7 @@ export default function FriendsProvider({ children }) {
         searchTimeoutRef.current = null;
       }
     };
-  }, [activeTab, open, searchQuery, supabase, user?.id]);
+  }, [activeTab, searchQuery, supabase]);
 
   const openFriends = useCallback((tab = FRIEND_TABS.SEARCH) => {
     setActiveTab(tab);
@@ -435,9 +460,7 @@ export default function FriendsProvider({ children }) {
         return { ok: false };
       }
 
-      toast.success(
-        `Friend request sent to @${targetUser.username || "user"}.`,
-      );
+      toast.success(`Friend request sent to @${targetUser.username || "user"}.`);
       refreshFriendsData();
       return { ok: true };
     },
@@ -449,36 +472,50 @@ export default function FriendsProvider({ children }) {
       if (!user?.id || !request?.id) return { ok: false };
 
       const [lowId, highId] = [request.sender_id, request.receiver_id].sort();
-      const { error: friendshipError } = await supabase
+      const { data: existingFriendship, error: lookupError } = await supabase
         .from("friendships")
-        .upsert(
-          {
-            user_low_id: lowId,
-            user_high_id: highId,
-            accepted_by: user.id,
-            accepted_at: new Date().toISOString(),
-          },
-          { onConflict: "user_low_id,user_high_id" },
-        );
+        .select("id")
+        .eq("user_low_id", lowId)
+        .eq("user_high_id", highId)
+        .maybeSingle();
 
-      if (friendshipError) {
-        console.error("Failed to accept friend request:", friendshipError);
+      if (lookupError) {
+        console.error("Failed to inspect existing friendship:", lookupError);
         toast.error("Could not accept friend request.");
         return { ok: false };
       }
 
-      const { error: deleteError } = await supabase
+      if (!existingFriendship?.id) {
+        const { error: friendshipError } = await supabase.from("friendships").insert({
+          user_low_id: lowId,
+          user_high_id: highId,
+          accepted_by: user.id,
+          accepted_at: new Date().toISOString(),
+        });
+
+        if (friendshipError) {
+          console.error("Failed to accept friend request:", friendshipError);
+          toast.error("Could not accept friend request.");
+          return { ok: false };
+        }
+      }
+
+      const { data: deletedRequest, error: deleteError } = await supabase
         .from("friend_requests")
         .delete()
+        .select("id")
         .eq("id", request.id);
 
-      if (deleteError) {
+      if (deleteError || !deletedRequest?.length) {
         console.error(
           "Failed to remove friend request after accept:",
           deleteError,
         );
+        toast.error("Could not accept friend request.");
+        return { ok: false };
       }
 
+      setRequests((prev) => prev.filter((item) => item.id !== request.id));
       toast.success("Friend request accepted.");
       refreshFriendsData();
       return { ok: true };
@@ -489,15 +526,20 @@ export default function FriendsProvider({ children }) {
   const rejectFriendRequest = useCallback(
     async (requestId) => {
       if (!user?.id || !requestId) return { ok: false };
-      const { error } = await supabase
+
+      const { data: deletedRequest, error } = await supabase
         .from("friend_requests")
         .delete()
+        .select("id")
         .eq("id", requestId);
-      if (error) {
+
+      if (error || !deletedRequest?.length) {
         console.error("Failed to reject friend request:", error);
         toast.error("Could not reject friend request.");
         return { ok: false };
       }
+
+      setRequests((prev) => prev.filter((item) => item.id !== requestId));
       toast.message("Friend request rejected.");
       refreshFriendsData();
       return { ok: true };
@@ -567,15 +609,19 @@ export default function FriendsProvider({ children }) {
   const dismissRoomInvite = useCallback(
     async (inviteId) => {
       if (!user?.id || !inviteId) return { ok: false };
-      const { error } = await supabase
+
+      const { data: deletedInvite, error } = await supabase
         .from("room_invites")
         .delete()
+        .select("id")
         .eq("id", inviteId);
-      if (error) {
+
+      if (error || !deletedInvite?.length) {
         console.error("Failed to dismiss room invite:", error);
         toast.error("Could not dismiss invite.");
         return { ok: false };
       }
+
       refreshFriendsData();
       return { ok: true };
     },
@@ -597,6 +643,7 @@ export default function FriendsProvider({ children }) {
         presenceRows,
         roomInvites,
         incomingRoomInvites,
+        onlineUsers,
         myStatus,
         loading,
         friendEntries,

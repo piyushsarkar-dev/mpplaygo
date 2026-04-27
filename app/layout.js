@@ -1,5 +1,4 @@
 import { OnboardingModal } from "@/components/auth/onboarding-modal";
-import FriendsPanel from "@/components/friends/friends-panel";
 import FriendsProvider from "@/components/providers/friends-provider";
 import MusicProvider from "@/components/providers/music-provider";
 import RoomProvider from "@/components/providers/room-provider";
@@ -71,7 +70,6 @@ export default function RootLayout({ children }) {
                 <RoomProvider>
                   <FriendsProvider>
                     {children}
-                    <FriendsPanel />
                   </FriendsProvider>
                 </RoomProvider>
               </MusicProvider>
