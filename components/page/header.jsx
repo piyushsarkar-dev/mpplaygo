@@ -1,19 +1,17 @@
 "use client";
 import { AuthModal } from "@/components/auth/auth-modal";
+import FriendsTrigger from "@/components/friends/friends-trigger";
 import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Home, List, Radio } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { UserProfileDropdown } from "../auth/user-profile-dropdown";
-import FriendSearch from "./friend-search";
 import Search from "./search";
 
 export default function Header() {
-  const { user, supabase } = useSupabase();
-  const router = useRouter();
+  const { user } = useSupabase();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[80]">
@@ -69,7 +67,7 @@ export default function Header() {
 
         {/* Right Section: Friends & Profile */}
         <div className="flex items-center gap-3 shrink-0 justify-self-end">
-          <FriendSearch />
+          <FriendsTrigger />
 
           {user ?
             <UserProfileDropdown>

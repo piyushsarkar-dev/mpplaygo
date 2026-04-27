@@ -1,30 +1,16 @@
 "use client";
-import FriendSearch from "@/components/page/friend-search";
+import FriendsTrigger from "@/components/friends/friends-trigger";
 import { PlaylistDrawer } from "@/components/playlist/playlist-drawer";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { cn } from "@/lib/utils";
-import { Home, ListMusic, Search, User, X } from "lucide-react";
+import { Home, ListMusic, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function MobileMenu() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile } = useSupabase();
-  const [searchOpen, setSearchOpen] = useState(false);
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (searchOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [searchOpen]);
 
   const navItems = [
     {
@@ -167,35 +153,8 @@ export default function MobileMenu() {
         })}
       </div>
 
-      {/* Search Button - Separate Circle with Glass Effect */}
-      <button
-        onClick={() => setSearchOpen(true)}
-        className="pointer-events-auto h-[62px] w-[62px] rounded-full glass-mobile-nav flex items-center justify-center text-white transition-all duration-400">
-        <Search className="w-6 h-6" />
-      </button>
-
-      {/* Mobile Search Popup - Reuses Desktop FriendSearch Component */}
-      {searchOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-12 px-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto">
-          <div className="w-full max-w-md bg-[#121212] rounded-2xl shadow-2xl border border-white/10 px-4 py-3 animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-white">Search Friends</h2>
-              <button
-                onClick={() => setSearchOpen(false)}
-                className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-all">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Reuse Desktop Search Component */}
-            <FriendSearch
-              className="max-w-full"
-              onUserClick={() => setSearchOpen(false)}
-            />
-          </div>
-        </div>
-      )}
+      {/* Friends Button - Separate Circle with Glass Effect */}
+      <FriendsTrigger mobile />
     </div>
   );
 }
