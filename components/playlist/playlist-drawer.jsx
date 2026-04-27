@@ -173,7 +173,9 @@ export function PlaylistDrawer({ children }) {
 						</SheetHeader>
 
 						<div className="flex flex-col gap-4 flex-1 overflow-hidden px-6 pt-6">
-							<CreatePlaylistModal onCreated={fetchPlaylists}>
+							<CreatePlaylistModal
+								mode="inline"
+								onCreated={fetchPlaylists}>
 								<Button className="w-full bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-white border border-primary/30 hover:border-primary/40 justify-center gap-2.5 h-12 rounded-xl backdrop-blur-sm font-semibold shadow-lg shadow-primary/10 transition-all">
 									<Plus className="w-5 h-5" />
 									Create New Playlist
