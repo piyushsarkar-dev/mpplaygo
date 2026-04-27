@@ -3,8 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { MusicContext } from "@/hooks/use-context";
-import { cn } from "@/lib/utils";
 import { getImageUrl } from "@/lib/media";
+import { cn } from "@/lib/utils";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";

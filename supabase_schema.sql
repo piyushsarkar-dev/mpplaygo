@@ -29,6 +29,9 @@ create table playlist_songs (
   added_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+alter table playlist_songs
+  add constraint playlist_songs_playlist_id_song_id_key unique (playlist_id, song_id);
+
 -- Create a table for user history
 create table user_history (
   id uuid default gen_random_uuid() primary key,

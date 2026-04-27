@@ -222,6 +222,7 @@ export default function PlaylistPage({ params }) {
                 : <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/60">
                     <Play className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/50" />
                   </div>
+
                 // Grid layout for multiple songs (Spotify style)
               : <div className="grid grid-cols-2 gap-0.5 h-full w-full bg-black/20 p-0.5">
                   {[0, 1, 2, 3].map((index) => (
