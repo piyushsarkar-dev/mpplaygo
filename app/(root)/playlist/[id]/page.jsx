@@ -4,7 +4,9 @@ import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MusicContext } from "@/hooks/use-context";
+import { getImageUrl } from "@/lib/media";
 import { Globe, Lock, Play, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -120,7 +122,7 @@ export default function PlaylistPage({ params }) {
           song_id: s.song_id,
           song_title: s.song_title,
           artist: s.artist,
-          thumbnail: s.thumbnail,
+          thumbnail: getImageUrl(s.thumbnail),
         }));
         const { error: songsError } = await supabase
           .from("playlist_songs")
@@ -212,20 +214,25 @@ export default function PlaylistPage({ params }) {
             {songs.length > 0 ?
               songs.length === 1 ?
                 // Single thumbnail for 1 song
-                <img
-                  src={songs[0].thumbnail}
-                  alt={playlist.name}
-                  className="h-full w-full object-cover"
-                />
+                getImageUrl(songs[0].thumbnail) ?
+                  <img
+                    src={getImageUrl(songs[0].thumbnail)}
+                    alt={playlist.name}
+                    className="h-full w-full object-cover"
+                  />
+                : <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/60">
+                    <Play className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground/50" />
+                  </div>
+
                 // Grid layout for multiple songs (Spotify style)
               : <div className="grid grid-cols-2 gap-0.5 h-full w-full bg-black/20 p-0.5">
                   {[0, 1, 2, 3].map((index) => (
                     <div
                       key={index}
                       className="relative bg-secondary/60 overflow-hidden">
-                      {songs[index]?.thumbnail ?
+                      {getImageUrl(songs[index]?.thumbnail) ?
                         <img
-                          src={songs[index].thumbnail}
+                          src={getImageUrl(songs[index].thumbnail)}
                           alt=""
                           className="w-full h-full object-cover"
                         />
@@ -255,9 +262,11 @@ export default function PlaylistPage({ params }) {
           <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 text-sm">
             <span className="text-muted-foreground">
               Created by{" "}
-              <span className="text-foreground font-semibold hover:underline cursor-pointer">
-                {playlist.profiles?.username}
-              </span>
+              <Link
+                href={`/profile/${encodeURIComponent(playlist.profiles?.username || playlist.user_id)}`}
+                className="text-foreground font-semibold hover:underline">
+                {playlist.profiles?.username || playlist.user_id}
+              </Link>
             </span>
             <span className="hidden md:inline text-muted-foreground/50">•</span>
             <span className="text-muted-foreground font-medium">
@@ -332,9 +341,12 @@ export default function PlaylistPage({ params }) {
             </div>
 
             <img
-              src={song.thumbnail}
+              src={getImageUrl(song.thumbnail)}
               alt={song.song_title}
               className="h-12 w-12 md:h-14 md:w-14 rounded-md object-cover bg-secondary shadow-md ring-1 ring-white/5"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
             />
 
             <div className="flex-1 min-w-0">
@@ -352,7 +364,7 @@ export default function PlaylistPage({ params }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all h-8 w-8 md:h-9 md:w-9"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all h-8 w-8 md:h-9 md:w-9"
                 onClick={() => handleDeleteSong(song.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>

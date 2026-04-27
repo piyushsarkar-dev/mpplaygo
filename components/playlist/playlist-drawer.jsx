@@ -3,6 +3,7 @@ import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getImageUrl } from "@/lib/media";
 import {
   Sheet,
   SheetContent,
@@ -24,6 +25,13 @@ import {
 import { useCallback, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CreatePlaylistModal } from "./create-playlist-modal";
+
+function getPlaylistThumbnails(playlistSongs = []) {
+  return playlistSongs
+    .slice(0, 4)
+    .map((song) => getImageUrl(song?.thumbnail))
+    .filter(Boolean);
+}
 
 export function PlaylistDrawer({ children }) {
   const { supabase, user } = useSupabase();
@@ -53,11 +61,7 @@ export function PlaylistDrawer({ children }) {
     if (data) {
       const playlistsWithThumbnails = data.map((playlist) => ({
         ...playlist,
-        thumbnails:
-          playlist.playlist_songs
-            ?.slice(0, 4)
-            .map((s) => s.thumbnail)
-            .filter(Boolean) || [],
+        thumbnails: getPlaylistThumbnails(playlist.playlist_songs || []),
         songCount: playlist.playlist_songs?.length || 0,
       }));
       setPlaylists(playlistsWithThumbnails);
@@ -71,54 +75,95 @@ export function PlaylistDrawer({ children }) {
       const { data } = await supabase
         .from("playlist_songs")
         .select("*")
-        .eq("playlist_id", playlistId)
-        .order("added_at", { ascending: true });
-      setPlaylistSongs(data || []);
-      setLoadingSongs(false);
-    },
-    [supabase],
-  );
+                  {playlists.map((playlist) => {
+                    const thumbnails = (playlist.thumbnails || [])
+                      .map((thumbnail) => getImageUrl(thumbnail))
+                      .filter(Boolean);
 
-  const handlePlaylistClick = (playlist) => {
-    setSelectedPlaylist(playlist);
-    fetchPlaylistSongs(playlist.id);
-  };
-
-  const handleBack = () => {
-    setSelectedPlaylist(null);
-    setPlaylistSongs([]);
-  };
-
-  const handlePlaySong = (songId) => {
-    try {
-      sessionStorage.setItem("mpplaygo_user_initiated_play", "true");
-    } catch {}
-    try {
-      localStorage.setItem("p", "true");
-    } catch {}
-    musicContext.setMusic(songId);
-    setOpen(false);
-  };
-
-  const handleRemoveSong = async (e, songDbId, songTitle) => {
-    e.stopPropagation();
-    const { error } = await supabase
-      .from("playlist_songs")
-      .delete()
-      .eq("id", songDbId);
-
-    if (error) {
-      toast.error("Failed to remove song");
-    } else {
-      toast.success(`Removed "${songTitle}"`);
-      setPlaylistSongs(playlistSongs.filter((s) => s.id !== songDbId));
-      setPlaylists(
-        playlists.map((p) =>
-          p.id === selectedPlaylist.id ?
-            { ...p, songCount: (p.songCount || 1) - 1 }
+                    return (
+                      <div
+                        key={playlist.id}
+                        className="group relative">
+                        <button
+                          type="button"
+                          onClick={() => handlePlaylistClick(playlist)}
+                          className="flex w-full items-center gap-3 rounded-xl border border-transparent p-3 pr-12 text-left transition-all hover:border-white/10 hover:bg-white/10 active:bg-white/15">
+                          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform">
+                            {thumbnails.length > 0 ?
+                              <div className="grid grid-cols-2 gap-0.5 h-full w-full bg-black">
+                                {[0, 1, 2, 3].map((index) => (
+                                  <div
+                                    key={index}
+                                    className="relative bg-zinc-900">
+                                    {thumbnails[index] ?
+                                      <img
+                                        src={thumbnails[index]}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                      />
+                                    : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+                                        <ListMusic className="w-3 h-3 text-zinc-600" />
+                                      </div>
+                                    }
+                                  </div>
+                                ))}
+                              </div>
+                            : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-black">
+                                <ListMusic className="w-7 h-7 text-zinc-600" />
+                              </div>
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-semibold truncate group-hover:text-primary transition text-base mb-1">
+                              {playlist.name}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-white/50">
+                              <div className="flex items-center gap-1">
+                                {playlist.is_public ?
+                                  <Globe className="w-3 h-3" />
+                                : <Lock className="w-3 h-3" />}
+                                <span>
+                                  {playlist.is_public ? "Public" : "Private"}
+                                </span>
+                              </div>
+                              <span>•</span>
+                              <span>
+                                {playlist.songCount}{
+            {
+              ...p,
+              songCount: nextSongs.length,
+              thumbnails: getPlaylistThumbnails(nextSongs),
+            }
           : p,
         ),
       );
+    }
+  };
+
+  const handleDeletePlaylist = async (playlist, event) => {
+    if (event) event.stopPropagation();
+    if (!playlist) return;
+
+    const confirmed = window.confirm(
+      `Delete playlist \"${playlist.name}\"? This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("playlists")
+      .delete()
+      .eq("id", playlist.id);
+
+    if (error) {
+      toast.error("Failed to delete playlist");
+      return;
+    }
+
+    toast.success(`Deleted \"${playlist.name}\"`);
+    setPlaylists((current) => current.filter((item) => item.id !== playlist.id));
+    if (selectedPlaylist?.id === playlist.id) {
+      setSelectedPlaylist(null);
+      setPlaylistSongs([]);
     }
   };
 
@@ -237,58 +282,60 @@ export function PlaylistDrawer({ children }) {
                     </div>
                   )}
 
-                  {playlists.map((playlist) => (
-                    <button
-                      key={playlist.id}
-                      onClick={() => handlePlaylistClick(playlist)}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 active:bg-white/15 transition-all group text-left w-full border border-transparent hover:border-white/10">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform">
-                        {playlist.thumbnails && playlist.thumbnails.length > 0 ?
-                          <div className="grid grid-cols-2 gap-0.5 h-full w-full bg-black">
-                            {[0, 1, 2, 3].map((index) => (
-                              <div
-                                key={index}
-                                className="relative bg-zinc-900">
-                                {playlist.thumbnails[index] ?
-                                  <img
-                                    src={playlist.thumbnails[index]}
-                                    alt=""
-                                    className="w-full h-full object-cover"
-                                  />
-                                : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
-                                    <ListMusic className="w-3 h-3 text-zinc-600" />
+                  {playlists.map((playlist) => {
+                    const thumbnails = (playlist.thumbnails || [])
+                      .map((thumbnail) => getImageUrl(thumbnail))
+                      .filter(Boolean);
+
+                    return (
+                      <div
+                        key={playlist.id}
+                        className="group relative">
+                        <button
+                          type="button"
+                          onClick={() => handlePlaylistClick(playlist)}
+                          className="flex w-full items-center gap-3 rounded-xl border border-transparent p-3 pr-12 text-left transition-all hover:border-white/10 hover:bg-white/10 active:bg-white/15">
+                          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform">
+                            {thumbnails.length > 0 ?
+                              <div className="grid grid-cols-2 gap-0.5 h-full w-full bg-black">
+                                {[0, 1, 2, 3].map((index) => (
+                                  <div
+                                    key={index}
+                                    className="relative bg-zinc-900">
+                                    {thumbnails[index] ?
+                                      <img
+                                        src={thumbnails[index]}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                      />
+                                    : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+                                        <ListMusic className="w-3 h-3 text-zinc-600" />
+                                      </div>
+                                    }
                                   </div>
-                                }
+                                ))}
                               </div>
-                            ))}
+                            : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-black">
+                                <ListMusic className="w-7 h-7 text-zinc-600" />
+                              </div>
+                            }
                           </div>
-                        : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-black">
-                            <ListMusic className="w-7 h-7 text-zinc-600" />
-                          </div>
-                        }
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-semibold truncate group-hover:text-primary transition text-base mb-1">
-                          {playlist.name}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-white/50">
-                          <div className="flex items-center gap-1">
-                            {playlist.is_public ?
-                              <Globe className="w-3 h-3" />
-                            : <Lock className="w-3 h-3" />}
-                            <span>
-                              {playlist.is_public ? "Public" : "Private"}
-                            </span>
-                          </div>
-                          <span>•</span>
-                          <span>
-                            {playlist.songCount}{" "}
-                            {playlist.songCount === 1 ? "song" : "songs"}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-semibold truncate group-hover:text-primary transition text-base mb-1">
+                              {playlist.name}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-white/50">
+                              <div className="flex items-center gap-1">
+                                {playlist.is_public ?
+                                  <Globe className="w-3 h-3" />
+                                : <Lock className="w-3 h-3" />}
+                                <span>
+                                  {playlist.is_public ? "Public" : "Private"}
+                                </span>
+                              </div>
+                              <span>•</span>
+                              <span>
+                                {playlist.songCount}{
                 </div>
               </ScrollArea>
             </div>
@@ -313,6 +360,13 @@ export function PlaylistDrawer({ children }) {
                   onClick={handleSharePlaylist}>
                   <Share2 className="w-5 h-5" />
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-red-500/10 hover:text-red-400 rounded-xl h-11 w-11 flex-shrink-0"
+                  onClick={(event) => handleDeletePlaylist(selectedPlaylist, event)}>
+                  <Trash2 className="w-5 h-5" />
+                </Button>
               </div>
               <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-4">
@@ -326,9 +380,9 @@ export function PlaylistDrawer({ children }) {
                           <div
                             key={index}
                             className="relative bg-zinc-900">
-                            {selectedPlaylist.thumbnails[index] ?
+                            {getImageUrl(selectedPlaylist.thumbnails[index]) ?
                               <img
-                                src={selectedPlaylist.thumbnails[index]}
+                                src={getImageUrl(selectedPlaylist.thumbnails[index])}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />
@@ -433,11 +487,16 @@ export function PlaylistDrawer({ children }) {
                     <button
                       onClick={() => handlePlaySong(song.song_id)}
                       className="flex-shrink-0">
-                      <img
-                        src={song.thumbnail}
-                        alt={song.song_title}
-                        className="w-14 h-14 rounded-lg object-cover shadow-md ring-1 ring-white/10 group-hover:scale-105 transition"
-                      />
+                      {getImageUrl(song.thumbnail) ?
+                        <img
+                          src={getImageUrl(song.thumbnail)}
+                          alt={song.song_title}
+                          className="w-14 h-14 rounded-lg object-cover shadow-md ring-1 ring-white/10 group-hover:scale-105 transition"
+                        />
+                      : <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/10 flex items-center justify-center">
+                          <ListMusic className="w-4 h-4 text-zinc-500" />
+                        </div>
+                      }
                     </button>
                     <button
                       onClick={() => handlePlaySong(song.song_id)}
@@ -452,7 +511,7 @@ export function PlaylistDrawer({ children }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg h-9 w-9 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                      className="text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg h-9 w-9 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all flex-shrink-0"
                       onClick={(e) =>
                         handleRemoveSong(e, song.id, song.song_title)
                       }>
