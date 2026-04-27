@@ -10,24 +10,23 @@ import { useRoom } from "@/components/providers/room-provider";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import {
   Check,
+  ArrowLeft,
   ChevronDown,
   ChevronUp,
   ExternalLink,
   Search,
   SendHorizontal,
+  RotateCcw,
   UserRoundPlus,
   X,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 function makePairKey(leftId, rightId) {
@@ -105,12 +104,9 @@ function TabButton({ tab, label, count }) {
 
 function FriendsContent() {
   const router = useRouter();
-  const pathname = usePathname();
   const { user } = useSupabase();
   const { room, isInRoom } = useRoom();
   const {
-    open,
-    closeFriends,
     activeTab,
     searchQuery,
     setSearchQuery,
@@ -131,24 +127,18 @@ function FriendsContent() {
     sendRoomInvite,
     dismissRoomInvite,
     incomingRoomInvites,
+    onlineUsers,
     loading,
+    refreshFriendsData,
   } = useFriends();
   const searchInputRef = useRef(null);
-  const previousPathnameRef = useRef(pathname);
   const [showOfflineFriends, setShowOfflineFriends] = useState(false);
 
   useEffect(() => {
-    if (open && activeTab === FRIEND_TABS.SEARCH) {
+    if (activeTab === FRIEND_TABS.SEARCH) {
       searchInputRef.current?.focus?.();
     }
-  }, [activeTab, open]);
-
-  useEffect(() => {
-    if (previousPathnameRef.current !== pathname && open) {
-      closeFriends();
-    }
-    previousPathnameRef.current = pathname;
-  }, [closeFriends, open, pathname]);
+  }, [activeTab]);
 
   const searchResultsWithState = useMemo(() => {
     return searchResults.map((person) => {
@@ -248,9 +238,9 @@ function FriendsContent() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={closeFriends}
+            onClick={() => router.push("/")}
             className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white">
-            <X className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
         </div>
 
@@ -277,6 +267,96 @@ function FriendsContent() {
 
       <ScrollArea className="flex-1 min-h-0">
         <div className="space-y-6 px-4 py-4 md:px-6 md:py-5">
+          <section className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4 md:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/35">
+                  Online now
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-white">
+                  Top 10 online users
+                </h3>
+                <p className="mt-1 text-sm text-white/45">
+                  These are the current online users, whether or not they are in your friends list.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={refreshFriendsData}
+                className="rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white">
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+
+            {loading ?
+              <div className="grid gap-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3">
+                    <Skeleton className="h-11 w-11 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-9 w-28 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            : onlineUsers.length > 0 ?
+              <div className="grid gap-2">
+                {onlineUsers.map((person) => {
+                  const pairKey = [user?.id, person.id].filter(Boolean).sort().join("::");
+                  const alreadyFriend = friendIdSet.has(person.id);
+                  const pending = requestPairSet.has(pairKey);
+                  const canSendRequest = user && !alreadyFriend && !pending;
+                  return (
+                    <div
+                      key={person.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <FriendAvatar
+                          person={person}
+                          className="h-11 w-11"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-white">
+                            @{person.username}
+                          </p>
+                          <p className="truncate text-xs text-white/45">
+                            {person.full_name || "Online now"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusChip status={person.status} />
+                        <Button
+                          variant={canSendRequest ? "default" : "outline"}
+                          size="sm"
+                          disabled={!canSendRequest}
+                          onClick={() => sendFriendRequest(person)}
+                          className={cn(
+                            "rounded-full",
+                            canSendRequest ?
+                              "bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                            : "border-white/10 bg-white/[0.03] text-white/45",
+                          )}>
+                          <UserRoundPlus className="mr-2 h-4 w-4" />
+                          {alreadyFriend ? "Friends" : pending ? "Requested" : "Add Friend"}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            : <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center text-sm text-white/45">
+                No online users right now.
+              </div>
+            }
+          </section>
+
           {user ? null : (
             <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-4 md:p-5">
               <div className="flex items-center gap-3">
@@ -516,7 +596,6 @@ function FriendsContent() {
                             variant="secondary"
                             size="sm"
                             onClick={() => {
-                              closeFriends();
                               router.push(`/room/${invite.room_id}`);
                             }}
                             className="rounded-full">
@@ -691,34 +770,5 @@ function FriendsShell() {
 }
 
 export default function FriendsPanel() {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const { open, closeFriends } = useFriends();
-
-  if (isMobile) {
-    return (
-      <Drawer
-        open={open}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) closeFriends();
-        }}>
-        <DrawerContent className="h-[92vh] border-white/10 bg-[#090909]/95 p-0 backdrop-blur-3xl">
-          <DrawerTitle className="sr-only">Friends</DrawerTitle>
-          <FriendsShell />
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) closeFriends();
-      }}>
-      <DialogContent className="max-w-[1120px] w-[calc(100vw-2rem)] h-[min(88vh,900px)] overflow-hidden border-white/10 bg-[#090909]/95 p-0 text-white shadow-[0_30px_120px_rgba(0,0,0,0.65)] backdrop-blur-3xl">
-        <DialogTitle className="sr-only">Friends</DialogTitle>
-        <FriendsShell />
-      </DialogContent>
-    </Dialog>
-  );
+  return <FriendsShell />;
 }
