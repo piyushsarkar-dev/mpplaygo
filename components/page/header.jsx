@@ -16,7 +16,7 @@ export default function Header() {
   const router = useRouter();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
+    <header className="fixed top-0 left-0 right-0 z-[80]">
       {/* ── Desktop Navbar ── */}
       <div className="hidden md:grid w-full h-[64px] bg-[#0a0a0a]/95 supports-[backdrop-filter]:bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/[0.06] grid-cols-[1fr_minmax(0,48rem)_1fr] items-center px-5 md:px-10">
         {/* Left Section: Logo */}
