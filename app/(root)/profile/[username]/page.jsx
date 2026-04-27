@@ -23,18 +23,32 @@ export default function ProfilePage({ params }) {
       // Fetch Profile
       // Need to decode username as it might be URL encoded
       const decodedUsername = decodeURIComponent(username);
-      const { data: profileData, error: profileError } = await supabase
+      let profileData = null;
+
+      const { data: usernameProfile, error: usernameError } = await supabase
         .from("profiles")
         .select("*")
         .eq("username", decodedUsername)
         .single();
 
-      if (profileError || !profileData) {
-        // handle error or not found
-        console.error(profileError);
-        setLoading(false);
-        return;
+      if (usernameProfile) {
+        profileData = usernameProfile;
+      } else {
+        const { data: idProfile, error: idError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", decodedUsername)
+          .single();
+
+        if (!idProfile) {
+          console.error(usernameError || idError);
+          setLoading(false);
+          return;
+        }
+
+        profileData = idProfile;
       }
+
       setProfile(profileData);
 
       // Fetch Playlists with first 4 song thumbnails

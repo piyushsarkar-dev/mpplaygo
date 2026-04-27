@@ -15,17 +15,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
-  Check,
   ArrowLeft,
+  Check,
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  RotateCcw,
   Search,
   SendHorizontal,
-  RotateCcw,
   UserRoundPlus,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -277,7 +278,8 @@ function FriendsContent() {
                   Top 10 online users
                 </h3>
                 <p className="mt-1 text-sm text-white/45">
-                  These are the current online users, whether or not they are in your friends list.
+                  These are the current online users, whether or not they are in
+                  your friends list.
                 </p>
               </div>
               <Button
@@ -308,7 +310,10 @@ function FriendsContent() {
             : onlineUsers.length > 0 ?
               <div className="grid gap-2">
                 {onlineUsers.map((person) => {
-                  const pairKey = [user?.id, person.id].filter(Boolean).sort().join("::");
+                  const pairKey = [user?.id, person.id]
+                    .filter(Boolean)
+                    .sort()
+                    .join("::");
                   const alreadyFriend = friendIdSet.has(person.id);
                   const pending = requestPairSet.has(pairKey);
                   const canSendRequest = user && !alreadyFriend && !pending;
@@ -344,7 +349,11 @@ function FriendsContent() {
                             : "border-white/10 bg-white/[0.03] text-white/45",
                           )}>
                           <UserRoundPlus className="mr-2 h-4 w-4" />
-                          {alreadyFriend ? "Friends" : pending ? "Requested" : "Add Friend"}
+                          {alreadyFriend ?
+                            "Friends"
+                          : pending ?
+                            "Requested"
+                          : "Add Friend"}
                         </Button>
                       </div>
                     </div>
@@ -431,25 +440,29 @@ function FriendsContent() {
                     <div
                       key={person.id}
                       className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 transition hover:border-white/15 hover:bg-white/[0.04]">
-                      <FriendAvatar
-                        person={person}
-                        className="h-11 w-11"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-semibold text-white">
-                            @{person.username}
-                          </p>
-                          {person.status && person.status !== "offline" && (
-                            <StatusChip status={person.status} />
-                          )}
+                      <Link
+                        href={`/profile/${encodeURIComponent(person.username || person.id)}`}
+                        className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-1 py-1 text-left transition hover:bg-white/[0.03]">
+                        <FriendAvatar
+                          person={person}
+                          className="h-11 w-11"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-white">
+                              @{person.username || person.id}
+                            </p>
+                            {person.status && person.status !== "offline" && (
+                              <StatusChip status={person.status} />
+                            )}
+                          </div>
+                          {person.full_name ?
+                            <p className="truncate text-xs text-white/45">
+                              {person.full_name}
+                            </p>
+                          : null}
                         </div>
-                        {person.full_name ?
-                          <p className="truncate text-xs text-white/45">
-                            {person.full_name}
-                          </p>
-                        : null}
-                      </div>
+                      </Link>
                       <Button
                         variant={person.disabled ? "outline" : "default"}
                         size="sm"
@@ -658,20 +671,22 @@ function FriendsContent() {
                       <div
                         key={friend.id}
                         className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex min-w-0 items-center gap-3">
+                        <Link
+                          href={`/profile/${encodeURIComponent(friend.username || friend.id)}`}
+                          className="flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 text-left transition hover:bg-white/[0.03]">
                           <FriendAvatar
                             person={friend}
                             className="h-11 w-11"
                           />
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-white">
-                              @{friend.username}
+                              @{friend.username || friend.id}
                             </p>
                             <p className="truncate text-xs text-white/45">
                               {friend.full_name || "Online now"}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusChip status={friend.status} />
                           <Button

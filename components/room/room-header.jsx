@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  FRIEND_TABS,
+  useFriends,
+} from "@/components/providers/friends-provider";
 import { useRoom } from "@/components/providers/room-provider";
 import { Button } from "@/components/ui/button";
 import { getRoomShareUrl } from "@/lib/room/utils";
@@ -12,6 +16,7 @@ import {
   Radio,
   Share2,
   Trash2,
+  UserRoundPlus,
   Wifi,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,6 +24,7 @@ import { toast } from "sonner";
 
 export function RoomHeader() {
   const router = useRouter();
+  const { openFriends } = useFriends();
   const {
     room,
     isAdmin,
@@ -128,6 +134,15 @@ export function RoomHeader() {
             className="text-white/60 hover:text-white hover:bg-white/[0.08] rounded-xl h-9 px-2.5 md:px-3 text-xs">
             <Copy className="w-4 h-4 md:mr-1.5" />
             <span className="hidden md:inline">Copy</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openFriends(FRIEND_TABS.FRIENDS)}
+            className="text-white/60 hover:text-white hover:bg-white/[0.08] rounded-xl h-9 px-2.5 md:px-3 text-xs">
+            <UserRoundPlus className="w-4 h-4 md:mr-1.5" />
+            <span className="hidden md:inline">Invite</span>
           </Button>
 
           <Button

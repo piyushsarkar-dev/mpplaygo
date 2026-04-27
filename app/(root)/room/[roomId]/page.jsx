@@ -43,14 +43,30 @@ export default function RoomPage() {
 
   // Auto-join if user is logged in and room is public
   useEffect(() => {
-    if (!authLoading && user && roomInfo && !isInRoom && !pageLoading) {
+    if (
+      !authLoading &&
+      user &&
+      roomInfo &&
+      !isInRoom &&
+      !pageLoading &&
+      !loading
+    ) {
       if (!roomInfo.is_private) {
         enterRoom(roomId);
       } else {
         setShowJoinModal(true);
       }
     }
-  }, [authLoading, user, roomInfo, isInRoom, pageLoading, roomId, enterRoom]);
+  }, [
+    authLoading,
+    user,
+    roomInfo,
+    isInRoom,
+    pageLoading,
+    loading,
+    roomId,
+    enterRoom,
+  ]);
 
   // Room was destroyed
   useEffect(() => {
