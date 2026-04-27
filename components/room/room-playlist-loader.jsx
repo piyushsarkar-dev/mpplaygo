@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Globe,
   ListMusic,
-  Loader2,
   Lock,
   Music,
   Play,
@@ -109,7 +108,6 @@ export function RoomPlaylistLoader() {
       primary: [{ name: song.artist || "Unknown" }],
     },
   });
-
 
   const playPlaylistFrom = (startIndex, shouldClose = false) => {
     if (playlistSongs.length === 0) return;
