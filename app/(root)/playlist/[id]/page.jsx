@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MusicContext } from "@/hooks/use-context";
 import { getImageUrl } from "@/lib/media";
 import { Globe, Lock, Play, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -261,9 +262,11 @@ export default function PlaylistPage({ params }) {
           <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 text-sm">
             <span className="text-muted-foreground">
               Created by{" "}
-              <span className="text-foreground font-semibold hover:underline cursor-pointer">
-                {playlist.profiles?.username}
-              </span>
+              <Link
+                href={`/profile/${encodeURIComponent(playlist.profiles?.username || playlist.user_id)}`}
+                className="text-foreground font-semibold hover:underline">
+                {playlist.profiles?.username || playlist.user_id}
+              </Link>
             </span>
             <span className="hidden md:inline text-muted-foreground/50">•</span>
             <span className="text-muted-foreground font-medium">

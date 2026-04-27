@@ -2,11 +2,12 @@
 
 import { EditProfileModal } from "@/components/auth/edit-profile-modal";
 import { CreatePlaylistModal } from "@/components/playlist/create-playlist-modal";
+import { useFriends } from "@/components/providers/friends-provider";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getImageUrl } from "@/lib/media";
-import { Globe, Lock, Music, Play } from "lucide-react";
+import { Check, Clock3, Globe, Lock, Music, Play, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,6 +15,12 @@ import { useEffect, useState } from "react";
 export default function ProfilePage({ params }) {
   const { username } = params;
   const { supabase, user } = useSupabase();
+  const {
+    friendIdSet,
+    incomingRequests,
+    outgoingRequestTargets,
+    sendFriendRequest,
+  } = useFriends();
   const [profile, setProfile] = useState(null);
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +130,29 @@ export default function ProfilePage({ params }) {
   if (!profile) return <div className="p-10 text-center">User not found</div>;
 
   const isOwner = user?.id === profile.id;
+  const isFriend = friendIdSet.has(profile.id);
+  const isPending =
+    !isFriend &&
+    (outgoingRequestTargets.has(profile.id) ||
+      incomingRequests.some((request) => request.sender_id === profile.id));
+
+  const relationButton = isFriend ?
+      {
+        label: "Friends",
+        icon: <Check className="h-4 w-4" />,
+        variant: "secondary",
+      }
+    : isPending ?
+      {
+        label: "Pending",
+        icon: <Clock3 className="h-4 w-4" />,
+        variant: "outline",
+      }
+    : {
+        label: "Add Friend",
+        icon: <UserRoundPlus className="h-4 w-4" />,
+        variant: "default",
+      };
 
   return (
     <div className="container mx-auto py-10 px-4 md:px-0">
@@ -151,11 +181,22 @@ export default function ProfilePage({ params }) {
           <p className="text-sm text-muted-foreground mt-1">
             Joined {new Date(profile.created_at).toLocaleDateString()}
           </p>
-          {isOwner && (
+          {isOwner ? (
             <div className="mt-4 flex justify-center md:justify-start">
               <EditProfileModal>
                 <Button variant="secondary">Edit Profile</Button>
               </EditProfileModal>
+            </div>
+          ) : (
+            <div className="mt-4 flex justify-center md:justify-start">
+              <Button
+                variant={relationButton.variant}
+                disabled={isFriend || isPending}
+                onClick={() => sendFriendRequest(profile)}
+                className="rounded-full">
+                {relationButton.icon}
+                <span className="ml-2">{relationButton.label}</span>
+              </Button>
             </div>
           )}
         </div>

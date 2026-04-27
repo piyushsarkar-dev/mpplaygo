@@ -525,22 +525,27 @@ function FriendsContent() {
                 <div className="space-y-2">
                   {incomingRequests.map((request) => {
                     const sender = request.sender || {};
+                    const senderHref = `/profile/${encodeURIComponent(sender.username || request.sender_id)}`;
                     return (
                       <div
                         key={request.id}
                         className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3">
-                        <FriendAvatar
-                          person={sender}
-                          className="h-11 w-11"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-white">
-                            @{sender.username || request.sender_id}
-                          </p>
-                          <p className="truncate text-xs text-white/45">
-                            Sent you a friend request
-                          </p>
-                        </div>
+                        <Link
+                          href={senderHref}
+                          className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-1 py-1 text-left transition hover:bg-white/[0.03]">
+                          <FriendAvatar
+                            person={sender}
+                            className="h-11 w-11"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-white">
+                              @{sender.username || request.sender_id}
+                            </p>
+                            <p className="truncate text-xs text-white/45">
+                              Sent you a friend request
+                            </p>
+                          </div>
+                        </Link>
                         <div className="flex shrink-0 items-center gap-2">
                           <Button
                             variant="outline"
@@ -596,7 +601,11 @@ function FriendsContent() {
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-white">
                             {invite.sender?.username ?
-                              `@${invite.sender.username}`
+                              <Link
+                                href={`/profile/${encodeURIComponent(invite.sender.username)}`}
+                                className="hover:underline">
+                                @{invite.sender.username}
+                              </Link>
                             : "A friend"}{" "}
                             invited you to a room
                           </p>
@@ -741,7 +750,9 @@ function FriendsContent() {
                       <div
                         key={friend.id}
                         className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex min-w-0 items-center gap-3">
+                        <Link
+                          href={`/profile/${encodeURIComponent(friend.username || friend.id)}`}
+                          className="flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 text-left transition hover:bg-white/[0.03]">
                           <FriendAvatar
                             person={friend}
                             className="h-11 w-11"
@@ -754,7 +765,7 @@ function FriendsContent() {
                               {friend.full_name || "Offline"}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                         <div className="flex items-center gap-2">
                           <StatusChip status={friend.status} />
                         </div>
