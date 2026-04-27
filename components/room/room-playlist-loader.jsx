@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   Globe,
   ListMusic,
-  Loader2,
   Lock,
   Music,
   Play,
@@ -110,7 +109,6 @@ export function RoomPlaylistLoader() {
     },
   });
 
-
   const playPlaylistFrom = (startIndex, shouldClose = false) => {
     if (playlistSongs.length === 0) return;
 
@@ -129,6 +127,7 @@ export function RoomPlaylistLoader() {
   const handlePlayAll = () => {
     if (playlistSongs.length === 0) return;
     playPlaylistFrom(0, true);
+  };
 
   // Queue All songs (add to current queue without changing current song)
   const handleQueueAll = () => {
