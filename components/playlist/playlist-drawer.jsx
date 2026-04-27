@@ -321,7 +321,15 @@ export function PlaylistDrawer({ children }) {
                               </div>
                               <span>•</span>
                               <span>
-                                {playlist.songCount}{
+                                {playlist.songCount}{" "}
+                                {playlist.songCount === 1 ? "song" : "songs"}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </div>
@@ -346,13 +354,6 @@ export function PlaylistDrawer({ children }) {
                   onClick={handleSharePlaylist}>
                   <Share2 className="w-5 h-5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-red-500/10 hover:text-red-400 rounded-xl h-11 w-11 flex-shrink-0"
-                  onClick={(event) => handleDeletePlaylist(selectedPlaylist, event)}>
-                  <Trash2 className="w-5 h-5" />
-                </Button>
               </div>
               <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-4">
@@ -366,9 +367,9 @@ export function PlaylistDrawer({ children }) {
                           <div
                             key={index}
                             className="relative bg-zinc-900">
-                            {getImageUrl(selectedPlaylist.thumbnails[index]) ?
+                            {selectedPlaylist.thumbnails[index] ?
                               <img
-                                src={getImageUrl(selectedPlaylist.thumbnails[index])}
+                                src={selectedPlaylist.thumbnails[index]}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />
@@ -473,16 +474,11 @@ export function PlaylistDrawer({ children }) {
                     <button
                       onClick={() => handlePlaySong(song.song_id)}
                       className="flex-shrink-0">
-                      {getImageUrl(song.thumbnail) ?
-                        <img
-                          src={getImageUrl(song.thumbnail)}
-                          alt={song.song_title}
-                          className="w-14 h-14 rounded-lg object-cover shadow-md ring-1 ring-white/10 group-hover:scale-105 transition"
-                        />
-                      : <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/10 flex items-center justify-center">
-                          <ListMusic className="w-4 h-4 text-zinc-500" />
-                        </div>
-                      }
+                      <img
+                        src={song.thumbnail}
+                        alt={song.song_title}
+                        className="w-14 h-14 rounded-lg object-cover shadow-md ring-1 ring-white/10 group-hover:scale-105 transition"
+                      />
                     </button>
                     <button
                       onClick={() => handlePlaySong(song.song_id)}
@@ -497,7 +493,7 @@ export function PlaylistDrawer({ children }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg h-9 w-9 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all flex-shrink-0"
+                      className="text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg h-9 w-9 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                       onClick={(e) =>
                         handleRemoveSong(e, song.id, song.song_title)
                       }>
