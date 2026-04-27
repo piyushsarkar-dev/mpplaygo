@@ -47,7 +47,7 @@ export function RoomUsersList() {
       </div>
 
       {/* Member List */}
-      <ScrollArea className="max-h-[260px] md:max-h-[420px]">
+      <ScrollArea className="h-[260px] md:h-[420px]">
         <div className="p-1.5 space-y-0.5">
           {sortedMembers.map((member) => {
             const memberIsAdmin = member.user_id === room.admin_id;

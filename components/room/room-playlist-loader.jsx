@@ -35,7 +35,6 @@ export function RoomPlaylistLoader() {
   const {
     isAdmin,
     hasControl,
-    broadcastChangeSong,
     broadcastPlayPlaylist,
     addToRoomQueue,
     isInRoom,
@@ -110,17 +109,25 @@ export function RoomPlaylistLoader() {
     },
   });
 
-  // Play All songs (auto-play with loop)
-  const handlePlayAll = () => {
+
+  const playPlaylistFrom = (startIndex, shouldClose = false) => {
     if (playlistSongs.length === 0) return;
+
     const queueItems = playlistSongs.map(toQueueItem);
-    broadcastPlayPlaylist(queueItems, 0, "loop-queue");
+    broadcastPlayPlaylist(queueItems, startIndex, "loop-queue");
     toast.success(
       `Playing ${playlistSongs.length} songs from "${selectedPlaylist.name}"`,
     );
-    setOpen(false);
-    setSelectedPlaylist(null);
+
+    if (shouldClose) {
+      setOpen(false);
+      setSelectedPlaylist(null);
+    }
   };
+  // Play All songs (auto-play with loop)
+  const handlePlayAll = () => {
+    if (playlistSongs.length === 0) return;
+    playPlaylistFrom(0, true);
 
   // Queue All songs (add to current queue without changing current song)
   const handleQueueAll = () => {
@@ -135,10 +142,8 @@ export function RoomPlaylistLoader() {
   };
 
   // Play single song from playlist
-  const handlePlaySingle = (song) => {
-    const item = toQueueItem(song);
-    broadcastChangeSong(item.id, item);
-    toast.success(`Playing "${song.song_title}"`);
+  const handlePlaySingle = (startIndex) => {
+    playPlaylistFrom(startIndex, false);
   };
 
   // Queue single song
@@ -228,7 +233,7 @@ export function RoomPlaylistLoader() {
           )}
 
           {playlists.length > 0 && (
-            <ScrollArea className="max-h-[240px] md:max-h-[300px]">
+            <ScrollArea className="h-[240px] md:h-[300px]">
               <div className="p-1.5">
                 {playlists.map((playlist) => (
                   <button
@@ -326,12 +331,21 @@ export function RoomPlaylistLoader() {
           )}
 
           {playlistSongs.length > 0 && (
-            <ScrollArea className="max-h-[220px] md:max-h-[280px]">
+            <ScrollArea className="h-[220px] md:h-[280px]">
               <div className="p-1.5">
                 {playlistSongs.map((song, idx) => (
                   <div
                     key={song.id}
-                    className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-white/[0.04] transition-all duration-200 group">
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handlePlaySingle(idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handlePlaySingle(idx);
+                      }
+                    }}
+                    className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-white/[0.04] transition-all duration-200 group cursor-pointer">
                     {/* Index */}
                     <span className="text-[11px] text-white/15 w-5 text-center font-mono shrink-0 tabular-nums">
                       {idx + 1}
@@ -351,7 +365,10 @@ export function RoomPlaylistLoader() {
                       }
                       {/* Play overlay on hover */}
                       <button
-                        onClick={() => handlePlaySingle(song)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlaySingle(idx);
+                        }}
                         className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-lg">
                         <Play className="w-3.5 h-3.5 text-white fill-white" />
                       </button>

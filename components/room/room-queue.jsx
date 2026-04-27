@@ -69,12 +69,26 @@ export function RoomQueue() {
       )}
 
       {roomQueue.length > 0 && (
-        <ScrollArea className="max-h-[260px] md:max-h-[340px]">
+        <ScrollArea className="h-[260px] md:h-[340px]">
           <div className="p-1.5">
             {roomQueue.map((song, idx) => (
               <div
                 key={song.id}
-                className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-white/[0.04] transition-all duration-200 group">
+                  role="button"
+                  tabIndex={canControl ? 0 : -1}
+                  onClick={() => {
+                    if (canControl) {
+                      broadcastChangeSong(song.id, song);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (!canControl) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      broadcastChangeSong(song.id, song);
+                    }
+                  }}
+                  className="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-white/[0.04] transition-all duration-200 group cursor-pointer">
                 {/* Index */}
                 <span className="text-[11px] text-white/15 w-5 text-center font-mono shrink-0 tabular-nums">
                   {idx + 1}
@@ -95,7 +109,10 @@ export function RoomQueue() {
                   {/* Play overlay on hover (controllers only) */}
                   {canControl && (
                     <button
-                      onClick={() => broadcastChangeSong(song.id, song)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        broadcastChangeSong(song.id, song);
+                      }}
                       className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-lg">
                       <Play className="w-3.5 h-3.5 text-white fill-white" />
                     </button>
@@ -117,7 +134,10 @@ export function RoomQueue() {
                 {/* Remove button (controllers only) */}
                 {canControl && (
                   <button
-                    onClick={() => removeFromRoomQueue(song.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromRoomQueue(song.id);
+                    }}
                     className="p-1.5 rounded-lg text-white/15 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200 shrink-0"
                     title="Remove from queue">
                     <Trash2 className="w-3.5 h-3.5" />

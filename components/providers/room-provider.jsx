@@ -50,6 +50,7 @@ export default function RoomProvider({ children }) {
   const presenceChannelRef = useRef(null);
   const syncIntervalRef = useRef(null);
   const audioTimeRef = useRef(0); // admin's real audio currentTime for sync ticks
+  const suggestionsRequestRef = useRef(0);
 
   // Cleanup function - defined early so it can be used by other callbacks
   const cleanup = useCallback(() => {
@@ -219,20 +220,31 @@ export default function RoomProvider({ children }) {
   // Load auto-suggestions for the current song into roomQueue
   const loadSuggestions = useCallback(async (songId) => {
     if (!songId) return;
+
+    suggestionsRequestRef.current += 1;
+    const requestId = suggestionsRequestRef.current;
+
+    if (playlistSongsRef.current.length > 0 && roomLoopMode === "loop-queue") {
+      return;
+    }
+
     setLoadingQueue(true);
     try {
       const res = await getSongsSuggestions(songId);
       if (res) {
         const data = await res.json();
         const suggestions = data?.data || [];
+        if (suggestionsRequestRef.current !== requestId) return;
         setRoomQueue(suggestions);
       }
     } catch (err) {
       console.error("Failed to load room suggestions:", err);
     } finally {
-      setLoadingQueue(false);
+      if (suggestionsRequestRef.current === requestId) {
+        setLoadingQueue(false);
+      }
     }
-  }, []);
+  }, [roomLoopMode]);
 
   // Add song to queue
   const addToRoomQueue = useCallback(

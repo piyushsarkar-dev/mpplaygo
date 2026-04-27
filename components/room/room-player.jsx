@@ -60,6 +60,12 @@ export function RoomPlayer() {
 
   const canControl = isAdmin || hasControl;
 
+  const getAudioUrl = (song) =>
+    song?.downloadUrl?.[2]?.url ||
+    song?.downloadUrl?.[1]?.url ||
+    song?.downloadUrl?.[0]?.url ||
+    "";
+
   // Fetch song data when roomSongId changes
   useEffect(() => {
     if (!roomSongId) {
@@ -70,14 +76,14 @@ export function RoomPlayer() {
 
     const fetchSong = async () => {
       try {
+        const currentRoomSongUrl = getAudioUrl(roomSongData);
+
         if (roomSongData && roomSongData.id === roomSongId) {
           setSongData(roomSongData);
-          const url =
-            roomSongData.downloadUrl?.[2]?.url ||
-            roomSongData.downloadUrl?.[1]?.url ||
-            roomSongData.downloadUrl?.[0]?.url;
-          if (url) setAudioURL(url);
-          return;
+          if (currentRoomSongUrl) {
+            setAudioURL(currentRoomSongUrl);
+            return;
+          }
         }
 
         const res = await getSongsById(roomSongId);
@@ -86,11 +92,9 @@ export function RoomPlayer() {
         const song = data?.data?.[0];
         if (song) {
           setSongData(song);
-          const url =
-            song.downloadUrl?.[2]?.url ||
-            song.downloadUrl?.[1]?.url ||
-            song.downloadUrl?.[0]?.url;
-          if (url) setAudioURL(url);
+          setAudioURL(getAudioUrl(song));
+        } else {
+          setAudioURL("");
         }
       } catch (err) {
         console.error("RoomPlayer: failed to fetch song", err);

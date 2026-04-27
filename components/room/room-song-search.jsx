@@ -96,7 +96,7 @@ export function RoomSongSearch() {
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-[#151515] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 z-50">
-          <ScrollArea className="max-h-[300px]">
+          <ScrollArea className="h-[300px]">
             <div className="p-1.5">
               {results.map((song) => (
                 <div
