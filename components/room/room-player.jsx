@@ -1,5 +1,6 @@
 "use client";
 
+import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { useRoom } from "@/components/providers/room-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +10,7 @@ import {
   Music,
   Pause,
   Play,
+  Plus,
   Repeat,
   Repeat1,
   SkipBack,
@@ -57,6 +59,37 @@ export function RoomPlayer() {
   const lastVolumeRef = useRef(50);
   const seekBlockRef = useRef(false);
   const isSyncRef = useRef(false);
+  const playlistSong =
+    roomSongId && songData ?
+      {
+        id: roomSongId,
+        title: songData?.name || songData?.title || "Unknown song",
+        artist:
+          songData?.artists?.primary?.[0]?.name ||
+          songData?.artist ||
+          "Unknown artist",
+        image:
+          songData?.image?.[2]?.url ||
+          songData?.image?.[1]?.url ||
+          songData?.image?.[0]?.url ||
+          "",
+      }
+    : null;
+
+  const renderSaveToPlaylistButton = (justifyClassName = "justify-center") =>
+    playlistSong ?
+      <div className={`mt-3 flex ${justifyClassName}`}>
+        <AddToPlaylist song={playlistSong}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs text-white/75 hover:bg-white/[0.08] hover:text-white">
+            <Plus className="mr-2 h-4 w-4" />
+            Save to playlist
+          </Button>
+        </AddToPlaylist>
+      </div>
+    : null;
 
   const canControl = isAdmin || hasControl;
 
@@ -340,6 +373,7 @@ export function RoomPlayer() {
                     {songData?.artists?.primary?.[0]?.name}
                   </p>
                 }
+                {renderSaveToPlaylistButton()}
               </div>
 
               {/* Progress */}
@@ -476,6 +510,7 @@ export function RoomPlayer() {
                         {songData?.artists?.primary?.[0]?.name}
                       </p>
                     }
+                    {renderSaveToPlaylistButton("justify-start")}
                   </div>
 
                   {/* Play Controls */}

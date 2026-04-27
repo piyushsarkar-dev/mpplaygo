@@ -61,6 +61,30 @@ function uniqIds(values) {
   return [...new Set((values || []).filter(Boolean))];
 }
 
+const PRESENCE_STALE_MS = 75_000;
+
+function parseTimestamp(value) {
+  const parsed = new Date(value || 0).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function isFreshPresenceRow(row, now = Date.now()) {
+  if (!row?.updated_at) return false;
+  return now - parseTimestamp(row.updated_at) < PRESENCE_STALE_MS;
+}
+
+function getEffectivePresenceStatus(row, now = Date.now()) {
+  const status = normalizeFriendStatus(row?.status);
+  if (status === "online") {
+    return isFreshPresenceRow(row, now) ? "online" : "offline";
+  }
+  return status;
+}
+
+function getProfileLabel(person) {
+  return person?.username || person?.full_name || person?.email || "Someone";
+}
+
 export default function FriendsProvider({ children }) {
   const { supabase, user } = useSupabase();
   const [open, setOpen] = useState(false);
@@ -78,6 +102,68 @@ export default function FriendsProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
   const searchTokenRef = useRef(0);
+  const [presenceClock, setPresenceClock] = useState(() => Date.now());
+  const hasLoadedFriendsRef = useRef(false);
+  const previousIncomingRequestIdsRef = useRef(new Set());
+  const previousIncomingRoomInviteIdsRef = useRef(new Set());
+  const myStatusRef = useRef("online");
+
+  useEffect(() => {
+    myStatusRef.current = myStatus;
+  }, [myStatus]);
+
+  useEffect(() => {
+    const tick = () => {
+      setPresenceClock(Date.now());
+    };
+    const interval = setInterval(tick, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id || !supabase) return;
+
+    const writePresence = async (status = myStatusRef.current) => {
+      try {
+        await supabase.from("user_presence").upsert(
+          {
+            user_id: user.id,
+            status,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+      } catch (error) {
+        console.error("Failed to refresh presence:", error);
+      }
+    };
+
+    const markOffline = () => {
+      supabase
+        .from("user_presence")
+        .upsert(
+          {
+            user_id: user.id,
+            status: "offline",
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        )
+        .catch(() => {});
+    };
+
+    writePresence();
+    const interval = setInterval(writePresence, 30000);
+    window.addEventListener("pagehide", markOffline);
+    window.addEventListener("beforeunload", markOffline);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("pagehide", markOffline);
+      window.removeEventListener("beforeunload", markOffline);
+      markOffline();
+    };
+  }, [supabase, user?.id]);
 
   const profileMap = useMemo(() => {
     return new Map(people.map((person) => [person.id, person]));
@@ -85,13 +171,18 @@ export default function FriendsProvider({ children }) {
 
   const presenceMap = useMemo(() => {
     return new Map(
-      presenceRows.map((row) => [row.user_id, normalizeFriendStatus(row.status)]),
+      presenceRows.map((row) => [
+        row.user_id,
+        getEffectivePresenceStatus(row, presenceClock),
+      ]),
     );
-  }, [presenceRows]);
+  }, [presenceRows, presenceClock]);
 
   const requestPairSet = useMemo(() => {
     return new Set(
-      requests.map((request) => makePairKey(request.sender_id, request.receiver_id)),
+      requests.map((request) =>
+        makePairKey(request.sender_id, request.receiver_id),
+      ),
     );
   }, [requests]);
 
@@ -136,6 +227,12 @@ export default function FriendsProvider({ children }) {
   const friendIdSet = useMemo(() => {
     return new Set(friendEntries.map((friend) => friend.id));
   }, [friendEntries]);
+
+  const visibleOnlineUsers = useMemo(() => {
+    return onlineUsers.filter((person) =>
+      isFreshPresenceRow({ updated_at: person.updatedAt }, presenceClock),
+    );
+  }, [onlineUsers, presenceClock]);
 
   const onlineFriends = useMemo(() => {
     return friendEntries.filter((friend) => friend.status === "online");
@@ -227,7 +324,9 @@ export default function FriendsProvider({ children }) {
 
       const relatedIds = uniqIds([
         ...nextRequests.map((request) =>
-          request.sender_id === user.id ? request.receiver_id : request.sender_id,
+          request.sender_id === user.id ?
+            request.receiver_id
+          : request.sender_id,
         ),
         ...nextFriendships.map((row) =>
           row.user_low_id === user.id ? row.user_high_id : row.user_low_id,
@@ -235,15 +334,17 @@ export default function FriendsProvider({ children }) {
         ...nextInvites.map((invite) => invite.sender_id),
       ]);
 
-      const profilesRes = relatedIds.length
-        ? await supabase
+      const profilesRes =
+        relatedIds.length ?
+          await supabase
             .from("profiles")
             .select("id,username,full_name,avatar_url,created_at")
             .in("id", relatedIds)
         : { data: [] };
 
-      const presenceRes = relatedIds.length
-        ? await supabase
+      const presenceRes =
+        relatedIds.length ?
+          await supabase
             .from("user_presence")
             .select("user_id,status,updated_at")
             .in("user_id", relatedIds)
@@ -262,8 +363,9 @@ export default function FriendsProvider({ children }) {
       const onlineUserIds = uniqIds(
         onlinePresenceRows.map((row) => row.user_id),
       );
-      const onlineProfilesRes = onlineUserIds.length
-        ? await supabase
+      const onlineProfilesRes =
+        onlineUserIds.length ?
+          await supabase
             .from("profiles")
             .select("id,username,full_name,avatar_url,created_at")
             .in("id", onlineUserIds)
@@ -274,6 +376,18 @@ export default function FriendsProvider({ children }) {
       );
       const onlinePresenceMap = new Map(
         onlinePresenceRows.map((row) => [row.user_id, row]),
+      );
+      const nextIncomingRequests = nextRequests.filter(
+        (request) => request.receiver_id === user.id,
+      );
+      const nextIncomingRequestIds = new Set(
+        nextIncomingRequests.map((request) => request.id),
+      );
+      const nextIncomingRoomInviteIds = new Set(
+        nextInvites.map((invite) => invite.id),
+      );
+      const profileLookup = new Map(
+        (profilesRes?.data || []).map((person) => [person.id, person]),
       );
 
       setRequests(nextRequests);
@@ -306,6 +420,39 @@ export default function FriendsProvider({ children }) {
           .filter(Boolean),
       );
       setMyStatus(currentStatus);
+
+      if (hasLoadedFriendsRef.current) {
+        const newIncomingRequest = nextIncomingRequests.find(
+          (request) => !previousIncomingRequestIdsRef.current.has(request.id),
+        );
+        if (newIncomingRequest) {
+          const sender = profileLookup.get(newIncomingRequest.sender_id);
+          const senderLabel = getProfileLabel(sender);
+          toast.message(
+            sender?.username ?
+              `@${sender.username} sent you a friend request.`
+            : `${senderLabel} sent you a friend request.`,
+          );
+        }
+
+        const newIncomingInvite = nextInvites.find(
+          (invite) => !previousIncomingRoomInviteIdsRef.current.has(invite.id),
+        );
+        if (newIncomingInvite) {
+          const sender = profileLookup.get(newIncomingInvite.sender_id);
+          const senderLabel = getProfileLabel(sender);
+          toast.message(
+            sender?.username ?
+              `@${sender.username} invited you to a room.`
+            : `${senderLabel} invited you to a room.`,
+          );
+        }
+      } else {
+        hasLoadedFriendsRef.current = true;
+      }
+
+      previousIncomingRequestIdsRef.current = nextIncomingRequestIds;
+      previousIncomingRoomInviteIdsRef.current = nextIncomingRoomInviteIds;
     } catch (error) {
       console.error("Failed to load friends data:", error);
       toast.error("Friends data could not be loaded.");
@@ -328,6 +475,9 @@ export default function FriendsProvider({ children }) {
       setRoomInvites([]);
       setOnlineUsers([]);
       setMyStatus("online");
+      hasLoadedFriendsRef.current = false;
+      previousIncomingRequestIdsRef.current = new Set();
+      previousIncomingRoomInviteIdsRef.current = new Set();
       return;
     }
 
@@ -460,7 +610,9 @@ export default function FriendsProvider({ children }) {
         return { ok: false };
       }
 
-      toast.success(`Friend request sent to @${targetUser.username || "user"}.`);
+      toast.success(
+        `Friend request sent to @${targetUser.username || "user"}.`,
+      );
       refreshFriendsData();
       return { ok: true };
     },
@@ -486,12 +638,14 @@ export default function FriendsProvider({ children }) {
       }
 
       if (!existingFriendship?.id) {
-        const { error: friendshipError } = await supabase.from("friendships").insert({
-          user_low_id: lowId,
-          user_high_id: highId,
-          accepted_by: user.id,
-          accepted_at: new Date().toISOString(),
-        });
+        const { error: friendshipError } = await supabase
+          .from("friendships")
+          .insert({
+            user_low_id: lowId,
+            user_high_id: highId,
+            accepted_by: user.id,
+            accepted_at: new Date().toISOString(),
+          });
 
         if (friendshipError) {
           console.error("Failed to accept friend request:", friendshipError);
@@ -643,7 +797,7 @@ export default function FriendsProvider({ children }) {
         presenceRows,
         roomInvites,
         incomingRoomInvites,
-        onlineUsers,
+        onlineUsers: visibleOnlineUsers,
         myStatus,
         loading,
         friendEntries,

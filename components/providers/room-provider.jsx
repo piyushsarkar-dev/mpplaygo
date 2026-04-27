@@ -11,8 +11,22 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 
 const RoomContext = createContext(null);
+
+function getDisplayName(currentUser) {
+  return (
+    currentUser?.user_metadata?.username ||
+    currentUser?.user_metadata?.full_name ||
+    currentUser?.email ||
+    "Someone"
+  );
+}
+
+function getSongLabel(songData, songId) {
+  return songData?.name || songData?.title || `Song ${songId}`;
+}
 
 export default function RoomProvider({ children }) {
   const { supabase, user } = useSupabase();
@@ -51,6 +65,7 @@ export default function RoomProvider({ children }) {
   const syncIntervalRef = useRef(null);
   const audioTimeRef = useRef(0); // admin's real audio currentTime for sync ticks
   const suggestionsRequestRef = useRef(0);
+  const joinInProgressRef = useRef(false);
 
   // Cleanup function - defined early so it can be used by other callbacks
   const cleanup = useCallback(() => {
@@ -66,6 +81,7 @@ export default function RoomProvider({ children }) {
       clearInterval(syncIntervalRef.current);
       syncIntervalRef.current = null;
     }
+    joinInProgressRef.current = false;
     setRoom(null);
     setMembers([]);
     setIsInRoom(false);
@@ -416,8 +432,12 @@ export default function RoomProvider({ children }) {
   );
 
   const broadcastChangeSong = useCallback(
-    (songId, songData) => {
+    (songId, songData, metadata = {}) => {
       if (channelRef.current && (isAdmin || hasControl)) {
+        const actorName = metadata.changedByName || getDisplayName(user);
+        const roomName = metadata.roomName || room?.name || "the room";
+        const songLabel = getSongLabel(songData, songId);
+
         // Push current song to history before changing
         setRoomSongData((prevData) => {
           if (prevData && prevData.id !== songId) {
@@ -432,7 +452,13 @@ export default function RoomProvider({ children }) {
         channelRef.current.send({
           type: "broadcast",
           event: ROOM_EVENTS.CHANGE_SONG,
-          payload: { songId, songData, timestamp: Date.now() },
+          payload: {
+            songId,
+            songData,
+            changedByName: actorName,
+            roomName,
+            timestamp: Date.now(),
+          },
         });
         setRoomSongId(songId);
         setRoomSongData(songData);
@@ -457,9 +483,13 @@ export default function RoomProvider({ children }) {
             }),
           }).catch(() => {});
         }
+
+        if (!metadata.suppressToast) {
+          toast.success(`${actorName} changed ${roomName} to "${songLabel}"`);
+        }
       }
     },
-    [isAdmin, hasControl, room, loadSuggestions],
+    [isAdmin, hasControl, room, loadSuggestions, user],
   );
 
   // Broadcast loop mode change
@@ -498,7 +528,7 @@ export default function RoomProvider({ children }) {
 
       // Play the selected song
       const songToPlay = songs[startIndex];
-      broadcastChangeSong(songToPlay.id, songToPlay);
+      broadcastChangeSong(songToPlay.id, songToPlay, { suppressToast: true });
 
       // Queue the rest (after the start index)
       const remaining = songs.filter((_, i) => i !== startIndex);
@@ -648,6 +678,15 @@ export default function RoomProvider({ children }) {
     (roomId) => {
       if (!supabase || !user) return;
 
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      if (presenceChannelRef.current) {
+        supabase.removeChannel(presenceChannelRef.current);
+        presenceChannelRef.current = null;
+      }
+
       // Broadcast channel for music sync
       const channel = supabase.channel(`room:${roomId}`, {
         config: { broadcast: { self: false } },
@@ -693,6 +732,15 @@ export default function RoomProvider({ children }) {
           setRoomCurrentTime(0);
           // Remove from queue if present
           setRoomQueue((prev) => prev.filter((s) => s.id !== payload.songId));
+
+          const roomName = payload.roomName || "the room";
+          const songLabel = getSongLabel(payload.songData, payload.songId);
+          const changedByName = payload.changedByName || payload.changedBy;
+          toast.message(
+            changedByName ?
+              `${changedByName} changed ${roomName} to "${songLabel}"`
+            : `${roomName} is now playing "${songLabel}"`,
+          );
         },
       );
 
@@ -868,6 +916,16 @@ export default function RoomProvider({ children }) {
         return false;
       }
 
+      if (room?.id === roomId && isInRoom) {
+        return true;
+      }
+
+      if (joinInProgressRef.current) {
+        return false;
+      }
+
+      joinInProgressRef.current = true;
+
       // If already in a different room, leave it first
       if (room && room.id !== roomId) {
         // Broadcast leave to old room
@@ -954,9 +1012,11 @@ export default function RoomProvider({ children }) {
         setError(err.message);
         setLoading(false);
         return false;
+      } finally {
+        joinInProgressRef.current = false;
       }
     },
-    [user, room, joinRoom, leaveRoom, fetchRoom, subscribeToRoom],
+    [user, room, isInRoom, joinRoom, leaveRoom, fetchRoom, subscribeToRoom],
   );
 
   const exitRoom = useCallback(async () => {
