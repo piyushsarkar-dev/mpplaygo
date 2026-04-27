@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Skeleton } from "../ui/skeleton";
 
 export default function Search({ className }) {
   const router = useRouter();
@@ -232,8 +233,22 @@ export default function Search({ className }) {
         <div className="fixed left-3 right-3 top-[56px] mt-0 md:absolute md:top-full md:left-0 md:right-0 md:mt-3 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[90] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div className="p-2">
             {loading && (
-              <div className="px-3 py-2 text-sm text-muted-foreground">
-                Searching…
+              <div className="space-y-2 px-1 py-1">
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2">
+                    <Skeleton
+                      circle
+                      className="h-4 w-4 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                    <Skeleton className="h-9 w-9 rounded-md" />
+                  </div>
+                ))}
               </div>
             )}
 
@@ -297,7 +312,7 @@ export default function Search({ className }) {
                   {song?.image?.[1]?.url && (
                     <img
                       alt={song.name}
-                      src={song.image[1].url}
+                      src={song.image?.[1]?.url || song.image?.[0]?.url || ""}
                       className="h-9 w-9 rounded-md bg-secondary/50 object-cover"
                     />
                   )}

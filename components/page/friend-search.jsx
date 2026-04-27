@@ -2,6 +2,7 @@
 
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -92,8 +93,21 @@ export default function FriendSearch({ className, onUserClick }) {
       {open && (loading || results.length > 0) && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-5 w-[383px] h-[274px] bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
           {loading && (
-            <div className="px-3 py-2 text-sm text-muted-foreground">
-              Searching…
+            <div className="space-y-2 p-1">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg">
+                  <Skeleton
+                    circle
+                    className="h-7 w-7 shrink-0"
+                  />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           {results.length > 0 && (

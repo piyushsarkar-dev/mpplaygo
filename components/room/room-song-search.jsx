@@ -3,6 +3,7 @@
 import { useRoom } from "@/components/providers/room-provider";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getSongsByQuery } from "@/lib/fetch";
 import { ListPlus, Music, Play, Search, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
@@ -108,7 +109,9 @@ export function RoomSongSearch() {
                     <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 relative ring-1 ring-white/[0.06]">
                       {song.image?.[1]?.url ?
                         <img
-                          src={song.image[1].url}
+                          src={
+                            song.image?.[1]?.url || song.image?.[0]?.url || ""
+                          }
                           alt={song.name}
                           className="w-full h-full object-cover"
                         />
@@ -153,9 +156,23 @@ export function RoomSongSearch() {
       )}
 
       {searching && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#151515] border border-white/[0.08] rounded-2xl p-8 text-center shadow-2xl shadow-black/50 z-50">
-          <div className="w-5 h-5 border-2 border-white/15 border-t-primary rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-white/30 text-sm">Searching...</p>
+        <div className="absolute top-full left-0 right-0 mt-2 bg-[#151515] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 z-50">
+          <ScrollArea className="h-[300px]">
+            <div className="p-1.5 space-y-2">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
+                  <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                  <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       )}
     </div>

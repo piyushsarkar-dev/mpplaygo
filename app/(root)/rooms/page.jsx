@@ -259,7 +259,11 @@ export default function RoomsLobbyPage() {
                   <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 ring-1 ring-white/[0.06]">
                     {room.current_song_data?.image?.[1]?.url ?
                       <img
-                        src={room.current_song_data.image[1].url}
+                        src={
+                          room.current_song_data.image?.[1]?.url ||
+                          room.current_song_data.image?.[0]?.url ||
+                          ""
+                        }
                         alt=""
                         className="w-full h-full object-cover"
                       />

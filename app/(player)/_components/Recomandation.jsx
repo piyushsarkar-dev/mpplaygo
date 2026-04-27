@@ -17,26 +17,33 @@ export default function Recomandation({ id }) {
   const QUEUE_KEY = "mpplaygo_queue";
 
   const getData = async () => {
-    await getSongsSuggestions(id)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data) {
-          setData(data.data);
-          let d = data.data[Math.floor(Math.random() * data?.data?.length)];
-          next.setNextData({
-            id: d.id,
-            name: d.name,
-            artist: d.artists.primary[0]?.name || "unknown",
-            album: d.album.name,
-            image: d.image[1].url,
-          });
-        } else {
-          setData(false);
-        }
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    try {
+      const res = await getSongsSuggestions(id);
+      const json = await res.json();
+      const suggestions = Array.isArray(json?.data) ? json.data : [];
+
+      if (suggestions.length === 0) {
+        setData(false);
+        return;
+      }
+
+      setData(suggestions);
+
+      const d = suggestions[Math.floor(Math.random() * suggestions.length)];
+      if (d) {
+        next.setNextData({
+          id: d.id,
+          name: d.name,
+          artist: d.artists?.primary?.[0]?.name || "unknown",
+          album: d.album?.name || "",
+          image: d.image?.[1]?.url || d.image?.[0]?.url || "",
+        });
+      }
+    } catch {
+      setData(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -52,7 +59,7 @@ export default function Recomandation({ id }) {
       }
     } catch {}
     getData();
-  }, []);
+  }, [id]);
 
   const handlePlay = (song) => {
     try {

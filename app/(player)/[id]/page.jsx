@@ -5,19 +5,30 @@ import SongHero from "../_components/SongHero";
 export const generateMetadata = async ({ params }) => {
   const title = await getSongsById(params.id);
   const data = await title.json();
-  console.log(data);
-  const song = data?.data[0];
+  const song = data?.data?.[0];
+
+  if (!song) {
+    return {
+      title: "MpPlaygo",
+      description: "Open-Source music streamer.",
+    };
+  }
+
+  const artistName = song?.artists?.primary?.[0]?.name || "unknown";
+  const songImage =
+    song?.image?.[2]?.url || song?.image?.[1]?.url || song?.image?.[0]?.url;
+
   return {
     title: song.name,
-    description: `Listen to "${song.name}" by ${data?.artists?.primary[0]?.name || "unknown"} from the album "${song.album?.name}".`,
+    description: `Listen to "${song.name}" by ${artistName} from the album "${song.album?.name || ""}".`,
     openGraph: {
       title: song.name,
-      description: `Listen to "${song.name}" by ${data?.artists?.primary[0]?.name || "unknown"}.`,
+      description: `Listen to "${song.name}" by ${artistName}.`,
       type: "music.song",
       url: song.url,
       images: [
         {
-          url: song.image[2]?.url || song.image[1]?.url || song.image[0]?.url,
+          url: songImage,
           width: 1200,
           height: 630,
           alt: song.name,
@@ -26,14 +37,14 @@ export const generateMetadata = async ({ params }) => {
       music: {
         album: song.album?.url,
         release_date: song.releaseDate,
-        musician: data?.artists?.primary[0]?.name || "unknown",
+        musician: artistName,
       },
     },
     twitter: {
       card: "summary_large_image",
       title: song.name,
-      description: `Listen to "${song.name}" by ${data?.artists?.primary[0]?.name || "unknown"}.`,
-      images: song.image?.[0]?.url,
+      description: `Listen to "${song.name}" by ${artistName}.`,
+      images: songImage,
     },
   };
 };

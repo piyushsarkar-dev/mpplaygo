@@ -1,95 +1,104 @@
 "use client";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export function UserProfileDropdown({ children }) {
-	const { user, profile, supabase } = useSupabase();
-	const router = useRouter();
+  const { user, profile, supabase, isLoading } = useSupabase();
+  const router = useRouter();
 
-	if (!user) return null;
+  if (!user) return null;
 
-	const handleLogout = async () => {
-		await supabase.auth.signOut();
-		// Clear cookie-based sessions (OAuth via server exchange).
-		await fetch("/api/logout", { method: "POST" });
-		router.refresh();
-	};
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    // Clear cookie-based sessions (OAuth via server exchange).
+    await fetch("/api/logout", { method: "POST" });
+    router.refresh();
+  };
 
-	const meta = user?.user_metadata ?? {};
-	const avatarUrl =
-		profile?.avatar_url ?? meta.avatar_url ?? meta.picture ?? null;
+  const meta = user?.user_metadata ?? {};
+  const avatarUrl =
+    profile?.avatar_url ?? meta.avatar_url ?? meta.picture ?? null;
 
-	const UserAvatar = () => (
-		<div className="relative h-8 w-8 rounded-full overflow-hidden border">
-			{avatarUrl ?
-				<img
-					src={avatarUrl}
-					alt={profile?.username || "User"}
-					className="h-full w-full object-cover"
-				/>
-			:	<div className="h-full w-full bg-primary/10 flex items-center justify-center text-xs">
-					{(profile?.username?.[0] || user.email[0]).toUpperCase()}
-				</div>
-			}
-		</div>
-	);
+  const UserAvatar = () => (
+    <div className="relative h-8 w-8 rounded-full overflow-hidden border">
+      {avatarUrl ?
+        <img
+          src={avatarUrl}
+          alt={profile?.username || "User"}
+          className="h-full w-full object-cover"
+        />
+      : <div className="h-full w-full bg-primary/10 flex items-center justify-center text-xs">
+          {(profile?.username?.[0] || user.email[0]).toUpperCase()}
+        </div>
+      }
+    </div>
+  );
 
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				{children ?? (
-					<button className="outline-none rounded-full">
-						<UserAvatar />
-					</button>
-				)}
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				className="w-56"
-				align="end"
-				forceMount>
-				<DropdownMenuLabel className="font-normal">
-					<div className="flex flex-col space-y-1">
-						<p className="text-sm font-medium leading-none">
-							{profile?.username || "Loading..."}
-						</p>
-						<p className="text-xs leading-none text-muted-foreground">
-							{user.email}
-						</p>
-					</div>
-				</DropdownMenuLabel>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem asChild>
-					<Link
-						href={
-							profile?.username ?
-								`/profile/${profile.username}`
-							:	"/"
-						}
-						className="cursor-pointer">
-						<User className="mr-2 h-4 w-4" />
-						<span>
-							{profile?.username ? "Profile" : "Complete profile"}
-						</span>
-					</Link>
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem
-					onClick={handleLogout}
-					className="cursor-pointer text-red-500 focus:text-red-500">
-					<LogOut className="mr-2 h-4 w-4" />
-					<span>Log out</span>
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
-	);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {children ?? (
+          <button className="outline-none rounded-full">
+            <UserAvatar />
+          </button>
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-56"
+        align="end"
+        forceMount>
+        <DropdownMenuLabel className="font-normal">
+          {isLoading ?
+            <div className="flex items-center gap-3">
+              <Skeleton
+                circle
+                className="h-10 w-10 shrink-0"
+              />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-36" />
+              </div>
+            </div>
+          : <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">
+                {profile?.username ||
+                  user?.user_metadata?.full_name ||
+                  user.email}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
+            </div>
+          }
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link
+            href={profile?.username ? `/profile/${profile.username}` : "/"}
+            className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>{profile?.username ? "Profile" : "Complete profile"}</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="cursor-pointer text-red-500 focus:text-red-500">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

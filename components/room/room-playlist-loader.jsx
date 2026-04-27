@@ -4,6 +4,7 @@ import { useRoom } from "@/components/providers/room-provider";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   Globe,
@@ -217,8 +218,18 @@ export function RoomPlaylistLoader() {
       {!selectedPlaylist && (
         <>
           {loading && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 text-primary/50 animate-spin" />
+            <div className="space-y-3 py-2">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3 rounded-xl">
+                  <Skeleton className="h-16 w-16 rounded-xl shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -318,8 +329,19 @@ export function RoomPlaylistLoader() {
           </div>
 
           {loadingSongs && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 text-primary/50 animate-spin" />
+            <div className="space-y-3 py-2">
+              {Array.from({ length: 5 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3 rounded-xl">
+                  <Skeleton className="h-14 w-14 rounded-lg shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                  <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+                </div>
+              ))}
             </div>
           )}
 

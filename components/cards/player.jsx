@@ -91,18 +91,18 @@ export default function Player() {
   const getSong = async () => {
     const get = await getSongsById(music);
     const data = await get.json();
-    const song = data.data[0];
-    setData(song);
-    setSongData(song); // Share with context
-    let url = "";
-    if (song?.downloadUrl[2]?.url) {
-      url = song.downloadUrl[2].url;
-    } else if (song?.downloadUrl[1]?.url) {
-      url = song.downloadUrl[1].url;
-    } else {
-      url = song.downloadUrl[0].url;
+    const song = data?.data?.[0];
+    setData(song || {});
+    setSongData(song || null); // Share with context
+    if (!song) {
+      setAudioURL("");
+      return;
     }
-    setAudioURL(url);
+
+    const downloadUrl = Array.isArray(song.downloadUrl) ? song.downloadUrl : [];
+    setAudioURL(
+      downloadUrl[2]?.url || downloadUrl[1]?.url || downloadUrl[0]?.url || "",
+    );
   };
 
   const formatTime = (time) => {
@@ -264,12 +264,18 @@ export default function Player() {
 
         {/* Song Info */}
         <div className="flex flex-col justify-center flex-1 ml-3 overflow-hidden mr-2">
-          <h3 className="text-white font-bold text-sm truncate leading-tight drop-shadow-md">
-            {data?.name || "Loading..."}
-          </h3>
-          <p className="text-white/60 text-[11px] truncate leading-tight">
-            {data?.artists?.primary[0]?.name || "Artist"}
-          </p>
+          {!data?.name ?
+            <Skeleton className="h-4 w-32 mb-1" />
+          : <h3 className="text-white font-bold text-sm truncate leading-tight drop-shadow-md">
+              {data?.name}
+            </h3>
+          }
+          {!data?.artists?.primary?.[0]?.name ?
+            <Skeleton className="h-3 w-20" />
+          : <p className="text-white/60 text-[11px] truncate leading-tight">
+              {data?.artists?.primary?.[0]?.name}
+            </p>
+          }
         </div>
 
         {/* Controls */}
@@ -329,10 +335,10 @@ export default function Player() {
                 {data?.name}
               </Link>
             }
-            {!data?.artists?.primary[0]?.name ?
+            {!data?.artists?.primary?.[0]?.name ?
               <Skeleton className="h-3 w-20" />
             : <span className="text-white/60 text-sm truncate hover:text-white cursor-pointer transition">
-                {data?.artists?.primary[0]?.name}
+                {data?.artists?.primary?.[0]?.name}
               </span>
             }
           </div>

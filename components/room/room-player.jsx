@@ -328,12 +328,18 @@ export function RoomPlayer() {
 
               {/* Song Info */}
               <div className="text-center px-6 pb-3">
-                <h3 className="text-white font-bold text-lg truncate leading-tight">
-                  {songData?.name || "Loading..."}
-                </h3>
-                <p className="text-white/50 text-sm truncate mt-0.5">
-                  {songData?.artists?.primary?.[0]?.name || "Artist"}
-                </p>
+                {!songData?.name ?
+                  <Skeleton className="h-6 w-44 mx-auto" />
+                : <h3 className="text-white font-bold text-lg truncate leading-tight">
+                    {songData?.name}
+                  </h3>
+                }
+                {!songData?.artists?.primary?.[0]?.name ?
+                  <Skeleton className="h-4 w-28 mx-auto mt-2" />
+                : <p className="text-white/50 text-sm truncate mt-0.5">
+                    {songData?.artists?.primary?.[0]?.name}
+                  </p>
+                }
               </div>
 
               {/* Progress */}
@@ -458,12 +464,18 @@ export function RoomPlayer() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between mb-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-white font-bold text-[15px] truncate leading-tight">
-                      {songData?.name || "Loading..."}
-                    </h3>
-                    <p className="text-white/50 text-sm truncate mt-0.5">
-                      {songData?.artists?.primary?.[0]?.name || "Artist"}
-                    </p>
+                    {!songData?.name ?
+                      <Skeleton className="h-5 w-44 mb-2" />
+                    : <h3 className="text-white font-bold text-[15px] truncate leading-tight">
+                        {songData?.name}
+                      </h3>
+                    }
+                    {!songData?.artists?.primary?.[0]?.name ?
+                      <Skeleton className="h-4 w-28" />
+                    : <p className="text-white/50 text-sm truncate mt-0.5">
+                        {songData?.artists?.primary?.[0]?.name}
+                      </p>
+                    }
                   </div>
 
                   {/* Play Controls */}

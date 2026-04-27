@@ -2,6 +2,7 @@
 
 import { useRoom } from "@/components/providers/room-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ListMusic, Music, Play, Repeat, Repeat1, Trash2 } from "lucide-react";
 
 /**
@@ -48,11 +49,19 @@ export function RoomQueue() {
       </div>
 
       {loadingQueue && roomQueue.length === 0 && (
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center gap-2 text-white/25 text-sm">
-            <div className="w-4 h-4 border-2 border-white/15 border-t-primary rounded-full animate-spin" />
-            Loading suggestions...
-          </div>
+        <div className="space-y-2 p-3">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-3 px-2.5 py-2 rounded-xl">
+              <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+            </div>
+          ))}
         </div>
       )}
 
