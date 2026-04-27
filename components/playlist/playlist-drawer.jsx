@@ -75,65 +75,51 @@ export function PlaylistDrawer({ children }) {
       const { data } = await supabase
         .from("playlist_songs")
         .select("*")
-                  {playlists.map((playlist) => {
-                    const thumbnails = (playlist.thumbnails || [])
-                      .map((thumbnail) => getImageUrl(thumbnail))
-                      .filter(Boolean);
+        .eq("playlist_id", playlistId)
+        .order("added_at", { ascending: true });
+      setPlaylistSongs(data || []);
+      setLoadingSongs(false);
+    },
+    [supabase],
+  );
 
-                    return (
-                      <div
-                        key={playlist.id}
-                        className="group relative">
-                        <button
-                          type="button"
-                          onClick={() => handlePlaylistClick(playlist)}
-                          className="flex w-full items-center gap-3 rounded-xl border border-transparent p-3 pr-12 text-left transition-all hover:border-white/10 hover:bg-white/10 active:bg-white/15">
-                          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform">
-                            {thumbnails.length > 0 ?
-                              <div className="grid grid-cols-2 gap-0.5 h-full w-full bg-black">
-                                {[0, 1, 2, 3].map((index) => (
-                                  <div
-                                    key={index}
-                                    className="relative bg-zinc-900">
-                                    {thumbnails[index] ?
-                                      <img
-                                        src={thumbnails[index]}
-                                        alt=""
-                                        className="w-full h-full object-cover"
-                                      />
-                                    : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
-                                        <ListMusic className="w-3 h-3 text-zinc-600" />
-                                      </div>
-                                    }
-                                  </div>
-                                ))}
-                              </div>
-                            : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-black">
-                                <ListMusic className="w-7 h-7 text-zinc-600" />
-                              </div>
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white font-semibold truncate group-hover:text-primary transition text-base mb-1">
-                              {playlist.name}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-white/50">
-                              <div className="flex items-center gap-1">
-                                {playlist.is_public ?
-                                  <Globe className="w-3 h-3" />
-                                : <Lock className="w-3 h-3" />}
-                                <span>
-                                  {playlist.is_public ? "Public" : "Private"}
-                                </span>
-                              </div>
-                              <span>•</span>
-                              <span>
-                                {playlist.songCount}{
-            {
-              ...p,
-              songCount: nextSongs.length,
-              thumbnails: getPlaylistThumbnails(nextSongs),
-            }
+  const handlePlaylistClick = (playlist) => {
+    setSelectedPlaylist(playlist);
+    fetchPlaylistSongs(playlist.id);
+  };
+
+  const handleBack = () => {
+    setSelectedPlaylist(null);
+    setPlaylistSongs([]);
+  };
+
+  const handlePlaySong = (songId) => {
+    try {
+      sessionStorage.setItem("mpplaygo_user_initiated_play", "true");
+    } catch {}
+    try {
+      localStorage.setItem("p", "true");
+    } catch {}
+    musicContext.setMusic(songId);
+    setOpen(false);
+  };
+
+  const handleRemoveSong = async (e, songDbId, songTitle) => {
+    e.stopPropagation();
+    const { error } = await supabase
+      .from("playlist_songs")
+      .delete()
+      .eq("id", songDbId);
+
+    if (error) {
+      toast.error("Failed to remove song");
+    } else {
+      toast.success(`Removed "${songTitle}"`);
+      setPlaylistSongs(playlistSongs.filter((s) => s.id !== songDbId));
+      setPlaylists(
+        playlists.map((p) =>
+          p.id === selectedPlaylist.id ?
+            { ...p, songCount: (p.songCount || 1) - 1 }
           : p,
         ),
       );
