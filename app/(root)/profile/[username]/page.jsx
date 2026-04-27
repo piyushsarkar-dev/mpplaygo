@@ -5,6 +5,7 @@ import { CreatePlaylistModal } from "@/components/playlist/create-playlist-modal
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getImageUrl } from "@/lib/media";
 import { Globe, Lock, Music, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -70,7 +71,7 @@ export default function ProfilePage({ params }) {
           thumbnails:
             playlist.playlist_songs
               ?.slice(0, 4)
-              .map((s) => s.thumbnail)
+              .map((s) => getImageUrl(s.thumbnail))
               .filter(Boolean) || [],
         }));
         console.log("Playlists with thumbnails:", playlistsWithThumbnails);
@@ -190,7 +191,7 @@ export default function ProfilePage({ params }) {
                         className="relative aspect-square bg-secondary/40">
                         {playlist.thumbnails[index] ?
                           <img
-                            src={playlist.thumbnails[index]}
+                            src={getImageUrl(playlist.thumbnails[index])}
                             alt=""
                             className="w-full h-full object-cover"
                           />

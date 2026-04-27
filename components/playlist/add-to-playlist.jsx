@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getImageUrl } from "@/lib/media";
 import { Music2, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -44,7 +45,7 @@ export function AddToPlaylist({ children, song }) {
       song_id: song.id,
       song_title: song.title,
       artist: song.artist,
-      thumbnail: song.image,
+      thumbnail: getImageUrl(song.image),
     });
 
     if (error) {

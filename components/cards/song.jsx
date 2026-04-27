@@ -4,6 +4,7 @@
 import { AddToPlaylist } from "@/components/playlist/add-to-playlist";
 import { MusicContext } from "@/hooks/use-context";
 import { cn } from "@/lib/utils";
+import { getImageUrl } from "@/lib/media";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
@@ -35,6 +36,7 @@ export default function SongCard({
     setLastPlayed();
     router.push(`/${id}`);
   };
+  const imageUrl = getImageUrl(image);
   return (
     <div
       className={cn(
@@ -43,16 +45,12 @@ export default function SongCard({
       )}>
       <div className="p-0 md:p-3">
         <div className="relative overflow-hidden rounded-xl">
-          {image ?
+          {imageUrl ?
             <div
               className="relative"
               onClick={handlePlay}>
               <img
-                src={
-                  typeof image === "string" ?
-                    image.replace(/^http:\/\//, "https://")
-                  : image
-                }
+                src={imageUrl}
                 alt={title}
                 className={cn(
                   "h-[182px] w-full object-cover bg-secondary/60 rounded-xl transition-transform duration-500 group-hover:scale-[1.04]",
@@ -78,7 +76,7 @@ export default function SongCard({
 
               {/* + icon in the old play button position */}
               {id && (
-                <AddToPlaylist song={{ id, title, artist, image }}>
+                <AddToPlaylist song={{ id, title, artist, image: imageUrl }}>
                   <button
                     type="button"
                     aria-label="Add to playlist"
