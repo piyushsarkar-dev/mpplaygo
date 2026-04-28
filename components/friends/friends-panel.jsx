@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  FRIEND_STATUS_META,
-  FRIEND_TABS,
-  normalizeFriendStatus,
-  useFriends,
+    FRIEND_STATUS_META,
+    FRIEND_TABS,
+    normalizeFriendStatus,
+    useFriends,
 } from "@/components/providers/friends-provider";
 import { useRoom } from "@/components/providers/room-provider";
 import { useSupabase } from "@/components/providers/supabase-provider";
@@ -14,24 +14,24 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
-  Bell,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  ExternalLink,
-  Facebook,
-  Instagram,
-  Link2,
-  MessageCircle,
-  Play,
-  Plus,
-  RotateCcw,
-  Search,
-  UserRoundPlus,
-  Users,
-  X,
+    Bell,
+    Check,
+    ChevronDown,
+    ChevronUp,
+    Copy,
+    ExternalLink,
+    Facebook,
+    Instagram,
+    Link2,
+    Play,
+    Plus,
+    RotateCcw,
+    Search,
+    UserRoundPlus,
+    Users,
+    X
 } from "lucide-react";
+import { BsWhatsapp } from "react-icons/bs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -571,9 +571,10 @@ function FriendsContent() {
     },
     {
       label: "WhatsApp",
-      icon: MessageCircle,
+      icon: BsWhatsapp,
       onClick: () =>
         openExternal(`https://wa.me/?text=${encodeURIComponent(shareMessage)}`),
+      iconClassName: "text-[#25D366]",
     },
     {
       label: "Facebook",
@@ -582,6 +583,7 @@ function FriendsContent() {
         openExternal(
           `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteLink)}`,
         ),
+      iconClassName: "text-[#1877F2]",
     },
     {
       label: "Instagram",
@@ -1071,7 +1073,7 @@ function FriendsContent() {
                     className="flex aspect-square items-center justify-center rounded-[18px] border border-white/10 bg-white/[0.05] text-white/70 transition-all duration-200 hover:bg-white/[0.1] hover:text-white"
                     title={item.label}
                     aria-label={item.label}>
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className={cn("h-5 w-5", item.iconClassName)} />
                   </button>
                 ))}
               </div>
