@@ -354,6 +354,13 @@ export function PlaylistDrawer({ children }) {
                   onClick={handleSharePlaylist}>
                   <Share2 className="w-5 h-5" />
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white/70 hover:text-red-400 hover:bg-red-500/10 rounded-xl h-11 w-11 flex-shrink-0"
+                  onClick={(e) => handleDeletePlaylist(selectedPlaylist, e)}>
+                  <Trash2 className="w-5 h-5" />
+                </Button>
               </div>
               <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-4">

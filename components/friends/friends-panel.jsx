@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
-  ArrowLeft,
   Bell,
   Check,
   ChevronDown,
@@ -119,7 +118,7 @@ function SectionPill({ children, className }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.26em] text-[#a8ff9a]",
+        "text-center inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-[11px] font-medium uppercase tracking-[0.26em] text-[#a8ff9a]",
         className,
       )}>
       {children}
@@ -874,8 +873,8 @@ function FriendsContent() {
   return (
     <div className="flex w-full flex-col gap-4 pb-6 text-white md:pb-10 xl:flex-row">
       <aside className="order-1 w-full xl:sticky xl:top-4 xl:w-[230px] xl:self-start">
-        <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+        <div className="">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
             <QuickNavButton
               label="MY FRIENDS"
               active={activeTab === FRIEND_TABS.FRIENDS}
@@ -921,86 +920,13 @@ function FriendsContent() {
       </aside>
 
       <main className="order-2 min-w-0 flex-1 space-y-4">
-        <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs uppercase tracking-[0.32em] text-white/35">
-                Friends
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                  Friends
-                </h1>
-                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/55">
-                  {friendCount}/{MAX_FRIENDS}
-                </span>
-              </div>
-              <p className="mt-2 max-w-2xl text-sm text-white/45">
-                Manage friends, requests, presence, room invites, and sharing
-                from one place.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 self-start">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => router.push("/")}
-                className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setActiveTab(FRIEND_TABS.REQUESTS)}
-                className="relative h-10 w-10 rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white">
-                <Bell className="h-4 w-4" />
-                {notificationCount > 0 ?
-                  <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-lime-400" />
-                : null}
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] uppercase tracking-[0.28em] text-white/35">
-                Your status
-              </span>
-              <div className="flex flex-wrap gap-2">{statusButtons}</div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <TabButton
-                label="Search Friends"
-                active={activeTab === FRIEND_TABS.SEARCH}
-                onClick={() => setActiveTab(FRIEND_TABS.SEARCH)}
-              />
-              <TabButton
-                label="Friend Requests"
-                count={incomingRequests.length}
-                active={activeTab === FRIEND_TABS.REQUESTS}
-                onClick={() => setActiveTab(FRIEND_TABS.REQUESTS)}
-              />
-              <TabButton
-                label="Friends List"
-                count={friendCount}
-                active={activeTab === FRIEND_TABS.FRIENDS}
-                onClick={() => setActiveTab(FRIEND_TABS.FRIENDS)}
-              />
-            </div>
-          </div>
-        </section>
-
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
+          <section className="rounded-[15px] border border-white/10 p-4 md:p-5">
             {renderPrimarySection()}
           </section>
 
           <div className="space-y-4">
-            <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
+            <section className="rounded-[15px] border border-white/10  p-4 md:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <SectionPill>Top 10 Online Users</SectionPill>
@@ -1081,7 +1007,7 @@ function FriendsContent() {
               </div>
             </section>
 
-            <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
+            <section className="rounded-[10px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <SectionPill>Room Invites</SectionPill>
@@ -1111,7 +1037,7 @@ function FriendsContent() {
               </div>
             </section>
 
-            <section className="rounded-[30px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
+            <section className="rounded-[10px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
               <div>
                 <SectionPill>Share System</SectionPill>
                 <p className="mt-2 text-sm text-white/45">

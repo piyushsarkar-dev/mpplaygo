@@ -2,12 +2,24 @@
 
 import { EditProfileModal } from "@/components/auth/edit-profile-modal";
 import { CreatePlaylistModal } from "@/components/playlist/create-playlist-modal";
-import { useFriends } from "@/components/providers/friends-provider";
+import {
+  FRIEND_STATUS_META,
+  normalizeFriendStatus,
+  useFriends,
+} from "@/components/providers/friends-provider";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getImageUrl } from "@/lib/media";
-import { Check, Clock3, Globe, Lock, Music, Play, UserRoundPlus } from "lucide-react";
+import {
+  Check,
+  Clock3,
+  Globe,
+  Lock,
+  Music,
+  Play,
+  UserRoundPlus,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,6 +31,9 @@ export default function ProfilePage({ params }) {
     friendIdSet,
     incomingRequests,
     outgoingRequestTargets,
+    presenceMap,
+    myStatus,
+    updateMyStatus,
     sendFriendRequest,
   } = useFriends();
   const [profile, setProfile] = useState(null);
@@ -130,13 +145,18 @@ export default function ProfilePage({ params }) {
   if (!profile) return <div className="p-10 text-center">User not found</div>;
 
   const isOwner = user?.id === profile.id;
+  const status = normalizeFriendStatus(
+    isOwner ? myStatus : presenceMap.get(profile.id),
+  );
+  const statusMeta = FRIEND_STATUS_META[status] || FRIEND_STATUS_META.offline;
   const isFriend = friendIdSet.has(profile.id);
   const isPending =
     !isFriend &&
     (outgoingRequestTargets.has(profile.id) ||
       incomingRequests.some((request) => request.sender_id === profile.id));
 
-  const relationButton = isFriend ?
+  const relationButton =
+    isFriend ?
       {
         label: "Friends",
         icon: <Check className="h-4 w-4" />,
@@ -171,7 +191,16 @@ export default function ProfilePage({ params }) {
           <h1 className="text-3xl font-bold">
             {profile.full_name || profile.username}
           </h1>
-          <p className="text-muted-foreground">@{profile.username}</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+            <p className="text-muted-foreground">@{profile.username}</p>
+            <span
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${statusMeta.chipClassName}`}>
+              <span
+                className={`h-2 w-2 rounded-full ${statusMeta.dotClassName}`}
+              />
+              {statusMeta.label}
+            </span>
+          </div>
           {profile.gender && (
             <p className="text-xs text-muted-foreground mt-1 capitalize">
               Gender: {profile.gender}
@@ -181,14 +210,36 @@ export default function ProfilePage({ params }) {
           <p className="text-sm text-muted-foreground mt-1">
             Joined {new Date(profile.created_at).toLocaleDateString()}
           </p>
-          {isOwner ? (
+          <div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
+            {isOwner ?
+              ["online", "offline", "dnd"].map((nextStatus) => {
+                const active = status === nextStatus;
+                const meta = FRIEND_STATUS_META[nextStatus];
+
+                return (
+                  <Button
+                    key={nextStatus}
+                    type="button"
+                    variant={active ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => updateMyStatus(nextStatus)}
+                    className={`rounded-full ${active ? "border-white/10 bg-white/[0.12] text-white" : "border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"}`}>
+                    <span
+                      className={`mr-2 h-2 w-2 rounded-full ${meta.dotClassName}`}
+                    />
+                    {meta.label}
+                  </Button>
+                );
+              })
+            : null}
+          </div>
+          {isOwner ?
             <div className="mt-4 flex justify-center md:justify-start">
               <EditProfileModal>
                 <Button variant="secondary">Edit Profile</Button>
               </EditProfileModal>
             </div>
-          ) : (
-            <div className="mt-4 flex justify-center md:justify-start">
+          : <div className="mt-4 flex justify-center md:justify-start">
               <Button
                 variant={relationButton.variant}
                 disabled={isFriend || isPending}
@@ -198,7 +249,7 @@ export default function ProfilePage({ params }) {
                 <span className="ml-2">{relationButton.label}</span>
               </Button>
             </div>
-          )}
+          }
         </div>
       </div>
 
