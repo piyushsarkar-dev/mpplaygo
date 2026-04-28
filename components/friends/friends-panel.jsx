@@ -1,10 +1,10 @@
 "use client";
 
 import {
-    FRIEND_STATUS_META,
-    FRIEND_TABS,
-    normalizeFriendStatus,
-    useFriends,
+  FRIEND_STATUS_META,
+  FRIEND_TABS,
+  normalizeFriendStatus,
+  useFriends,
 } from "@/components/providers/friends-provider";
 import { useRoom } from "@/components/providers/room-provider";
 import { useSupabase } from "@/components/providers/supabase-provider";
@@ -14,27 +14,27 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
-    Bell,
-    Check,
-    ChevronDown,
-    ChevronUp,
-    Copy,
-    ExternalLink,
-    Facebook,
-    Instagram,
-    Link2,
-    Play,
-    Plus,
-    RotateCcw,
-    Search,
-    UserRoundPlus,
-    Users,
-    X
+  Bell,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  ExternalLink,
+  Facebook,
+  Instagram,
+  Link2,
+  Play,
+  Plus,
+  RotateCcw,
+  Search,
+  UserRoundPlus,
+  Users,
+  X,
 } from "lucide-react";
-import { BsWhatsapp } from "react-icons/bs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BsWhatsapp } from "react-icons/bs";
 import { toast } from "sonner";
 
 const MAX_FRIENDS = 100;

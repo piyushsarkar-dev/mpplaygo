@@ -1,9 +1,7 @@
 "use client";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getImageUrl } from "@/lib/media";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +9,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MusicContext } from "@/hooks/use-context";
+import { getImageUrl } from "@/lib/media";
 import {
   ArrowLeft,
   Globe,
@@ -146,7 +146,9 @@ export function PlaylistDrawer({ children }) {
     }
 
     toast.success(`Deleted \"${playlist.name}\"`);
-    setPlaylists((current) => current.filter((item) => item.id !== playlist.id));
+    setPlaylists((current) =>
+      current.filter((item) => item.id !== playlist.id),
+    );
     if (selectedPlaylist?.id === playlist.id) {
       setSelectedPlaylist(null);
       setPlaylistSongs([]);
