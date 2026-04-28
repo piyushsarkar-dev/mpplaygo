@@ -1,9 +1,7 @@
 "use client";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getImageUrl } from "@/lib/media";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +9,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MusicContext } from "@/hooks/use-context";
+import { getImageUrl } from "@/lib/media";
 import {
   ArrowLeft,
   Globe,
@@ -146,7 +146,9 @@ export function PlaylistDrawer({ children }) {
     }
 
     toast.success(`Deleted \"${playlist.name}\"`);
-    setPlaylists((current) => current.filter((item) => item.id !== playlist.id));
+    setPlaylists((current) =>
+      current.filter((item) => item.id !== playlist.id),
+    );
     if (selectedPlaylist?.id === playlist.id) {
       setSelectedPlaylist(null);
       setPlaylistSongs([]);
@@ -353,6 +355,13 @@ export function PlaylistDrawer({ children }) {
                   className="text-white hover:bg-white/10 rounded-xl h-11 w-11 flex-shrink-0"
                   onClick={handleSharePlaylist}>
                   <Share2 className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white/70 hover:text-red-400 hover:bg-red-500/10 rounded-xl h-11 w-11 flex-shrink-0"
+                  onClick={(e) => handleDeletePlaylist(selectedPlaylist, e)}>
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               </div>
               <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl p-4 border border-white/10">
