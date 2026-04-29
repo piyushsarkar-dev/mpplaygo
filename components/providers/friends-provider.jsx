@@ -138,18 +138,19 @@ export default function FriendsProvider({ children }) {
       }
     };
 
-    const markOffline = () => {
-      supabase
-        .from("user_presence")
-        .upsert(
+    const markOffline = async () => {
+      try {
+        await supabase.from("user_presence").upsert(
           {
             user_id: user.id,
             status: "offline",
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" },
-        )
-        .catch(() => {});
+        );
+      } catch (e) {
+        // ignore errors when attempting to mark offline (best-effort)
+      }
     };
 
     writePresence();
